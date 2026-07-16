@@ -66,7 +66,7 @@ export function SiteHeader() {
         >
           <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] p-1">
             <Image
-              src="/images/aquagpt logoo.png"
+              src="/images/aquagpt-logo.png"
               alt="AquaGPT"
               width={30}
               height={30}
