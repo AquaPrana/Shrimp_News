@@ -123,12 +123,10 @@ It must not provide unsafe chemical dosages, unsupported guarantees, or definite
 
 ## Reference Files
 
-The project reference documents are located in:
-
-../reference-documents/
-
 The broken HTML design reference is located in:
 
 ../design-reference/
 
 The HTML file should only be used as a visual reference. Its broken template logic should not be copied.
+
+Article cover images are served from `public/images/articles/` using lowercase kebab-case filenames.

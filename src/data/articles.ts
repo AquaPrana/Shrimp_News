@@ -18,48 +18,48 @@ export function getLocalized(text: LocalizedText, language: Language): string { 
 export function getArticlesByTopic(topic: ArticleTopic): Article[] { return launchArticles.filter((article) => article.topics.includes(topic)); }
 export function getArticleBySlug(slug: string): Article | undefined { return launchArticles.find((article) => article.slug === slug); }
 
-/** Cover photos from reference-documents (1st Five + 6-20 Articles docx). */
+/** Cover photos served from public/images/articles. */
 export const ARTICLE_COVERS: Record<string, string> = {
   "why-india-produces-shrimp-for-the-world-but-eats-so-little-at-home":
-    "/images/article-covers/why-india-produces-shrimp.jpg",
+    "/images/articles/why-india-produces-shrimp.jpg",
   "shrimp-is-one-of-the-healthiest-proteins-you-can-eat":
-    "/images/article-covers/shrimp-healthiest-proteins.jpg",
+    "/images/articles/shrimp-healthiest-proteins.jpg",
   "shrimp-myths-vs-facts-separating-science-from-misinformation":
-    "/images/article-covers/shrimp-myths-vs-facts.jpg",
+    "/images/articles/shrimp-myths-vs-facts.jpg",
   "understanding-shrimp-prices-in-india":
-    "/images/article-covers/understanding-shrimp-prices.jpg",
+    "/images/articles/understanding-shrimp-prices.jpg",
   "export-vs-domestic-market-stability-for-indias-shrimp-industry":
-    "/images/article-covers/export-vs-domestic-market.jpg",
+    "/images/articles/export-vs-domestic-market.jpg",
   "complete-guide-to-vannamei-shrimp-farming":
-    "/images/article-covers/complete-guide-to-vannamei.jpg",
+    "/images/articles/complete-guide-to-vannamei.jpg",
   "water-quality-is-the-foundation-of-every-successful-shrimp-farm":
-    "/images/article-covers/water-quality-foundation.jpg",
+    "/images/articles/water-quality-foundation.jpg",
   "understanding-shrimp-diseases-prevention-is-always-better-than-treatment":
-    "/images/article-covers/understanding-shrimp-diseases.jpg",
+    "/images/articles/understanding-shrimp-diseases.jpg",
   "shrimp-farming-is-becoming-smarter-how-technology-is-changing-aquaculture":
-    "/images/article-covers/shrimp-farming-becoming-smarter.jpg",
+    "/images/articles/shrimp-farming-becoming-smarter.jpg",
   "future-of-indias-shrimp-industry-domestic-consumption-innovation-and-global-leadership":
-    "/images/article-covers/future-of-indias-shrimp-industry.jpg",
+    "/images/articles/future-of-indias-shrimp-industry.jpg",
   "is-farmed-shrimp-safe-to-eat":
-    "/images/article-covers/is-farmed-shrimp-safe.jpg",
+    "/images/articles/is-farmed-shrimp-safe.jpg",
   "fresh-vs-frozen-shrimp-which-one-is-actually-better":
-    "/images/article-covers/fresh-vs-frozen-shrimp.jpg",
+    "/images/articles/fresh-vs-frozen-shrimp.jpg",
   "how-shrimp-travels-from-farm-to-your-plate":
-    "/images/article-covers/how-shrimp-travels-farm-to-plate.jpg",
+    "/images/articles/how-shrimp-travels-farm-to-plate.jpg",
   "whiteleg-shrimp-vannamei-why-it-dominates-indias-shrimp-industry":
-    "/images/article-covers/whiteleg-shrimp-vannamei.jpg",
+    "/images/articles/whiteleg-shrimp-vannamei.jpg",
   "why-shrimp-prices-go-up-and-down-a-complete-market-guide":
-    "/images/article-covers/why-shrimp-prices-go-up-down.jpg",
+    "/images/articles/why-shrimp-prices-go-up-down.jpg",
   "sustainable-shrimp-farming-can-india-grow-more-while-protecting-nature":
-    "/images/article-covers/sustainable-shrimp-farming.jpg",
+    "/images/articles/sustainable-shrimp-farming.jpg",
   "business-of-shrimp-farming-is-shrimp-farming-profitable-in-india":
-    "/images/article-covers/business-of-shrimp-farming.jpg",
+    "/images/articles/business-of-shrimp-farming.jpg",
   "value-added-shrimp-products-the-future-beyond-raw-shrimp-exports":
-    "/images/article-covers/value-added-shrimp-products.jpg",
+    "/images/articles/value-added-shrimp-products.jpg",
   "why-water-testing-is-the-most-important-daily-job-on-every-shrimp-farm":
-    "/images/article-covers/why-water-testing-daily.jpg",
+    "/images/articles/why-water-testing-daily.jpg",
   "next-decade-of-indias-shrimp-industry-ai-domestic-consumption-and-global-leadership":
-    "/images/article-covers/next-decade-shrimp-industry.jpg",
+    "/images/articles/next-decade-shrimp-industry.jpg",
 };
 
 export function getArticleCover(slug: string): string | undefined {
