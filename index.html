@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shrimp.News — India shrimp intelligence</title>
+    <meta name="description" content="Shrimp.News brings together shrimp intelligence, domestic consumption, market reporting, farming guidance, and AI-assisted aquaculture insight." />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <div data-header></div>
+      <div data-ticker></div>
+
+      <main class="container">
+        <section class="hero">
+          <div class="hero-copy reveal">
+            <div class="section-title">India-first · globally aware</div>
+            <h1>The pulse of <span class="accent">global shrimp.</span></h1>
+            <p>Shrimp.News is building a dedicated media platform for India’s shrimp ecosystem, helping consumers, farmers, traders, and exporters better understand domestic consumption, prices, markets, technology, and health.</p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="/pages/feed.html">Read the feed</a>
+              <a class="btn btn-secondary" href="/pages/markets.html">Live markets</a>
+            </div>
+          </div>
+          <div class="hero-graphic reveal" aria-hidden="true">
+            <div class="ring one"></div>
+            <div class="ring two"></div>
+            <div class="ring three"></div>
+            <div class="core"></div>
+          </div>
+        </section>
+
+        <section class="section reveal">
+          <div class="section-title">Market overview</div>
+          <div class="market-grid">
+            <article class="card market-chart-card">
+              <div class="flex" style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+                <div>
+                  <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.24em; color:var(--text-muted);">Farmgate price trend</div>
+                  <h3 style="margin:0.4rem 0 0; font-size:1.2rem;">L. vannamei • India</h3>
+                </div>
+                <div class="status-pill"><span class="pulse-dot"></span><span>LIVE</span></div>
+              </div>
+              <div class="chart-shell">
+                <svg class="chart-svg" viewBox="0 0 420 240" role="img" aria-label="Shrimp market trend chart">
+                  <defs>
+                    <linearGradient id="lineFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stop-color="#ff5b39" stop-opacity="0.36"></stop>
+                      <stop offset="100%" stop-color="#ff5b39" stop-opacity="0"></stop>
+                    </linearGradient>
+                  </defs>
+                  <path d="M20 180 C80 145, 120 140, 170 155 S270 168, 320 130 S380 80, 400 65" fill="none" stroke="#ff5b39" stroke-width="4" stroke-linecap="round"></path>
+                  <path d="M20 180 C80 145, 120 140, 170 155 S270 168, 320 130 S380 80, 400 65 L400 220 L20 220 Z" fill="url(#lineFill)"></path>
+                  <circle cx="400" cy="65" r="8" fill="#ff5b39"></circle>
+                  <g fill="#6f7aa6" font-size="11" font-family="Arial, sans-serif">
+                    <text x="20" y="220">Jan</text>
+                    <text x="98" y="220">Feb</text>
+                    <text x="176" y="220">Mar</text>
+                    <text x="254" y="220">Apr</text>
+                    <text x="332" y="220">May</text>
+                    <text x="390" y="220">Jun</text>
+                  </g>
+                </svg>
+              </div>
+            </article>
+            <div class="metric-grid" data-metrics></div>
+          </div>
+        </section>
+
+        <section class="section story-grid reveal">
+          <article class="card story-card">
+            <div class="section-title">Top story</div>
+            <div class="article-tag">Domestic Consumption</div>
+            <h3>Why India produces shrimp for the world but eats so little at home</h3>
+            <p>This flagship article explains why India is a global shrimp powerhouse, why domestic shrimp consumption remains low, and why increasing local awareness matters for the whole ecosystem.</p>
+            <div class="story-meta">
+              <span>Shrimp.News Desk</span>
+              <span>Jul 10, 2026</span>
+              <span>8 min read</span>
+            </div>
+          </article>
+          <aside class="card story-card">
+            <div class="section-title">Signal wire</div>
+            <div data-signals></div>
+          </aside>
+        </section>
+
+        <section class="section reveal">
+          <div class="section-title">Market intelligence</div>
+          <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-end; margin-bottom:1rem;">
+            <h2 style="margin:0; font-size:clamp(1.4rem, 2vw, 1.8rem);">India, state by state</h2>
+            <div style="color:var(--text-muted);">L. vannamei · count 40 · farm-gate ₹/kg</div>
+          </div>
+          <div data-states></div>
+        </section>
+
+        <section class="section reveal">
+          <div class="section-title">The feed</div>
+          <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; align-items:flex-end;">
+            <h2 style="margin:0; font-size:clamp(1.4rem, 2vw, 1.8rem);">Latest intelligence</h2>
+            <div data-filters class="filter-group"></div>
+          </div>
+          <div data-articles></div>
+        </section>
+
+        <section class="section reveal">
+          <div data-features></div>
+        </section>
+
+        <section class="section reveal" data-newsletter></section>
+      </main>
+
+      <div data-footer></div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/script.js"></script>
+  </body>
+</html>
