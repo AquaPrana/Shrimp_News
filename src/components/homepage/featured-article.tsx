@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { getLocalized, type Article } from "@/data/articles";
+import { getArticleTitle, getLocalized, type Article } from "@/data/articles";
 import { useLanguage } from "@/context/language-context";
 
 export function FeaturedArticle({ article }: { article: Article }) {
   const { language, t } = useLanguage();
+  const title = getArticleTitle(article, language);
 
   return (
     <article className="market-dashboard-card relative grid gap-8 overflow-hidden rounded-[28px] border border-cyan-300/20 bg-[#0B4F7A] p-8 shadow-[0_24px_70px_rgba(11,79,122,0.28)] lg:grid-cols-[1.4fr_0.9fr] xl:p-10">
@@ -17,7 +18,7 @@ export function FeaturedArticle({ article }: { article: Article }) {
         </span>
         <div className="space-y-4">
           <h2 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-            {getLocalized(article.title, language)}
+            {title}
           </h2>
           <p className="max-w-3xl text-base leading-8 text-cyan-50/85 sm:text-lg">
             {getLocalized(article.excerpt, language)}
@@ -38,7 +39,7 @@ export function FeaturedArticle({ article }: { article: Article }) {
       <div className="relative z-10 overflow-hidden rounded-[28px] border border-white/10 bg-[#03172d]">
         <Image
           src="/images/shrimpImage.jpeg"
-          alt={getLocalized(article.title, language)}
+          alt={title}
           width={900}
           height={700}
           className="h-full min-h-[280px] w-full object-cover sm:min-h-[320px]"

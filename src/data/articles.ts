@@ -1,4 +1,5 @@
 import type { Language } from "@/context/language-context";
+import { getEnglishArticleContent } from "@/data/article-content";
 
 export type ArticleTopic =
   | "national" | "international" | "domestic-consumption" | "shrimp-farming" | "shrimp-health"
@@ -15,6 +16,12 @@ export const TOPIC_LABELS: Record<ArticleTopic, LocalizedText> = {
 };
 
 export function getLocalized(text: LocalizedText, language: Language): string { return text[language] || text.en; }
+export function getArticleTitle(article: Article, language: Language): string {
+  if (language === "en") {
+    return getEnglishArticleContent(article.slug)?.title ?? article.title.en;
+  }
+  return getLocalized(article.title, language);
+}
 export function getArticlesByTopic(topic: ArticleTopic): Article[] { return launchArticles.filter((article) => article.topics.includes(topic)); }
 export function getArticleBySlug(slug: string): Article | undefined { return launchArticles.find((article) => article.slug === slug); }
 

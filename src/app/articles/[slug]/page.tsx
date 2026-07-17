@@ -6,9 +6,11 @@ import { useParams } from "next/navigation";
 import {
   getArticleBySlug,
   getArticleCover,
+  getArticleTitle,
   getArticlesByTopic,
   getLocalized,
 } from "@/data/articles";
+import { getEnglishArticleContent } from "@/data/article-content";
 import { useLanguage } from "@/context/language-context";
 import { ArticleGrid } from "@/components/articles/article-grid";
 import { PAGE_CONTENT_PANEL_CLASS } from "@/components/layout/page-shell";
@@ -34,6 +36,10 @@ export default function ArticleDetailPage() {
   }
 
   const cover = getArticleCover(article.slug);
+  const title = getArticleTitle(article, language);
+  const englishContent = language === "en"
+    ? getEnglishArticleContent(article.slug)
+    : undefined;
   const relatedTopic = article.topics[0];
   const related = getArticlesByTopic(relatedTopic)
     .filter((item) => item.slug !== article.slug)
@@ -48,13 +54,13 @@ export default function ArticleDetailPage() {
             {getLocalized(article.category, language)}
           </p>
           <h1 className="text-2xl font-extrabold tracking-tight text-[#0B3A6E] sm:text-4xl lg:text-5xl">
-            {getLocalized(article.title, language)}
+            {title}
           </h1>
           {cover ? (
             <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[24px] bg-sky-50 shadow-[0_18px_50px_rgba(11,79,122,0.14)] sm:rounded-[30px]">
               <Image
                 src={cover}
-                alt={getLocalized(article.title, language)}
+                alt={title}
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 896px"
@@ -75,30 +81,60 @@ export default function ArticleDetailPage() {
 
         <article className={PAGE_CONTENT_PANEL_CLASS}>
           <div className="space-y-5">
-            {getLocalized(article.body, language)
-              .split("\n\n")
-              .map((paragraph, index) => {
-                const isHeading =
-                  paragraph.length < 90 &&
-                  !paragraph.endsWith(".") &&
-                  !paragraph.endsWith("?") &&
-                  !paragraph.includes("\n");
-
-                if (isHeading) {
+            {englishContent
+              ? englishContent.blocks.map((block, index) => {
+                if (block.type === "heading") {
                   return (
                     <h2
                       key={`${article.slug}-${index}`}
                       className="pt-2 text-xl font-semibold text-[#0B3A6E] sm:text-2xl"
                     >
-                      {paragraph}
+                      {block.text}
                     </h2>
                   );
                 }
 
+                if (block.type === "bullets") {
+                  return (
+                    <ul
+                      key={`${article.slug}-${index}`}
+                      className="list-disc space-y-2 pl-6"
+                    >
+                      {block.items.map((item, itemIndex) => (
+                        <li key={`${article.slug}-${index}-${itemIndex}`}>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  );
+                }
+
                 return (
-                  <p key={`${article.slug}-${index}`}>{paragraph}</p>
+                  <p key={`${article.slug}-${index}`}>{block.text}</p>
                 );
-              })}
+              })
+              : getLocalized(article.body, language)
+                .split("\n\n")
+                .map((paragraph, index) => {
+                  const isHeading =
+                    paragraph.length < 90 &&
+                    !paragraph.endsWith(".") &&
+                    !paragraph.endsWith("?") &&
+                    !paragraph.includes("\n");
+
+                  if (isHeading) {
+                    return (
+                      <h2
+                        key={`${article.slug}-${index}`}
+                        className="pt-2 text-xl font-semibold text-[#0B3A6E] sm:text-2xl"
+                      >
+                        {paragraph}
+                      </h2>
+                    );
+                  }
+
+                  return <p key={`${article.slug}-${index}`}>{paragraph}</p>;
+                })}
           </div>
         </article>
 

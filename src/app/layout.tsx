@@ -32,10 +32,16 @@ const notoSansDevanagari = Noto_Sans_Devanagari({
   display: "swap",
 });
 
+
 export const metadata: Metadata = {
   title: "Shrimp.News | India shrimp intelligence and industry news",
   description:
     "Shrimp.News is an India-focused platform for shrimp consumption, prices, markets, farming, health, and technology.",
+  icons: {
+    icon: "/favicon.png?v=2",
+    shortcut: "/favicon.png?v=2",
+    apple: "/favicon.png?v=2",
+  },
 };
 
 export default function RootLayout({

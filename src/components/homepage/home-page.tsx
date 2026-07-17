@@ -10,6 +10,7 @@ import { ArticleCard } from "@/components/homepage/article-card";
 import { NewsletterSection } from "@/components/homepage/newsletter-section";
 import {
   featuredArticle,
+  getArticleTitle,
   getLocalized,
   launchArticles,
 } from "@/data/articles";
@@ -17,6 +18,7 @@ import { useLanguage } from "@/context/language-context";
 
 export function HomePage() {
   const { language, t } = useLanguage();
+  const featuredTitle = getArticleTitle(featuredArticle, language);
 
   const homeArticles = launchArticles.filter(
     (article) => article.slug !== featuredArticle.slug,
@@ -58,7 +60,7 @@ export function HomePage() {
 
               <div className="space-y-4">
                 <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                  {getLocalized(featuredArticle.title, language)}
+                  {featuredTitle}
                 </h2>
 
                 <p className="max-w-3xl text-base leading-8 text-cyan-50/85 sm:text-lg">
@@ -89,10 +91,7 @@ export function HomePage() {
             <div className="relative z-10 overflow-hidden rounded-[28px] border border-white/10 bg-[#03172d]">
               <Image
                 src="/images/shrimpImage.jpeg"
-                alt={getLocalized(
-                  featuredArticle.title,
-                  language,
-                )}
+                alt={featuredTitle}
                 width={900}
                 height={700}
                 className="h-full min-h-[280px] w-full object-cover transition-transform duration-700 hover:scale-[1.03] sm:min-h-[320px]"
