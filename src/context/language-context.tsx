@@ -6,11 +6,40 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 
 export type Language = "en" | "te" | "hi";
+
+const LANGUAGE_STORAGE_KEY = "shrimp-news-language";
+const LANGUAGE_CHANGE_EVENT = "shrimp-news-language-change";
+
+function isLanguage(value: string | null): value is Language {
+  return value === "en" || value === "te" || value === "hi";
+}
+
+function getStoredLanguage(): Language {
+  const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  return isLanguage(savedLanguage) ? savedLanguage : "en";
+}
+
+function subscribeToLanguage(onStoreChange: () => void) {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === LANGUAGE_STORAGE_KEY) {
+      onStoreChange();
+    }
+  };
+  const handleLocalChange = () => onStoreChange();
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(LANGUAGE_CHANGE_EVENT, handleLocalChange);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(LANGUAGE_CHANGE_EVENT, handleLocalChange);
+  };
+}
 
 type LanguageContextValue = {
   language: Language;
@@ -701,27 +730,20 @@ export function LanguageProvider({
 }: {
   children: ReactNode;
 }) {
-  const [language, setLanguageState] = useState<Language>("en");
+  const language = useSyncExternalStore<Language>(
+    subscribeToLanguage,
+    getStoredLanguage,
+    () => "en" as Language,
+  );
 
   useEffect(() => {
-    const savedLanguage = localStorage.getItem(
-      "shrimp-news-language",
-    ) as Language | null;
-
-    if (
-      savedLanguage === "en" ||
-      savedLanguage === "te" ||
-      savedLanguage === "hi"
-    ) {
-      setLanguageState(savedLanguage);
-      document.documentElement.lang = savedLanguage;
-    }
-  }, []);
+    document.documentElement.lang = language;
+  }, [language]);
 
   const setLanguage = useCallback((newLanguage: Language) => {
-    setLanguageState(newLanguage);
-    localStorage.setItem("shrimp-news-language", newLanguage);
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, newLanguage);
     document.documentElement.lang = newLanguage;
+    window.dispatchEvent(new Event(LANGUAGE_CHANGE_EVENT));
   }, []);
 
   const t = useCallback(

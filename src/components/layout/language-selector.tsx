@@ -9,10 +9,11 @@ import {
 const languages: Array<{
   code: Language;
   shortLabel: string;
+  nativeName: string;
 }> = [
-  { code: "en", shortLabel: "EN" },
-  { code: "te", shortLabel: "TE" },
-  { code: "hi", shortLabel: "HI" },
+  { code: "en", shortLabel: "EN", nativeName: "English" },
+  { code: "te", shortLabel: "TE", nativeName: "తెలుగు" },
+  { code: "hi", shortLabel: "HI", nativeName: "हिन्दी" },
 ];
 
 export function LanguageSelector() {
@@ -39,12 +40,6 @@ export function LanguageSelector() {
       document.removeEventListener("keydown", handleEscape);
     };
   }, []);
-
-  const getLanguageName = (code: Language) => {
-    if (code === "en") return t("english");
-    if (code === "te") return t("telugu");
-    return t("hindi");
-  };
 
   const selectLanguage = (code: Language) => {
     setLanguage(code);
@@ -99,7 +94,12 @@ export function LanguageSelector() {
                   : "text-white hover:bg-white/10 hover:text-sky-300"
               }`}
             >
-              <span>{getLanguageName(item.code)}</span>
+              <span
+                lang={item.code}
+                className={`language-native-name language-native-name--${item.code}`}
+              >
+                {item.nativeName}
+              </span>
               <span className="text-xs text-cyan-100/70">{item.shortLabel}</span>
             </button>
           );

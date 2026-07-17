@@ -1,4 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is the frontend-only Shrimp News website, built with [Next.js](https://nextjs.org). It does not require a database.
+
+## Market ticker API
+
+The ticker uses built-in demo data unless `NEXT_PUBLIC_MARKET_DATA_API_URL` is set. To connect a live provider, configure that variable in the deployment environment with a public, CORS-enabled HTTPS endpoint.
+
+The endpoint must return the same response shape as the demo adapter:
+
+```json
+{
+  "items": [
+    {
+      "symbol": "VAN_C40",
+      "label": "Vannamei C40",
+      "price": 362,
+      "currency": "INR",
+      "unit": "kg",
+      "changePercent": 8,
+      "direction": "up",
+      "sourceName": "Market provider",
+      "isLive": true,
+      "observedAt": "2026-07-17T10:00:00.000Z",
+      "updatedAt": "2026-07-17T10:00:00.000Z"
+    }
+  ],
+  "source": "market-provider",
+  "isFallback": false,
+  "fetchedAt": "2026-07-17T10:00:00.000Z"
+}
+```
+
+Because the browser calls this endpoint directly, do not put private API keys in `NEXT_PUBLIC_` environment variables. If a provider requires a secret, expose a separate secured proxy endpoint and use its public URL here.
 
 ## Getting Started
 

@@ -33,6 +33,58 @@ body {
   background: #ffffff;
 }
 
+html[lang="te"] body {
+  font-family: var(--font-noto-telugu), "Noto Sans Telugu", "Nirmala UI",
+    Gautami, sans-serif;
+  line-height: 1.62;
+  letter-spacing: 0.006em;
+  word-spacing: 0.05em;
+}
+
+html[lang="hi"] body {
+  font-family: var(--font-noto-devanagari), "Noto Sans Devanagari",
+    "Nirmala UI", Mangal, sans-serif;
+  line-height: 1.58;
+  letter-spacing: 0.004em;
+  word-spacing: 0.045em;
+}
+
+html:is([lang="te"], [lang="hi"]) :is(h1, h2, h3, h4, h5, h6) {
+  line-height: 1.38;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+html:is([lang="te"], [lang="hi"]) :is(p, li, blockquote) {
+  line-height: 1.78;
+  overflow-wrap: anywhere;
+}
+
+.language-native-name {
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.language-native-name--te {
+  font-family: var(--font-noto-telugu), "Noto Sans Telugu", "Nirmala UI",
+    Gautami, sans-serif;
+  letter-spacing: 0.006em;
+  word-spacing: 0.05em;
+}
+
+.language-native-name--hi {
+  font-family: var(--font-noto-devanagari), "Noto Sans Devanagari",
+    "Nirmala UI", Mangal, sans-serif;
+  letter-spacing: 0.004em;
+  word-spacing: 0.045em;
+}
+
+.ticker-localized-text {
+  line-height: 1.25;
+  letter-spacing: 0.006em;
+  word-spacing: 0.04em;
+}
+
 @layer base {
   a {
     color: inherit;
