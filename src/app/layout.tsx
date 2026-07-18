@@ -38,10 +38,14 @@ export const metadata: Metadata = {
   description:
     "Shrimp.News is an India-focused platform for shrimp consumption, prices, markets, farming, health, and technology.",
   icons: {
-    icon: "/favicon.png?v=2",
-    shortcut: "/favicon.png?v=2",
-    apple: "/favicon.png?v=2",
-  },
+  icon: [
+    { url: "/favicon.ico" },
+    { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+    { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+  ],
+  shortcut: "/favicon.ico",
+  apple: "/apple-touch-icon.png",
+},
 };
 
 export default function RootLayout({

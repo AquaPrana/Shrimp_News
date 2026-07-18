@@ -54,36 +54,92 @@ const categoryLinks: FooterLink[] = [
   },
 ];
 
-const socialLinks = [
-  {
-    label: "Facebook",
-    href: "https://www.facebook.com",
-    icon: FaFacebookF,
-  },
-  {
-    label: "Instagram",
-    href: "https://www.instagram.com",
-    icon: FaInstagram,
-  },
-  {
-    label: "X",
-    href: "https://x.com",
-    icon: FaXTwitter,
-  },
-  {
-    label: "LinkedIn",
-    href: "https://www.linkedin.com",
-    icon: FaLinkedinIn,
-  },
-  {
-    label: "YouTube",
-    href: "https://www.youtube.com",
-    icon: FaYoutube,
-  },
-];
+const socialLinksByLanguage = {
+  en: [
+    {
+      label: "Shrimp News English Facebook",
+      href: "https://www.facebook.com/profile.php?id=61580776233747",
+      icon: FaFacebookF,
+    },
+    {
+      label: "Shrimp News English Instagram",
+      href: "https://www.instagram.com/shrimpnewsenglish?igsh=MWg5ZmpvdzZ3bmo4cg==",
+      icon: FaInstagram,
+    },
+    {
+      label: "Shrimp News X",
+      href: "https://x.com/Shrimp_News",
+      icon: FaXTwitter,
+    },
+    {
+      label: "Shrimp News LinkedIn",
+      href: "https://www.linkedin.com/company/shrimpnews/",
+      icon: FaLinkedinIn,
+    },
+    {
+      label: "Shrimp News English YouTube",
+      href: "https://www.youtube.com/@ShrimpNewsEnglish",
+      icon: FaYoutube,
+    },
+  ],
+  hi: [
+    {
+      label: "Shrimp News Hindi Facebook",
+      href: "https://www.facebook.com/profile.php?id=61583544692855",
+      icon: FaFacebookF,
+    },
+    {
+      label: "Shrimp News Hindi Instagram",
+      href: "https://www.instagram.com/shrimpnews.in?igsh=MXg0ODF5MWhrbmlncg==",
+      icon: FaInstagram,
+    },
+    {
+      label: "Shrimp News X",
+      href: "https://x.com/Shrimp_News",
+      icon: FaXTwitter,
+    },
+    {
+      label: "Shrimp News LinkedIn",
+      href: "https://www.linkedin.com/company/shrimpnews/",
+      icon: FaLinkedinIn,
+    },
+    {
+      label: "Shrimp News Hindi YouTube",
+      href: "https://www.youtube.com/@ShrimpNews1",
+      icon: FaYoutube,
+    },
+  ],
+  te: [
+    {
+      label: "Shrimp News Telugu Facebook",
+      href: "https://www.facebook.com/profile.php?id=61577296447930",
+      icon: FaFacebookF,
+    },
+    {
+      label: "Shrimp News Telugu Instagram",
+      href: "https://www.instagram.com/shrimpnewstelugu?igsh=eTRhc250YmVkODNh",
+      icon: FaInstagram,
+    },
+    {
+      label: "Shrimp News X",
+      href: "https://x.com/Shrimp_News",
+      icon: FaXTwitter,
+    },
+    {
+      label: "Shrimp News LinkedIn",
+      href: "https://www.linkedin.com/company/shrimpnews/",
+      icon: FaLinkedinIn,
+    },
+    {
+      label: "Shrimp News Telugu YouTube",
+      href: "https://www.youtube.com/@ShrimpNewsTelugu",
+      icon: FaYoutube,
+    },
+  ],
+} as const;
 
 export function SiteFooter() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   function scrollToTop() {
     window.scrollTo({
@@ -150,19 +206,23 @@ export function SiteFooter() {
               {t("followShrimpNews")}
             </h3>
 
-            <div className="mt-5 flex flex-wrap gap-3">
-              {socialLinks.map(({ label, href, icon: Icon }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-cyan-300/25 bg-[#0B345B] text-white transition duration-200 hover:-translate-y-1 hover:border-cyan-300 hover:bg-cyan-400 hover:text-[#071A33]"
-                >
-                  <Icon className="h-4 w-4" />
-                </a>
-              ))}
+            <div className="mt-5 flex flex-wrap items-start gap-x-3 gap-y-4">
+              {socialLinksByLanguage[language].map(
+                ({ label, href, icon: Icon }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="group flex w-16 flex-col items-center gap-2 text-center"
+                  >
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full border border-cyan-300/25 bg-[#0B345B] text-white transition duration-200 group-hover:-translate-y-1 group-hover:border-cyan-300 group-hover:bg-cyan-400 group-hover:text-[#071A33]">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                  </a>
+                ),
+              )}
             </div>
 
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-3 text-sm">
@@ -191,7 +251,7 @@ export function SiteFooter() {
                 href="/contact"
                 className="text-white/85 transition hover:text-cyan-300"
               >
-                Contact
+                {t("contact")}
               </Link>
             </div>
           </div>
@@ -210,7 +270,7 @@ export function SiteFooter() {
             onClick={scrollToTop}
             className="w-fit font-semibold text-white/85 transition hover:text-cyan-300"
           >
-            ↑ Back to top
+            ↑ {t("backToTop")}
           </button>
         </div>
       </div>

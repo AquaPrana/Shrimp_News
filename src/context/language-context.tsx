@@ -77,7 +77,8 @@ const translations = {
     relatedArticles: "Related Articles",
 
     heroEyebrow: "India-first · Globally aware",
-    heroTitleStart: "The pulse of global",
+    heroTitleStart: "The pulse of",
+    heroTitleMiddle: "global",
     heroTitleHighlight: "shrimp",
     heroDescription:
       "News, shrimp prices, market intelligence, farming insights and practical knowledge for the people who grow, trade and consume shrimp.",
@@ -179,9 +180,9 @@ const translations = {
       "Shrimp.News is India's first dedicated digital media platform built exclusively for the global shrimp industry.\n\nOur purpose is simple—to create one trusted platform where every stakeholder in the shrimp ecosystem can access reliable information, practical knowledge, market intelligence, and industry insights.\n\nWe bring together the latest news, long-form industry analysis, shrimp farming practices, disease and health management, domestic and international market intelligence, pricing updates, policy developments, technology innovations, research summaries, and consumer awareness—all in one place.\n\nBeyond reporting news, our mission is to build knowledge. One of our key priorities is promoting domestic shrimp consumption in India.\n\nOur Vision\nTo become the world's most trusted shrimp knowledge and media platform by delivering reliable information, connecting the global shrimp ecosystem, promoting innovation, strengthening domestic shrimp consumption, and empowering every stakeholder through knowledge.\n\nOur Mission\nDeliver credible, accurate, and timely information across the global shrimp industry. Connect farmers, businesses, researchers, policymakers, retailers, exporters, and consumers through one dedicated platform. Promote domestic shrimp consumption by creating awareness about shrimp's nutritional, economic, and social value.",
 
     pricesEyebrow: "Shrimp Prices",
-    pricesTitle: "Know the Price Before You Decide",
+    pricesTitle: "Vannamei Shrimp Farmgate Prices",
     pricesDescription:
-      "Farmgate shrimp prices, count-based updates, weekly trends, and market insights for farmers, traders, processors, and buyers.",
+      "Shrimp.News brings you the latest Vannamei shrimp farmgate prices to help farmers, traders, processors, and buyers stay informed about current market rates. The prices below are based on the market update for 15 July 2026 and are intended for informational purposes.",
     pricesBody:
       "Shrimp prices influence every decision across the shrimp value chain—from stocking and harvesting to procurement and trading. Prices vary based on shrimp count, seasonal harvests, demand, and market conditions.\n\nWhat You'll Find\nFarmgate shrimp prices across major shrimp-producing states in India\nPrice updates by shrimp count and size\nWeekly market trends and analysis\nSeasonal price movements\nHarvest and procurement insights",
 
@@ -310,6 +311,7 @@ const translations = {
 
     heroEyebrow: "భారతదేశానికి ప్రాధాన్యం · ప్రపంచ అవగాహన",
     heroTitleStart: "ప్రపంచ రొయ్యల రంగపు",
+    heroTitleMiddle: "",
     heroTitleHighlight: "స్పందన",
     heroDescription:
       "రొయ్యల పెంపకం, వాణిజ్యం మరియు వినియోగంతో సంబంధం ఉన్న వారికి వార్తలు, ధరలు, మార్కెట్ సమాచారం, సాగు సూచనలు మరియు ఉపయోగకరమైన జ్ఞానం.",
@@ -529,6 +531,7 @@ const translations = {
 
     heroEyebrow: "भारत प्रथम · वैश्विक दृष्टिकोण",
     heroTitleStart: "वैश्विक झींगा बाज़ार की",
+    heroTitleMiddle: "",
     heroTitleHighlight: "धड़कन",
     heroDescription:
       "झींगा उत्पादकों, व्यापारियों और उपभोक्ताओं के लिए समाचार, झींगा कीमतें, बाज़ार जानकारी, पालन संबंधी सुझाव और उपयोगी ज्ञान.",

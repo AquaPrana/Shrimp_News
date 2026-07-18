@@ -30,6 +30,7 @@ export function HeroSection() {
               <span className="block">{t("heroTitleStart")}</span>
 
               <span className="block">
+                {t("heroTitleMiddle") ? `${t("heroTitleMiddle")} ` : null}
                 <span className="text-[#ff5a2f]">
                   {t("heroTitleHighlight")}
                 </span>
