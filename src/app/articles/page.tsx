@@ -37,6 +37,7 @@ function ArticlesContent() {
       eyebrowKey={eyebrowKey}
       titleKey={titleKey}
       descriptionKey={descriptionKey}
+      hideTitleAndDescription={!topic}
     >
       <ArticleGrid topic={topic} />
     </PageShell>

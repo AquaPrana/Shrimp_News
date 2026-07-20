@@ -12,6 +12,7 @@ type PageShellProps = {
   descriptionKey: TranslationKey;
   eyebrowKey?: TranslationKey;
   bodyKey?: TranslationKey;
+  hideTitleAndDescription?: boolean;
   children?: ReactNode;
 };
 
@@ -20,6 +21,7 @@ export function PageShell({
   descriptionKey,
   eyebrowKey,
   bodyKey,
+  hideTitleAndDescription = false,
   children,
 }: PageShellProps) {
   const { t } = useLanguage();
@@ -36,12 +38,16 @@ export function PageShell({
               {t(eyebrowKey)}
             </p>
           ) : null}
-          <h1 className="text-2xl font-extrabold tracking-tight text-[#0B3A6E] sm:text-4xl lg:text-5xl">
-            {t(titleKey)}
-          </h1>
-          <p className="max-w-2xl text-sm leading-7 text-slate-600 sm:text-lg sm:leading-8">
-            {t(descriptionKey)}
-          </p>
+          {!hideTitleAndDescription ? (
+            <>
+              <h1 className="text-2xl font-extrabold tracking-tight text-[#0B3A6E] sm:text-4xl lg:text-5xl">
+                {t(titleKey)}
+              </h1>
+              <p className="max-w-2xl text-sm leading-7 text-slate-600 sm:text-lg sm:leading-8">
+                {t(descriptionKey)}
+              </p>
+            </>
+          ) : null}
         </div>
 
         {children ??

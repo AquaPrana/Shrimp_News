@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+body:has(.admin-root) > header,
+body:has(.admin-root) > footer {
+  display: none;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #0f172a;
