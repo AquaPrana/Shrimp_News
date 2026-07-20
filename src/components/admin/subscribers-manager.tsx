@@ -1,4 +1,39 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-unused-expressions,@next/next/no-html-link-for-pages */
-import{useCallback,useEffect,useState}from"react";import{LANGUAGE_NAMES,type Subscriber}from"@/lib/article-types";
-export function SubscribersManager(){const[items,setItems]=useState<Subscriber[]>([]),[loading,setLoading]=useState(true),[message,setMessage]=useState(""),[filters,setFilters]=useState({q:"",language:"",status:""});const load=useCallback(async()=>{setLoading(true);const p=new URLSearchParams(Object.entries(filters).filter(([,v])=>v)),r=await fetch(`/api/admin/subscribers?${p}`,{cache:"no-store"}),d=await r.json();r.ok?setItems(d.subscribers):setMessage(d.error);setLoading(false)},[filters]);useEffect(()=>{const t=setTimeout(load,200);return()=>clearTimeout(t)},[load]);async function update(s:Subscriber,status:string){const r=await fetch(`/api/admin/subscribers/${s.id}`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({status})}),d=await r.json();setMessage(d.message||d.error);if(r.ok)load()}const set=(k:string,v:string)=>setFilters(f=>({...f,[k]:v}));return<div className="space-y-6"><header className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-700">Audience</p><h1 className="mt-2 text-3xl font-extrabold">Subscribers</h1><p className="mt-2 text-slate-600">{items.length} subscriber{items.length===1?"":"s"} match the filters.</p></div><a href="/api/admin/subscribers/export" className="rounded-xl bg-[#0B4F7A] px-5 py-3 text-sm font-bold text-white">Export CSV</a></header>{message?<div role="status" className="rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm">{message}</div>:null}<section className="grid gap-3 rounded-2xl border bg-white p-4 md:grid-cols-3"><input value={filters.q} onChange={e=>set("q",e.target.value)} placeholder="Search email or name…" className="h-11 rounded-xl border px-3"/><select value={filters.language} onChange={e=>set("language",e.target.value)} className="h-11 rounded-xl border px-3"><option value="">All languages</option>{Object.entries(LANGUAGE_NAMES).map(([v,l])=><option value={v} key={v}>{l}</option>)}</select><select value={filters.status} onChange={e=>set("status",e.target.value)} className="h-11 rounded-xl border px-3"><option value="">All statuses</option><option value="active">Active</option><option value="unsubscribed">Unsubscribed</option></select></section><section className="overflow-x-auto rounded-2xl border bg-white"><table className="min-w-[800px] w-full text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Subscriber</th><th className="px-4 py-3">Language</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Subscribed</th><th className="px-4 py-3">Action</th></tr></thead><tbody className="divide-y">{loading?<tr><td colSpan={5} className="p-10 text-center">Loading subscribers…</td></tr>:items.length?items.map(s=><tr key={s.id}><td className="px-4 py-4"><p className="font-semibold">{s.email}</p><p className="text-xs text-slate-500">{s.name||"Name not provided"}</p></td><td className="px-4">{s.language?LANGUAGE_NAMES[s.language]:"—"}</td><td className="px-4"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${s.status==="active"?"bg-emerald-100 text-emerald-700":"bg-slate-200"}`}>{s.status}</span></td><td className="px-4 text-slate-500">{new Date(s.subscribedAt).toLocaleString()}</td><td className="px-4"><button onClick={()=>update(s,s.status==="active"?"unsubscribed":"active")} className="font-semibold text-orange-600">{s.status==="active"?"Deactivate":"Reactivate"}</button></td></tr>):<tr><td colSpan={5} className="p-10 text-center text-slate-500">No subscribers match these filters.</td></tr>}</tbody></table></section></div>}
+
+/* eslint-disable @next/next/no-html-link-for-pages */
+import { useCallback, useEffect, useState } from "react";
+import type { AdminSubscriber } from "@/lib/article-types";
+
+export function SubscribersManager() {
+  const [items, setItems] = useState<AdminSubscriber[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const params = new URLSearchParams();
+      if (query) params.set("q", query);
+      const response = await fetch(`/api/admin/subscribers?${params}`, { cache: "no-store" });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "Unable to load subscribers.");
+      setItems(body.subscribers);
+    } catch (value) {
+      setItems([]);
+      setError(value instanceof Error ? value.message : "Unable to load subscribers.");
+    } finally {
+      setLoading(false);
+    }
+  }, [query]);
+
+  useEffect(() => { const timer = setTimeout(load, 200); return () => clearTimeout(timer); }, [load]);
+
+  return <div className="space-y-6">
+    <header className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-700">Audience</p><h1 className="mt-2 text-3xl font-extrabold">Subscribers</h1><p className="mt-2 text-slate-600">{items.length} subscriber{items.length === 1 ? "" : "s"} match the filter.</p></div><a href="/api/admin/subscribers/export" className="rounded-xl bg-[#0B4F7A] px-5 py-3 text-sm font-bold text-white">Export CSV</a></header>
+    {error ? <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
+    <section className="rounded-2xl border bg-white p-4"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search email…" aria-label="Search subscribers" className="h-11 w-full rounded-xl border px-3 md:max-w-md" /></section>
+    <section className="overflow-x-auto rounded-2xl border bg-white"><table className="w-full min-w-[600px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Subscriber</th><th className="px-4 py-3">Subscribed</th></tr></thead><tbody className="divide-y">{loading ? <tr><td colSpan={2} className="p-10 text-center">Loading subscribers…</td></tr> : items.length ? items.map((subscriber) => <tr key={subscriber.id}><td className="px-4 py-4 font-semibold">{subscriber.email}</td><td className="px-4 text-slate-500">{new Date(subscriber.createdAt).toLocaleString()}</td></tr>) : <tr><td colSpan={2} className="p-10 text-center text-slate-500">No subscribers match this filter.</td></tr>}</tbody></table></section>
+  </div>;
+}

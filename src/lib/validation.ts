@@ -10,3 +10,62 @@ export function validateArticleInput(raw: Record<string, unknown>) {
  if(value.title.length<5)return{ok:false as const,error:"Title must be at least 5 characters."};if(!value.slug)return{ok:false as const,error:"A valid slug is required."};if(value.excerpt.length<20)return{ok:false as const,error:"Excerpt must be at least 20 characters."};if(value.content.length<50)return{ok:false as const,error:"Article content must be at least 50 characters."};if(!ARTICLE_CATEGORIES.includes(value.category))return{ok:false as const,error:"Choose a valid category."};if(!ARTICLE_LANGUAGES.includes(value.language))return{ok:false as const,error:"Choose a valid language."};if(!ARTICLE_STATUSES.includes(value.status))return{ok:false as const,error:"Choose a valid status."};if(!value.author)return{ok:false as const,error:"Author is required."};if(!value.seoTitle)value.seoTitle=value.title;if(!value.seoDescription)value.seoDescription=value.excerpt;
  return{ok:true as const,value};
 }
+
+export type PrismaArticleInput = {
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string | null;
+  imageUrl: string | null;
+  category: ArticleCategory;
+  language: ArticleLanguage;
+  isPublished: boolean;
+};
+
+export function validatePrismaArticleInput(raw: Record<string, unknown>) {
+  const title = sanitizePlainText(raw.title, 255);
+  const slug = slugify(String(raw.slug || title));
+  const content = sanitizePlainText(raw.content, 500_000);
+  const excerpt = sanitizePlainText(raw.excerpt, 2_000) || null;
+  const category = sanitizePlainText(raw.category, 120) as ArticleCategory;
+  const language = sanitizePlainText(raw.language, 20) as ArticleLanguage;
+
+  if (!title) return { ok: false as const, error: "Title is required." };
+  if (!slug) return { ok: false as const, error: "A valid slug is required." };
+  if (!content) return { ok: false as const, error: "Content is required." };
+  if (!category) return { ok: false as const, error: "Category is required." };
+  if (!language) return { ok: false as const, error: "Language is required." };
+  if (!ARTICLE_CATEGORIES.includes(category)) return { ok: false as const, error: "Choose a valid category." };
+  if (!ARTICLE_LANGUAGES.includes(language)) return { ok: false as const, error: "Choose a valid language." };
+  if (raw.isPublished !== undefined && typeof raw.isPublished !== "boolean") {
+    return { ok: false as const, error: "Published status must be true or false." };
+  }
+
+  let imageUrl: string | null = null;
+  if (typeof raw.imageUrl === "string" && raw.imageUrl.trim()) {
+    const candidate = raw.imageUrl.trim();
+    if (candidate.startsWith("/") && !candidate.startsWith("//") && !candidate.includes("..")) {
+      imageUrl = candidate;
+    } else {
+      try {
+        const url = new URL(candidate);
+        if (!['http:', 'https:'].includes(url.protocol)) throw new Error("Unsupported URL protocol");
+        imageUrl = url.toString();
+      } catch {
+        return { ok: false as const, error: "Image URL must be a valid HTTP or HTTPS URL." };
+      }
+    }
+  }
+
+  const value: PrismaArticleInput = {
+    title,
+    slug,
+    content,
+    excerpt,
+    imageUrl,
+    category,
+    language,
+    isPublished: raw.isPublished === true,
+  };
+  return { ok: true as const, value };
+}

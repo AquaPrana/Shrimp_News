@@ -3,7 +3,6 @@ import "server-only";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SignJWT, jwtVerify } from "jose";
-import { isMysqlIntegrationEnabled } from "@/lib/mysql";
 
 export const ADMIN_COOKIE = "shrimp_admin_session";
 export type AdminSession = {
@@ -46,12 +45,14 @@ const demoSecret = new TextEncoder().encode(
   "shrimp-news-demo-only-session-secret-never-use-in-production",
 );
 
-function productionSecret() {
-  const value = process.env.ADMIN_SESSION_SECRET;
-  if (!value || value.length < 32) {
-    throw new Error("ADMIN_SESSION_SECRET must contain at least 32 characters.");
+function sessionSecret() {
+  const value = process.env.ADMIN_SESSION_SECRET?.trim() || process.env.AUTH_SECRET?.trim();
+  if (value && value.length >= 32) return new TextEncoder().encode(value);
+  if (process.env.NODE_ENV === "production") {
+    console.error("[admin-auth] ADMIN_SESSION_SECRET must contain at least 32 characters.");
+    throw new Error("Admin session secret is not configured.");
   }
-  return new TextEncoder().encode(value);
+  return demoSecret;
 }
 
 export async function createAdminToken(admin: AdminSession) {
@@ -60,7 +61,7 @@ export async function createAdminToken(admin: AdminSession) {
     .setSubject(String(admin.id))
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(isMysqlIntegrationEnabled() ? productionSecret() : demoSecret);
+    .sign(sessionSecret());
 }
 
 export async function readAdminSession(): Promise<AdminSession | null> {
@@ -69,7 +70,7 @@ export async function readAdminSession(): Promise<AdminSession | null> {
   try {
     const { payload } = await jwtVerify(
       token,
-      isMysqlIntegrationEnabled() ? productionSecret() : demoSecret,
+      sessionSecret(),
       { algorithms: ["HS256"] },
     );
     const credentials = getAdminCredentials();

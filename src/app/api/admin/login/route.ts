@@ -14,25 +14,24 @@ export async function POST(request: Request) {
   try {
     const body = await request.json() as { email?: string; password?: string };
     const email = body.email?.trim().toLowerCase() || "";
-    const password = body.password || "";
+    const plainPassword = body.password || "";
     const credentials = getAdminCredentials();
+    if (!credentials) return NextResponse.json({ error: "Unable to sign in right now." }, { status: 500 });
 
-    if (!credentials) {
-      return NextResponse.json({ error: "Unable to sign in right now." }, { status: 500 });
+    const validPassword = isEmail(email) && plainPassword.length <= 200
+      ? await compare(plainPassword, credentials.passwordHash)
+      : false;
+    if (email !== credentials.admin.email || !validPassword) {
+      return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
     }
 
-    const validPassword = isEmail(email) && password.length <= 200
-      ? await compare(password, credentials.passwordHash)
-      : false;
-    const admin = email === credentials.admin.email && validPassword
-      ? credentials.admin
-      : null;
-
-    if (!admin) return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
-    const token = await createAdminToken(admin);
+    const token = await createAdminToken(credentials.admin);
     (await cookies()).set(ADMIN_COOKIE, token, {
-      httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production",
-      path: "/", maxAge: 7 * 24 * 60 * 60,
+      httpOnly: true,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60,
     });
     return NextResponse.json({ message: "Signed in." });
   } catch {

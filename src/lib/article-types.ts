@@ -25,6 +25,26 @@ export type Subscriber = {
   subscribedAt: string;
 };
 
+export type AdminArticle = {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string | null;
+  imageUrl: string | null;
+  category: ArticleCategory;
+  language: ArticleLanguage;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AdminSubscriber = {
+  id: string;
+  email: string;
+  createdAt: string;
+};
+
 export const LANGUAGE_NAMES: Record<ArticleLanguage, string> = {
   en: "English", hi: "Hindi", te: "Telugu",
 };

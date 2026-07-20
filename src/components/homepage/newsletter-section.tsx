@@ -8,8 +8,9 @@ export function NewsletterSection() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const trimmedEmail = email.trim();
@@ -26,10 +27,26 @@ export function NewsletterSection() {
     }
 
     setError("");
-    setMessage(
-      `${t("newsletterSuccessPrefix")} ${trimmedEmail}! ${t("newsletterSuccessSuffix")}`,
-    );
-    setEmail("");
+    setMessage("");
+    setBusy(true);
+    try {
+      const response = await fetch("/api/subscribers", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail }),
+      });
+      const body = await response.json();
+      if (!response.ok) {
+        setError(body.error || "Unable to subscribe right now.");
+        return;
+      }
+      setMessage(`${t("newsletterSuccessPrefix")} ${trimmedEmail}! ${t("newsletterSuccessSuffix")}`);
+      setEmail("");
+    } catch {
+      setError("Unable to subscribe right now.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -71,9 +88,10 @@ export function NewsletterSection() {
                   />
                   <button
                     type="submit"
+                    disabled={busy}
                     className="h-12 rounded-2xl bg-[#FF4F2E] px-6 text-sm font-bold text-white transition hover:bg-[#FF6548] hover:shadow-[0_8px_24px_rgba(255,79,46,0.28)]"
                   >
-                    {t("newsletterSubscribe")}
+                    {busy ? "Subscribing…" : t("newsletterSubscribe")}
                   </button>
                 </div>
                 {error ? (

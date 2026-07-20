@@ -1,61 +1,81 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { verifyAdminApi } from "@/lib/admin-auth";
-import { createDemoArticle, demoStore } from "@/lib/demo-admin-store";
-import { mapArticle, type ArticleRow } from "@/lib/article-repository";
-import { execute, isMysqlIntegrationEnabled, selectRows } from "@/lib/mysql";
-import { validateArticleInput } from "@/lib/validation";
+import { logDatabaseError, prisma, prismaErrorCode } from "@/lib/prisma";
+import { validatePrismaArticleInput } from "@/lib/validation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  if (!await verifyAdminApi(request)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  const url = new URL(request.url);
-  const q = url.searchParams.get("q")?.trim().toLowerCase();
-  const category = url.searchParams.get("category");
-  const language = url.searchParams.get("language");
-  const status = url.searchParams.get("status");
-  const date = url.searchParams.get("date");
-
-  if (!isMysqlIntegrationEnabled()) {
-    const articles = demoStore.articles.filter((article) =>
-      (!q || article.title.toLowerCase().includes(q)) &&
-      (!category || article.category === category) &&
-      (!language || article.language === language) &&
-      (!status || article.status === status) &&
-      (!date || article.publishedAt?.slice(0, 10) === date),
-    ).sort((a, b) => (b.publishedAt || b.createdAt).localeCompare(a.publishedAt || a.createdAt));
-    return NextResponse.json({ articles });
+  if (!await verifyAdminApi(request)) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
   try {
-    const clauses: string[] = [];
-    const values: unknown[] = [];
-    if (q) { clauses.push("title LIKE ?"); values.push(`%${q}%`); }
-    if (category) { clauses.push("category=?"); values.push(category); }
-    if (language) { clauses.push("language=?"); values.push(language); }
-    if (status) { clauses.push("status=?"); values.push(status); }
-    if (date) { clauses.push("DATE(published_at)=?"); values.push(date); }
-    const rows = await selectRows<ArticleRow>(`SELECT * FROM articles ${clauses.length ? `WHERE ${clauses.join(" AND ")}` : ""} ORDER BY COALESCE(published_at,created_at) DESC LIMIT 500`, values);
-    return NextResponse.json({ articles: rows.map(mapArticle) });
-  } catch { return NextResponse.json({ error: "Unable to load articles." }, { status: 500 }); }
+    const url = new URL(request.url);
+    const q = url.searchParams.get("q")?.trim();
+    const category = url.searchParams.get("category")?.trim();
+    const language = url.searchParams.get("language")?.trim();
+    const status = url.searchParams.get("status")?.trim();
+    const date = url.searchParams.get("date")?.trim();
+    const where: Prisma.ArticleWhereInput = {};
+
+    if (category) where.category = category;
+    if (language) where.language = language;
+    if (status === "published") where.isPublished = true;
+    if (status === "draft") where.isPublished = false;
+    if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      const start = new Date(`${date}T00:00:00.000Z`);
+      const end = new Date(start);
+      end.setUTCDate(end.getUTCDate() + 1);
+      where.createdAt = { gte: start, lt: end };
+    }
+
+    const rows = await prisma.article.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+    });
+    const articles = q
+      ? rows.filter((article) => article.title.toLowerCase().includes(q.toLowerCase()))
+      : rows;
+    return NextResponse.json({ articles });
+  } catch (error) {
+    logDatabaseError("articles.list", error);
+    return NextResponse.json({ error: "Failed to load articles." }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
-  if (!await verifyAdminApi(request)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  if (!await verifyAdminApi(request)) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   try {
-    const parsed = validateArticleInput(await request.json());
-    if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
-    const article = parsed.value;
-    if (!isMysqlIntegrationEnabled()) {
-      if (demoStore.articles.some((item) => item.slug === article.slug)) return NextResponse.json({ error: "That slug is already in use." }, { status: 409 });
-      const created = createDemoArticle(article);
-      return NextResponse.json({ id: created.id, message: article.status === "published" ? "Article published." : "Draft saved." }, { status: 201 });
+    const body = await request.json() as Record<string, unknown>;
+    const validated = validatePrismaArticleInput({ ...body, language: "en" });
+    if (!validated.ok) {
+      return NextResponse.json({ error: validated.error }, { status: 400 });
     }
-    const duplicate = await selectRows<ArticleRow>("SELECT id FROM articles WHERE slug=? LIMIT 1", [article.slug]);
-    if (duplicate[0]) return NextResponse.json({ error: "That slug is already in use." }, { status: 409 });
-    const publishedAt = article.status === "published" ? article.publishedAt || new Date().toISOString().slice(0, 19).replace("T", " ") : article.publishedAt;
-    const result = await execute("INSERT INTO articles (title,slug,excerpt,content,featured_image_url,featured_image_alt,category,language,author,status,seo_title,seo_description,source_url,published_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", [article.title, article.slug, article.excerpt, article.content, article.featuredImageUrl, article.featuredImageAlt, article.category, article.language, article.author, article.status, article.seoTitle, article.seoDescription, article.sourceUrl, publishedAt]);
-    return NextResponse.json({ id: result.insertId, message: article.status === "published" ? "Article published." : "Draft saved." }, { status: 201 });
-  } catch { return NextResponse.json({ error: "Unable to save the article." }, { status: 500 }); }
+
+    const duplicate = await prisma.article.findUnique({
+      where: { slug: validated.value.slug },
+      select: { id: true },
+    });
+    if (duplicate) {
+      return NextResponse.json({ error: "An article with this slug already exists." }, { status: 409 });
+    }
+
+    const article = await prisma.article.create({ data: validated.value });
+    return NextResponse.json({ message: "Article created successfully.", article }, { status: 201 });
+  } catch (error) {
+    logDatabaseError("articles.create", error);
+    if (prismaErrorCode(error) === "P2002") {
+      return NextResponse.json({ error: "An article with this slug already exists." }, { status: 409 });
+    }
+    if (error instanceof SyntaxError) {
+      return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Failed to create article." }, { status: 500 });
+  }
 }
