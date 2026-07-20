@@ -1,43 +1,47 @@
 "use client";
 
-import {
-  getArticlesByTopic,
-  getLocalized,
-  launchArticles,
-  TOPIC_LABELS,
-  type Article,
-  type ArticleTopic,
-} from "@/data/articles";
 import { ArticleCard } from "@/components/homepage/article-card";
 import { useLanguage } from "@/context/language-context";
-
-function isArticleTopic(value: string | null): value is ArticleTopic {
-  return (
-    value === "national" ||
-    value === "international" ||
-    value === "domestic-consumption" ||
-    value === "shrimp-farming" ||
-    value === "shrimp-health" ||
-    value === "technology" ||
-    value === "research" ||
-    value === "shrimp-prices" ||
-    value === "markets-industry"
-  );
-}
+import { useArticles } from "@/hooks/use-articles";
+import type { PublicArticle } from "@/lib/article-types";
+import { TOPIC_LABELS, isArticleTopic } from "@/lib/public-articles-shared";
 
 export function ArticleGrid({
   topic,
   articles,
+  initialArticles = [],
 }: {
-  topic?: ArticleTopic | null;
-  articles?: Article[];
+  topic?: string | null;
+  articles?: PublicArticle[];
+  initialArticles?: PublicArticle[];
 }) {
-  const { language, t } = useLanguage();
+  const { t, language } = useLanguage();
+  const shouldFetch = !articles;
+  const { articles: fetched, loading, error } = useArticles({
+    topic: shouldFetch ? topic : undefined,
+    limit: 60,
+  });
   const list =
     articles ??
-    (topic && isArticleTopic(topic)
-      ? getArticlesByTopic(topic)
-      : launchArticles);
+    (language === "en" && initialArticles.length > 0
+      ? initialArticles
+      : fetched);
+
+  if (shouldFetch && loading && list.length === 0) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-[#F7FBFF] p-6 text-slate-600 sm:rounded-[28px] sm:p-8">
+        Loading articles…
+      </div>
+    );
+  }
+
+  if (shouldFetch && error && list.length === 0) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-[#F7FBFF] p-6 text-slate-600 sm:rounded-[28px] sm:p-8">
+        {error}
+      </div>
+    );
+  }
 
   if (list.length === 0) {
     return (
@@ -57,7 +61,7 @@ export function ArticleGrid({
     <div className="space-y-6">
       {showTopicLabel ? (
         <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#ff6a3d]">
-          {getLocalized(TOPIC_LABELS[topic], language)}
+          {TOPIC_LABELS[topic]}
         </p>
       ) : null}
 

@@ -1,27 +1,24 @@
-"use client";
+import { CategoryArticlesView } from "@/components/articles/category-articles-view";
+import { getPublishedArticles } from "@/lib/public-articles";
 
-import { ArticleGrid } from "@/components/articles/article-grid";
-import {
-  PAGE_CONTENT_PANEL_CLASS,
-  PageShell,
-} from "@/components/layout/page-shell";
-import { useLanguage } from "@/context/language-context";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-export default function DomesticConsumptionPage() {
-  const { t } = useLanguage();
+export default async function DomesticConsumptionPage() {
+  const articles = await getPublishedArticles({
+    language: "en",
+    topic: "domestic-consumption",
+    limit: 60,
+  });
 
   return (
-    <PageShell
+    <CategoryArticlesView
       eyebrowKey="domesticEyebrow"
       titleKey="domesticPageTitle"
       descriptionKey="domesticPageDescription"
-    >
-      <div className="space-y-8">
-        <div className={`${PAGE_CONTENT_PANEL_CLASS} whitespace-pre-line`}>
-          {t("domesticBody")}
-        </div>
-        <ArticleGrid topic="domestic-consumption" />
-      </div>
-    </PageShell>
+      bodyKey="domesticBody"
+      topic="domestic-consumption"
+      initialArticles={articles}
+    />
   );
 }

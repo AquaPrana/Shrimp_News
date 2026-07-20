@@ -1,40 +1,40 @@
-"use client";
-
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { ArticleGrid } from "@/components/articles/article-grid";
-import {
-  PAGE_CONTENT_PANEL_CLASS,
-  PageShell,
-} from "@/components/layout/page-shell";
-import { useLanguage } from "@/context/language-context";
+import { CategoryArticlesView } from "@/components/articles/category-articles-view";
+import { getPublishedArticles } from "@/lib/public-articles";
 
-function TechnologyContent() {
-  const { t } = useLanguage();
-  const searchParams = useSearchParams();
-  const topic =
-    searchParams.get("topic") === "research" ? "research" : "technology";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+type PageProps = {
+  searchParams: Promise<{ topic?: string }>;
+};
+
+async function TechnologyArticles({ topic }: { topic: string }) {
+  const articles = await getPublishedArticles({
+    language: "en",
+    topic,
+    limit: 60,
+  });
 
   return (
-    <PageShell
+    <CategoryArticlesView
       eyebrowKey="techEyebrow"
       titleKey="techTitle"
       descriptionKey="techDescription"
-    >
-      <div className="space-y-8">
-        <div className={`${PAGE_CONTENT_PANEL_CLASS} whitespace-pre-line`}>
-          {t("techBody")}
-        </div>
-        <ArticleGrid topic={topic} />
-      </div>
-    </PageShell>
+      bodyKey="techBody"
+      topic={topic}
+      initialArticles={articles}
+    />
   );
 }
 
-export default function TechnologyPage() {
+export default async function TechnologyPage({ searchParams }: PageProps) {
+  const { topic: topicParam } = await searchParams;
+  const topic = topicParam === "research" ? "research" : "technology";
+
   return (
     <Suspense fallback={null}>
-      <TechnologyContent />
+      <TechnologyArticles topic={topic} />
     </Suspense>
   );
 }

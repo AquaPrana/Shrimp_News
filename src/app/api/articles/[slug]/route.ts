@@ -1,2 +1,42 @@
-import{NextResponse}from"next/server";import{mapArticle,type ArticleRow}from"@/lib/article-repository";import{selectRows}from"@/lib/mysql";export const runtime="nodejs";export const dynamic="force-dynamic";
-export async function GET(_request:Request,{params}:{params:Promise<{slug:string}>}){try{const{slug}=await params;const rows=await selectRows<ArticleRow>("SELECT * FROM articles WHERE slug=? AND status='published' AND published_at IS NOT NULL AND published_at<=UTC_TIMESTAMP() LIMIT 1",[slug]);if(!rows[0])return NextResponse.json({error:"Article not found."},{status:404});const article=mapArticle(rows[0]);const related=await selectRows<ArticleRow>("SELECT * FROM articles WHERE id<>? AND status='published' AND language=? AND category=? AND published_at<=UTC_TIMESTAMP() ORDER BY published_at DESC LIMIT 3",[rows[0].id,article.language,article.category]);return NextResponse.json({article,related:related.map(mapArticle)})}catch{return NextResponse.json({error:"Unable to load this article."},{status:500})}}
+import { NextResponse } from "next/server";
+import { ARTICLE_LANGUAGES, type ArticleLanguage } from "@/lib/article-types";
+import { logDatabaseError, prisma } from "@/lib/prisma";
+import { localizedSlug, mapPublicArticle } from "@/lib/public-articles";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  try {
+    const { slug } = await params;
+    const requestedLanguage = new URL(request.url).searchParams.get("language") as ArticleLanguage | null;
+    const language = requestedLanguage && ARTICLE_LANGUAGES.includes(requestedLanguage)
+      ? requestedLanguage
+      : null;
+    const requestedSlug = language ? localizedSlug(slug, language) : slug;
+    const article = await prisma.article.findFirst({
+      where: { slug: requestedSlug, isPublished: true },
+    });
+
+    if (!article) return NextResponse.json({ error: "Article not found." }, { status: 404 });
+
+    const related = await prisma.article.findMany({
+      where: {
+        id: { not: article.id },
+        isPublished: true,
+        language: article.language,
+        category: article.category,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 3,
+    });
+
+    return NextResponse.json({
+      article: mapPublicArticle(article),
+      related: related.map(mapPublicArticle),
+    });
+  } catch (error) {
+    logDatabaseError("public-articles.get", error);
+    return NextResponse.json({ error: "Unable to load this article." }, { status: 500 });
+  }
+}

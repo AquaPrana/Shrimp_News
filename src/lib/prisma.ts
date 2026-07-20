@@ -41,11 +41,21 @@ function createPrismaClient() {
   });
 }
 
-export const prisma = globalForPrisma.shrimpNewsPrisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.shrimpNewsPrisma = prisma;
+function getPrismaClient() {
+  if (!globalForPrisma.shrimpNewsPrisma) {
+    globalForPrisma.shrimpNewsPrisma = createPrismaClient();
+  }
+  return globalForPrisma.shrimpNewsPrisma;
 }
+
+/** Lazy proxy so importing this module during build does not require DB env vars. */
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, property, receiver) {
+    const client = getPrismaClient();
+    const value = Reflect.get(client, property, receiver);
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
 
 function redact(value: string | undefined) {
   if (!value) return value;

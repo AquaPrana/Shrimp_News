@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "postinstall": "prisma generate",
     "admin:create": "tsx scripts/create-admin.ts",
     "db:seed-articles": "tsx scripts/seed-existing-articles.ts",
     "import:articles": "tsx --env-file=.env.local scripts/import-articles.ts"
@@ -15,6 +16,7 @@
     "@prisma/adapter-mariadb": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
     "jose": "^6.2.3",
     "lucide-react": "^1.24.0",
     "mariadb": "^3.5.3",

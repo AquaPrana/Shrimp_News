@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { featuredArticle } from "@/data/articles";
 import { useLanguage } from "@/context/language-context";
+import type { PublicArticle } from "@/lib/article-types";
 
-export function HeroSection() {
+export function HeroSection({ featuredArticle }: { featuredArticle?: PublicArticle }) {
   const { t } = useLanguage();
 
   return (
@@ -51,7 +51,7 @@ export function HeroSection() {
             style={{ animationDelay: "0.42s" }}
           >
             <Link
-              href={`/articles/${featuredArticle.slug}`}
+              href={featuredArticle ? `/articles/${featuredArticle.slug}` : "/articles"}
               className="hero-btn-lift inline-flex items-center justify-center rounded-full border border-cyan-400/40 bg-cyan-500 px-8 py-4 text-base font-semibold text-slate-950 shadow-[0_18px_60px_rgba(255,90,47,0.24)] transition hover:bg-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 focus-visible:ring-offset-2"
             >
               {t("readLatest")}

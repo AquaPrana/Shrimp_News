@@ -1,52 +1,24 @@
-"use client";
+import { CategoryArticlesView } from "@/components/articles/category-articles-view";
+import { getPublishedArticles } from "@/lib/public-articles";
 
-import { ArticleGrid } from "@/components/articles/article-grid";
-import {
-  PAGE_CONTENT_PANEL_CLASS,
-  PageShell,
-} from "@/components/layout/page-shell";
-import { useLanguage, type TranslationKey } from "@/context/language-context";
-import type { ArticleTopic } from "@/data/articles";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-function CategoryArticlesPage({
-  eyebrowKey,
-  titleKey,
-  descriptionKey,
-  bodyKey,
-  topic,
-}: {
-  eyebrowKey: TranslationKey;
-  titleKey: TranslationKey;
-  descriptionKey: TranslationKey;
-  bodyKey: TranslationKey;
-  topic: ArticleTopic;
-}) {
-  const { t } = useLanguage();
+export default async function HealthPage() {
+  const articles = await getPublishedArticles({
+    language: "en",
+    topic: "shrimp-health",
+    limit: 60,
+  });
 
   return (
-    <PageShell
-      eyebrowKey={eyebrowKey}
-      titleKey={titleKey}
-      descriptionKey={descriptionKey}
-    >
-      <div className="space-y-8">
-        <div className={`${PAGE_CONTENT_PANEL_CLASS} whitespace-pre-line`}>
-          {t(bodyKey)}
-        </div>
-        <ArticleGrid topic={topic} />
-      </div>
-    </PageShell>
-  );
-}
-
-export default function HealthPage() {
-  return (
-    <CategoryArticlesPage
+    <CategoryArticlesView
       eyebrowKey="healthEyebrow"
       titleKey="healthTitle"
       descriptionKey="healthDescription"
       bodyKey="healthBody"
       topic="shrimp-health"
+      initialArticles={articles}
     />
   );
 }

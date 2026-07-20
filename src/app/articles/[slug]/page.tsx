@@ -1,49 +1,32 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import {
-  getArticleBySlug,
-  getArticleCover,
-  getArticleTitle,
-  getArticlesByTopic,
-  getLocalized,
-} from "@/data/articles";
-import { getEnglishArticleContent } from "@/data/article-content";
-import { useLanguage } from "@/context/language-context";
+import { notFound } from "next/navigation";
 import { ArticleGrid } from "@/components/articles/article-grid";
 import { PAGE_CONTENT_PANEL_CLASS } from "@/components/layout/page-shell";
+import { readingTime } from "@/lib/article-types";
+import {
+  getPublishedArticleBySlug,
+  getRelatedPublishedArticles,
+} from "@/lib/public-articles";
 
-export default function ArticleDetailPage() {
-  const params = useParams<{ slug: string }>();
-  const { language, t } = useLanguage();
-  const article = getArticleBySlug(params.slug);
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+type PageProps = {
+  params: Promise<{ slug: string }>;
+};
+
+export default async function ArticleDetailPage({ params }: PageProps) {
+  const { slug } = await params;
+  const article = await getPublishedArticleBySlug(slug);
 
   if (!article) {
-    return (
-      <section className="overflow-x-hidden bg-white px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <div className={`mx-auto max-w-3xl ${PAGE_CONTENT_PANEL_CLASS}`}>
-          {t("noArticlesFound")}
-          <div className="mt-6">
-            <Link href="/articles" className="font-semibold text-orange-500">
-              {t("exploreArticles")}
-            </Link>
-          </div>
-        </div>
-      </section>
-    );
+    notFound();
   }
 
-  const cover = getArticleCover(article.slug);
-  const title = getArticleTitle(article, language);
-  const englishContent = language === "en"
-    ? getEnglishArticleContent(article.slug)
-    : undefined;
-  const relatedTopic = article.topics[0];
-  const related = getArticlesByTopic(relatedTopic)
-    .filter((item) => item.slug !== article.slug)
-    .slice(0, 3);
+  const related = await getRelatedPublishedArticles(article, 3);
+  const cover =
+    article.featuredImageUrl || "/images/articles/ArticleImage.jpeg";
 
   return (
     <section className="relative overflow-x-hidden bg-white px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-16">
@@ -51,101 +34,73 @@ export default function ArticleDetailPage() {
       <div className="relative z-10 mx-auto max-w-4xl space-y-6 sm:space-y-8">
         <div className="space-y-3 sm:space-y-4">
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-500 sm:text-sm">
-            {getLocalized(article.category, language)}
+            {article.category}
           </p>
           <h1 className="text-2xl font-extrabold tracking-tight text-[#0B3A6E] sm:text-4xl lg:text-5xl">
-            {title}
+            {article.title}
           </h1>
-          {cover ? (
-            <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[24px] bg-sky-50 shadow-[0_18px_50px_rgba(11,79,122,0.14)] sm:rounded-[30px]">
-              <Image
-                src={cover}
-                alt={title}
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 896px"
-                className="object-cover object-center"
-              />
-            </div>
-          ) : null}
+          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[24px] bg-sky-50 shadow-[0_18px_50px_rgba(11,79,122,0.14)] sm:rounded-[30px]">
+            <Image
+              src={cover}
+              alt={article.featuredImageAlt || article.title}
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 896px"
+              className="object-cover object-center"
+            />
+          </div>
           <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
             <span className="rounded-full border border-orange-400/30 bg-orange-500/10 px-3 py-1 text-xs uppercase tracking-[0.28em] text-[#ff6a3d]">
-              {getLocalized(article.label, language)}
+              Article
             </span>
-            <span>{getLocalized(article.readingTime, language)}</span>
+            <span>{readingTime(article.content)}</span>
           </div>
-          <p className="text-sm leading-7 text-slate-600 sm:text-lg sm:leading-8">
-            {getLocalized(article.excerpt, language)}
-          </p>
+          {article.excerpt ? (
+            <p className="text-sm leading-7 text-slate-600 sm:text-lg sm:leading-8">
+              {article.excerpt}
+            </p>
+          ) : null}
         </div>
 
         <article className={PAGE_CONTENT_PANEL_CLASS}>
           <div className="space-y-5">
-            {englishContent
-              ? englishContent.blocks.map((block, index) => {
-                if (block.type === "heading") {
-                  return (
-                    <h2
-                      key={`${article.slug}-${index}`}
-                      className="pt-2 text-xl font-semibold text-[#0B3A6E] sm:text-2xl"
-                    >
-                      {block.text}
-                    </h2>
-                  );
-                }
+            {article.content.split("\n\n").map((paragraph, index) => {
+              const isHeading =
+                paragraph.length < 90 &&
+                !paragraph.endsWith(".") &&
+                !paragraph.endsWith("?") &&
+                !paragraph.includes("\n");
 
-                if (block.type === "bullets") {
-                  return (
-                    <ul
-                      key={`${article.slug}-${index}`}
-                      className="list-disc space-y-2 pl-6"
-                    >
-                      {block.items.map((item, itemIndex) => (
-                        <li key={`${article.slug}-${index}-${itemIndex}`}>
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  );
-                }
-
+              if (isHeading) {
                 return (
-                  <p key={`${article.slug}-${index}`}>{block.text}</p>
+                  <h2
+                    key={`${article.slug}-${index}`}
+                    className="pt-2 text-xl font-semibold text-[#0B3A6E] sm:text-2xl"
+                  >
+                    {paragraph}
+                  </h2>
                 );
-              })
-              : getLocalized(article.body, language)
-                .split("\n\n")
-                .map((paragraph, index) => {
-                  const isHeading =
-                    paragraph.length < 90 &&
-                    !paragraph.endsWith(".") &&
-                    !paragraph.endsWith("?") &&
-                    !paragraph.includes("\n");
+              }
 
-                  if (isHeading) {
-                    return (
-                      <h2
-                        key={`${article.slug}-${index}`}
-                        className="pt-2 text-xl font-semibold text-[#0B3A6E] sm:text-2xl"
-                      >
-                        {paragraph}
-                      </h2>
-                    );
-                  }
-
-                  return <p key={`${article.slug}-${index}`}>{paragraph}</p>;
-                })}
+              return <p key={`${article.slug}-${index}`}>{paragraph}</p>;
+            })}
           </div>
         </article>
 
         {related.length > 0 ? (
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-[#0B3A6E] sm:text-2xl">
-              {t("relatedArticles")}
+              Related Articles
             </h2>
             <ArticleGrid articles={related} />
           </div>
         ) : null}
+
+        <div>
+          <Link href="/articles" className="font-semibold text-orange-500">
+            ← Explore articles
+          </Link>
+        </div>
       </div>
     </section>
   );

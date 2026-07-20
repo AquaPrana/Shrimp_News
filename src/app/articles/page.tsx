@@ -1,53 +1,24 @@
-"use client";
+import { ArticlesPageClient } from "@/components/articles/articles-page-client";
+import { isArticleTopic } from "@/lib/public-articles-shared";
+import { getPublishedArticles } from "@/lib/public-articles";
 
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
-import { ArticleGrid, isArticleTopic } from "@/components/articles/article-grid";
-import { PageShell } from "@/components/layout/page-shell";
-import type { TranslationKey } from "@/context/language-context";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-function ArticlesContent() {
-  const searchParams = useSearchParams();
-  const topicParam = searchParams.get("topic");
+type PageProps = {
+  searchParams: Promise<{ topic?: string }>;
+};
+
+export default async function ArticlesPage({ searchParams }: PageProps) {
+  const { topic: topicParam } = await searchParams;
   const topic = isArticleTopic(topicParam) ? topicParam : null;
-
-  const eyebrowKey: TranslationKey | undefined =
-    topic === "national"
-      ? "india"
-      : topic === "international"
-        ? "global"
-        : "articlesEyebrow";
-
-  const titleKey: TranslationKey =
-    topic === "national"
-      ? "newsIndiaTitle"
-      : topic === "international"
-        ? "newsGlobalTitle"
-        : "articlesTitle";
-
-  const descriptionKey: TranslationKey =
-    topic === "national"
-      ? "newsIndiaDescription"
-      : topic === "international"
-        ? "newsGlobalDescription"
-        : "articlesDescription";
+  const articles = await getPublishedArticles({
+    language: "en",
+    topic,
+    limit: 60,
+  });
 
   return (
-    <PageShell
-      eyebrowKey={eyebrowKey}
-      titleKey={titleKey}
-      descriptionKey={descriptionKey}
-      hideTitleAndDescription={!topic}
-    >
-      <ArticleGrid topic={topic} />
-    </PageShell>
-  );
-}
-
-export default function ArticlesPage() {
-  return (
-    <Suspense fallback={null}>
-      <ArticlesContent />
-    </Suspense>
+    <ArticlesPageClient topicParam={topic} initialArticles={articles} />
   );
 }

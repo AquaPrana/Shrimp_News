@@ -53,7 +53,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json() as Record<string, unknown>;
-    const validated = validatePrismaArticleInput({ ...body, language: "en" });
+    const validated = validatePrismaArticleInput(body);
     if (!validated.ok) {
       return NextResponse.json({ error: validated.error }, { status: 400 });
     }

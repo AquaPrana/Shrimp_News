@@ -1,27 +1,24 @@
-"use client";
+import { CategoryArticlesView } from "@/components/articles/category-articles-view";
+import { getPublishedArticles } from "@/lib/public-articles";
 
-import { ArticleGrid } from "@/components/articles/article-grid";
-import {
-  PAGE_CONTENT_PANEL_CLASS,
-  PageShell,
-} from "@/components/layout/page-shell";
-import { useLanguage } from "@/context/language-context";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-export default function MarketsIndustryPage() {
-  const { t } = useLanguage();
+export default async function MarketsIndustryPage() {
+  const articles = await getPublishedArticles({
+    language: "en",
+    topic: "markets-industry",
+    limit: 60,
+  });
 
   return (
-    <PageShell
+    <CategoryArticlesView
       eyebrowKey="marketsEyebrow"
       titleKey="marketsPageTitle"
       descriptionKey="marketsPageDescription"
-    >
-      <div className="space-y-8">
-        <div className={`${PAGE_CONTENT_PANEL_CLASS} whitespace-pre-line`}>
-          {t("marketsBody")}
-        </div>
-        <ArticleGrid topic="markets-industry" />
-      </div>
-    </PageShell>
+      bodyKey="marketsBody"
+      topic="markets-industry"
+      initialArticles={articles}
+    />
   );
 }
