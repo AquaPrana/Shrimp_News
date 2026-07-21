@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ARTICLE_CATEGORIES,
@@ -10,7 +10,10 @@ import {
   type ArticleCategory,
   type ArticleLanguage,
 } from "@/lib/article-types";
+import { editorHtmlToPlainText } from "@/lib/article-content";
 import { normalizeArticleImageUrl, slugify } from "@/lib/validation";
+import { ArticleContentBody } from "@/components/articles/article-content-body";
+import { ArticleContentEditor } from "@/components/admin/article-content-editor";
 
 type FormState = {
   title: string;
@@ -36,6 +39,12 @@ const empty: FormState = {
   language: "en",
   isPublished: false,
 };
+
+type UploadStatus = "idle" | "uploading" | "success" | "error";
+
+const ALLOWED_UPLOAD_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const ALLOWED_UPLOAD_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 function resolveFormImageUrl(article?: AdminArticle) {
   if (!article) return "";
@@ -73,12 +82,30 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
   const [preview, setPreview] = useState(false);
   const [previewBroken, setPreviewBroken] = useState(false);
   const [imageError, setImageError] = useState("");
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
+  const [uploadMessage, setUploadMessage] = useState("");
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (localPreviewUrl) URL.revokeObjectURL(localPreviewUrl);
+    };
+  }, [localPreviewUrl]);
 
   useEffect(() => {
     setForm(toFormState(article));
     setSlugEdited(Boolean(article));
     setPreviewBroken(false);
     setImageError("");
+    setUploadStatus("idle");
+    setUploadMessage("");
+    setShowUrlInput(false);
+    setLocalPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- avoid wiping in-progress edits
   }, [article?.id, article?.imageUrl, article?.updatedAt]);
 
@@ -108,6 +135,79 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
     if (normalized.ok) setImageError("");
   }
 
+  function clearLocalPreview() {
+    setLocalPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
+  }
+
+  function removeImage() {
+    updateImageUrl("");
+    clearLocalPreview();
+    setUploadStatus("idle");
+    setUploadMessage("");
+    setPreviewBroken(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function uploadFeaturedImage(file: File) {
+    const lowerName = file.name.toLowerCase();
+    const hasAllowedExtension = ALLOWED_UPLOAD_EXTENSIONS.some((ext) =>
+      lowerName.endsWith(ext),
+    );
+
+    if (!ALLOWED_UPLOAD_TYPES.has(file.type) || !hasAllowedExtension) {
+      setUploadStatus("error");
+      setUploadMessage("Only JPG, JPEG, PNG, and WebP images are allowed.");
+      return;
+    }
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setUploadStatus("error");
+      setUploadMessage("Image must be 5 MB or smaller.");
+      return;
+    }
+
+    clearLocalPreview();
+    setLocalPreviewUrl(URL.createObjectURL(file));
+    setUploadStatus("uploading");
+    setUploadMessage("Uploading...");
+    setPreviewBroken(false);
+    setImageError("");
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const body = await response.json();
+      if (!response.ok) {
+        setUploadStatus("error");
+        setUploadMessage(body.error || "Upload failed.");
+        return;
+      }
+
+      updateImageUrl(typeof body.url === "string" ? body.url : "");
+      setUploadStatus("success");
+      setUploadMessage("Upload successful.");
+      clearLocalPreview();
+    } catch {
+      setUploadStatus("error");
+      setUploadMessage("Upload failed. Please try again.");
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) void uploadFeaturedImage(file);
+  }
+
   function updateTitle(value: string) {
     setForm((current) => ({
       ...current,
@@ -118,6 +218,11 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isUploading) {
+      setIsError(true);
+      setMessage("Please wait for the image upload to finish.");
+      return;
+    }
     setBusy(true);
     setMessage("");
     setIsError(false);
@@ -136,6 +241,13 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
       setImageError(loadError);
       setIsError(true);
       setMessage(loadError);
+      setBusy(false);
+      return;
+    }
+
+    if (editorHtmlToPlainText(form.content).length < 50) {
+      setIsError(true);
+      setMessage("Article content must be at least 50 characters.");
       setBusy(false);
       return;
     }
@@ -182,6 +294,10 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
   const trimmedImageUrl = form.imageUrl.trim();
   const formatOk = !trimmedImageUrl || normalizeArticleImageUrl(trimmedImageUrl).ok;
   const showImagePreview = Boolean(trimmedImageUrl) && formatOk && !previewBroken;
+  const previewSrc = localPreviewUrl || (showImagePreview ? trimmedImageUrl : "");
+  const hasPreview = Boolean(previewSrc);
+  const isUploading = uploadStatus === "uploading";
+  const publishDisabled = busy || isUploading;
 
   return (
     <div className="space-y-6">
@@ -246,37 +362,58 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
             />
           </Field>
           <Field label="Complete article content">
-            <textarea
+            <ArticleContentEditor
               value={form.content}
-              onChange={(event) => setField("content", event.target.value)}
-              required
-              rows={18}
-              className={`${input} h-auto whitespace-pre-wrap py-3 font-mono text-sm`}
+              onChange={(html) => setField("content", html)}
             />
-            <Hint>
-              Plain text is stored safely. Separate paragraphs with blank lines.
-            </Hint>
           </Field>
         </section>
         <aside className="space-y-5">
           <section className="space-y-4 rounded-2xl border bg-white p-5 shadow-sm">
-            <Field label="Featured image URL">
+            <Field label="Featured image">
               <input
-                type="text"
-                inputMode="url"
-                value={form.imageUrl}
-                onChange={(event) => updateImageUrl(event.target.value)}
-                onBlur={() => {
-                  if (form.imageUrl.trim()) validateImageField(form.imageUrl);
-                }}
-                placeholder="/images/articles/example.jpeg"
-                className={`${input}${imageError || previewBroken ? " border-red-400 focus:border-red-500 focus:ring-red-100" : ""}`}
-                aria-invalid={Boolean(imageError || previewBroken)}
+                ref={fileInputRef}
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleFileChange}
               />
-              <Hint>
-                Use a local path (`/images/articles/…`) or a full HTTPS CDN /
-                Hostinger URL. Preview updates immediately.
-              </Hint>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-[#0B4F7A] disabled:opacity-50"
+                >
+                  {hasPreview ? "Replace image" : "Choose image"}
+                </button>
+                {hasPreview ? (
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    disabled={isUploading}
+                    className="h-11 rounded-xl border border-red-200 px-4 text-sm font-bold text-red-600 disabled:opacity-50"
+                  >
+                    Remove
+                  </button>
+                ) : null}
+              </div>
+              <Hint>JPG, JPEG, PNG, or WebP up to 5 MB.</Hint>
+              {uploadMessage ? (
+                <p
+                  role="status"
+                  aria-live="polite"
+                  className={`text-sm ${
+                    uploadStatus === "error"
+                      ? "text-red-600"
+                      : uploadStatus === "success"
+                        ? "text-emerald-600"
+                        : "text-slate-600"
+                  }`}
+                >
+                  {uploadMessage}
+                </p>
+              ) : null}
             </Field>
             {imageError || previewBroken ? (
               <p role="alert" className="text-sm text-red-600">
@@ -284,30 +421,61 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                   "Featured image could not be loaded. Check the URL or local path and try again."}
               </p>
             ) : null}
-            {showImagePreview ? (
+            {hasPreview ? (
               <img
-                key={trimmedImageUrl}
-                src={trimmedImageUrl}
+                key={previewSrc}
+                src={previewSrc}
                 alt="Featured image preview"
                 className="aspect-video w-full rounded-xl object-cover"
                 onLoad={() => {
-                  setPreviewBroken(false);
-                  if (!imageError) setImageError("");
+                  if (!localPreviewUrl) {
+                    setPreviewBroken(false);
+                    if (!imageError) setImageError("");
+                  }
                 }}
                 onError={() => {
-                  setPreviewBroken(true);
-                  setImageError(
-                    "Featured image could not be loaded. Check the URL or local path and try again.",
-                  );
+                  if (!localPreviewUrl) {
+                    setPreviewBroken(true);
+                    setImageError(
+                      "Featured image could not be loaded. Check the URL or local path and try again.",
+                    );
+                  }
                 }}
               />
             ) : (
               <div className="grid aspect-video place-items-center rounded-xl bg-slate-100 px-4 text-center text-sm text-slate-500">
-                {trimmedImageUrl
-                  ? "Waiting for a valid, loadable image…"
-                  : "Image preview"}
+                Image preview
               </div>
             )}
+            <div className="space-y-3 border-t border-slate-100 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowUrlInput((current) => !current)}
+                className="text-sm font-semibold text-cyan-700"
+              >
+                {showUrlInput ? "Hide image URL" : "Use image URL instead"}
+              </button>
+              {showUrlInput ? (
+                <Field label="Featured image URL">
+                  <input
+                    type="text"
+                    inputMode="url"
+                    value={form.imageUrl}
+                    onChange={(event) => updateImageUrl(event.target.value)}
+                    onBlur={() => {
+                      if (form.imageUrl.trim()) validateImageField(form.imageUrl);
+                    }}
+                    placeholder="/images/articles/example.jpeg"
+                    className={`${input}${imageError || previewBroken ? " border-red-400 focus:border-red-500 focus:ring-red-100" : ""}`}
+                    aria-invalid={Boolean(imageError || previewBroken)}
+                  />
+                  <Hint>
+                    Optional fallback. Use a local path (`/images/articles/…`) or a
+                    full HTTPS CDN / Hostinger URL.
+                  </Hint>
+                </Field>
+              ) : null}
+            </div>
           </section>
           <section className="space-y-4 rounded-2xl border bg-white p-5 shadow-sm">
             <Field label="Category">
@@ -363,14 +531,16 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                 Preview
               </button>
               <button
-                disabled={busy}
+                disabled={publishDisabled}
                 className="h-11 rounded-xl bg-[#0B4F7A] font-bold text-white disabled:opacity-50"
               >
-                {busy
-                  ? "Saving…"
-                  : form.isPublished
-                    ? "Publish"
-                    : "Save draft"}
+                {isUploading
+                  ? "Uploading..."
+                  : busy
+                    ? "Saving…"
+                    : form.isPublished
+                      ? "Publish"
+                      : "Save draft"}
               </button>
             </div>
           </section>
@@ -402,10 +572,8 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                 className="mt-7 aspect-video w-full rounded-2xl object-cover"
               />
             ) : null}
-            <div className="mt-8 space-y-5 leading-8">
-              {form.content.split(/\n\n+/).map((paragraph, index) => (
-                <p key={index}>{paragraph}</p>
-              ))}
+            <div className="mt-8">
+              <ArticleContentBody content={form.content} />
             </div>
           </article>
         </div>

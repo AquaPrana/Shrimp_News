@@ -14,17 +14,20 @@ model Admin {
 }
 
 model Article {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  content     String   @db.LongText
-  excerpt     String?
-  imageUrl    String?
-  category    String
-  language    String
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  title              String
+  slug               String   @unique
+  content            String   @db.LongText
+  excerpt            String?
+  imageUrl           String?
+  category           String
+  language           String
+  translationGroupId String?
+  isPublished        Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([translationGroupId])
 }
 
 model Subscriber {

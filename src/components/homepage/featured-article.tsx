@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArticleCoverImage } from "@/components/articles/article-cover-image";
 import { useLanguage } from "@/context/language-context";
 import { readingTime, type PublicArticle } from "@/lib/article-types";
+import { baseSlug } from "@/lib/public-articles-shared";
 
 export function FeaturedArticle({ article }: { article: PublicArticle }) {
   const { t } = useLanguage();
@@ -24,7 +25,7 @@ export function FeaturedArticle({ article }: { article: PublicArticle }) {
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <Link
-            href={`/articles/${article.slug}`}
+            href={`/articles/${baseSlug(article.slug)}`}
             className="inline-flex rounded-full bg-orange-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-[0_0_30px_rgba(249,115,22,0.18)] transition hover:bg-orange-400"
           >
             {t("readFeaturedStory")}

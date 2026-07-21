@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import { verifyAdminApi } from "@/lib/admin-auth";
+import {
+  deleteArticleTranslationGroup,
+  syncArticleTranslations,
+} from "@/lib/article-translations-sync";
+import { baseSlug } from "@/lib/public-articles";
 import { logDatabaseError, prisma, prismaErrorCode } from "@/lib/prisma";
 import { validatePrismaArticleInput } from "@/lib/validation";
 
@@ -37,8 +42,18 @@ export async function PUT(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: validated.error }, { status: 400 });
     }
 
-    const existing = await prisma.article.findUnique({ where: { id }, select: { id: true } });
+    const existing = await prisma.article.findUnique({
+      where: { id },
+      select: { id: true, language: true, translationGroupId: true },
+    });
     if (!existing) return NextResponse.json({ error: "Article not found." }, { status: 404 });
+
+    if (existing.language === "en") {
+      validated.value.language = "en";
+      validated.value.slug = baseSlug(validated.value.slug);
+    } else {
+      validated.value.language = existing.language as typeof validated.value.language;
+    }
 
     const duplicate = await prisma.article.findFirst({
       where: { slug: validated.value.slug, NOT: { id } },
@@ -52,7 +67,16 @@ export async function PUT(request: Request, { params }: RouteContext) {
       where: { id },
       data: validated.value,
     });
-    return NextResponse.json({ message: "Article updated successfully.", article });
+
+    if (existing.language === "en") {
+      await syncArticleTranslations(article.id, validated.value);
+    }
+
+    const saved = await prisma.article.findUnique({ where: { id: article.id } });
+    return NextResponse.json({
+      message: "Article updated successfully.",
+      article: saved ?? article,
+    });
   } catch (error) {
     logDatabaseError("articles.update", error);
     const code = prismaErrorCode(error);
@@ -74,7 +98,17 @@ export async function DELETE(request: Request, { params }: RouteContext) {
 
   try {
     const { id } = await params;
-    await prisma.article.delete({ where: { id } });
+    const existing = await prisma.article.findUnique({
+      where: { id },
+      select: { translationGroupId: true },
+    });
+    if (!existing) return NextResponse.json({ error: "Article not found." }, { status: 404 });
+
+    const deletedGroup = await deleteArticleTranslationGroup(existing.translationGroupId);
+    if (!deletedGroup) {
+      await prisma.article.delete({ where: { id } });
+    }
+
     return NextResponse.json({ message: "Article deleted successfully." });
   } catch (error) {
     logDatabaseError("articles.delete", error);

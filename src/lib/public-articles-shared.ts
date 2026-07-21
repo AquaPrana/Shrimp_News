@@ -27,3 +27,13 @@ export function isArticleTopic(
 ): value is keyof typeof TOPIC_CATEGORIES {
   return Boolean(value && value in TOPIC_CATEGORIES);
 }
+
+export function baseSlug(slug: string) {
+  return slug.replace(/-(hi|te)$/, "");
+}
+
+export function languageFromSlug(slug: string): "en" | "hi" | "te" {
+  if (slug.endsWith("-te")) return "te";
+  if (slug.endsWith("-hi")) return "hi";
+  return "en";
+}

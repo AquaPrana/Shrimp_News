@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/context/language-context";
 import type { PublicArticle } from "@/lib/article-types";
+import { baseSlug } from "@/lib/public-articles-shared";
 
 export function HeroSection({ featuredArticle }: { featuredArticle?: PublicArticle }) {
   const { t } = useLanguage();
@@ -51,7 +52,7 @@ export function HeroSection({ featuredArticle }: { featuredArticle?: PublicArtic
             style={{ animationDelay: "0.42s" }}
           >
             <Link
-              href={featuredArticle ? `/articles/${featuredArticle.slug}` : "/articles"}
+              href={featuredArticle ? `/articles/${baseSlug(featuredArticle.slug)}` : "/articles"}
               className="hero-btn-lift inline-flex items-center justify-center rounded-full border border-cyan-400/40 bg-cyan-500 px-8 py-4 text-base font-semibold text-slate-950 shadow-[0_18px_60px_rgba(255,90,47,0.24)] transition hover:bg-cyan-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 focus-visible:ring-offset-2"
             >
               {t("readLatest")}
@@ -78,7 +79,7 @@ export function HeroSection({ featuredArticle }: { featuredArticle?: PublicArtic
 
               <div className="relative z-10 overflow-hidden rounded-[31px] bg-[#03172d]">
                 <Image
-                  src="/images/Shrimp-Home.png"
+                  src="/images/Shrimp-home.png"
                   alt="Shrimp industry benefits including growth, protein, nutrients, global demand and sustainable aquaculture"
                   width={1200}
                   height={1200}

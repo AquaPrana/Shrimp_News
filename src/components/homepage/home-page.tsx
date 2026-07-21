@@ -10,6 +10,7 @@ import { NewsletterSection } from "@/components/homepage/newsletter-section";
 import { useLanguage } from "@/context/language-context";
 import { useArticles } from "@/hooks/use-articles";
 import { readingTime, type PublicArticle } from "@/lib/article-types";
+import { baseSlug } from "@/lib/public-articles-shared";
 
 export function HomePage({
   initialArticles = [],
@@ -90,7 +91,7 @@ export function HomePage({
 
               <div className="flex flex-wrap items-center gap-4">
                 <Link
-                  href={`/articles/${featuredArticle.slug}`}
+                  href={`/articles/${baseSlug(featuredArticle.slug)}`}
                   className="inline-flex rounded-full bg-orange-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-[0_0_30px_rgba(249,115,22,0.18)] transition hover:-translate-y-0.5 hover:bg-orange-400"
                 >
                   {t("readFeaturedStory")}

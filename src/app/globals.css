@@ -339,3 +339,82 @@ html:is([lang="te"], [lang="hi"]) :is(p, li, blockquote) {
     transform: none;
   }
 }
+
+.article-prose h2,
+.article-editor h2 {
+  margin-top: 2rem;
+  padding-top: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #0b3a6e;
+}
+
+.article-prose h2:first-child,
+.article-editor h2:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+@media (min-width: 640px) {
+  .article-prose h2,
+  .article-editor h2 {
+    font-size: 1.5rem;
+  }
+}
+
+.article-prose h3,
+.article-editor h3 {
+  margin-top: 1.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #0b3a6e;
+}
+
+.article-prose h3:first-child,
+.article-editor h3:first-child {
+  margin-top: 0;
+}
+
+.article-prose p,
+.article-editor p {
+  margin-top: 1rem;
+  line-height: 1.75;
+  color: inherit;
+}
+
+.article-prose p:first-child,
+.article-editor p:first-child {
+  margin-top: 0;
+}
+
+.article-prose ul,
+.article-prose ol,
+.article-editor ul,
+.article-editor ol {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.article-prose li,
+.article-editor li {
+  margin: 0.35rem 0;
+  line-height: 1.7;
+}
+
+.article-prose strong,
+.article-prose b,
+.article-editor strong,
+.article-editor b {
+  font-weight: 700;
+}
+
+.article-prose > * + *,
+.article-editor > * + * {
+  margin-top: 1.25rem;
+}
+
+.article-editor:focus {
+  outline: none;
+}

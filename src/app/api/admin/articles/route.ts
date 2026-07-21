@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { verifyAdminApi } from "@/lib/admin-auth";
+import { syncArticleTranslations } from "@/lib/article-translations-sync";
+import { baseSlug } from "@/lib/public-articles";
 import { logDatabaseError, prisma, prismaErrorCode } from "@/lib/prisma";
 import { validatePrismaArticleInput } from "@/lib/validation";
 
@@ -58,6 +60,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: validated.error }, { status: 400 });
     }
 
+    validated.value.language = "en";
+    validated.value.slug = baseSlug(validated.value.slug);
+
     const duplicate = await prisma.article.findUnique({
       where: { slug: validated.value.slug },
       select: { id: true },
@@ -66,8 +71,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "An article with this slug already exists." }, { status: 409 });
     }
 
-    const article = await prisma.article.create({ data: validated.value });
-    return NextResponse.json({ message: "Article created successfully.", article }, { status: 201 });
+    const article = await prisma.article.create({
+      data: {
+        ...validated.value,
+        translationGroupId: crypto.randomUUID(),
+      },
+    });
+
+    if (validated.value.isPublished) {
+      await syncArticleTranslations(article.id, validated.value);
+    }
+
+    const saved = await prisma.article.findUnique({ where: { id: article.id } });
+    return NextResponse.json(
+      { message: "Article created successfully.", article: saved ?? article },
+      { status: 201 },
+    );
   } catch (error) {
     logDatabaseError("articles.create", error);
     if (prismaErrorCode(error) === "P2002") {

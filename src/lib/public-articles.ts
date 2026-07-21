@@ -6,11 +6,13 @@ import { logDatabaseError, prisma } from "@/lib/prisma";
 import {
   TOPIC_CATEGORIES as SHARED_TOPIC_CATEGORIES,
   TOPIC_LABELS,
+  baseSlug,
   isArticleTopic,
+  languageFromSlug,
 } from "@/lib/public-articles-shared";
 
 export const TOPIC_CATEGORIES = SHARED_TOPIC_CATEGORIES as Record<string, ArticleCategory[]>;
-export { TOPIC_LABELS, isArticleTopic };
+export { TOPIC_LABELS, isArticleTopic, baseSlug, languageFromSlug };
 
 /** Prefer real aquaculture covers over the shared placeholder. */
 const ARTICLE_IMAGE_OVERRIDES: Record<string, string> = {
@@ -60,7 +62,7 @@ export function mapPublicArticle(article: PrismaArticle): PublicArticle {
 }
 
 export function localizedSlug(slug: string, language: ArticleLanguage) {
-  const base = slug.replace(/-(hi|te)$/, "");
+  const base = baseSlug(slug);
   return language === "en" ? base : `${base}-${language}`;
 }
 
@@ -103,14 +105,32 @@ export async function getPublishedArticleBySlug(
   language?: ArticleLanguage | null,
 ): Promise<PublicArticle | null> {
   try {
-    const requestedSlug = language ? localizedSlug(slug, language) : slug;
+    const base = baseSlug(slug);
+    const requestedLanguage = language || "en";
+    const requestedSlug = localizedSlug(base, requestedLanguage);
+
     const article = await prisma.article.findFirst({
       where: { slug: requestedSlug, isPublished: true },
     });
     if (article) return mapPublicArticle(article);
 
-    // Fallback: try the raw slug if a language-specific slug was not found.
-    if (language && requestedSlug !== slug) {
+    if (requestedLanguage !== "en") {
+      const english = await prisma.article.findFirst({
+        where: { slug: base, isPublished: true, language: "en" },
+      });
+      if (english?.translationGroupId) {
+        const sibling = await prisma.article.findFirst({
+          where: {
+            translationGroupId: english.translationGroupId,
+            language: requestedLanguage,
+            isPublished: true,
+          },
+        });
+        if (sibling) return mapPublicArticle(sibling);
+      }
+    }
+
+    if (requestedSlug !== slug) {
       const fallback = await prisma.article.findFirst({
         where: { slug, isPublished: true },
       });

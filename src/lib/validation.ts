@@ -6,6 +6,7 @@ import {
   type ArticleLanguage,
   type ArticleStatus,
 } from "@/lib/article-types";
+import { prepareArticleContentForSave } from "@/lib/article-content";
 
 export function slugify(value: string) {
   return value
@@ -204,14 +205,14 @@ export type PrismaArticleInput = {
 export function validatePrismaArticleInput(raw: Record<string, unknown>) {
   const title = sanitizePlainText(raw.title, 255);
   const slug = slugify(String(raw.slug || title));
-  const content = sanitizePlainText(raw.content, 500_000);
   const excerpt = sanitizePlainText(raw.excerpt, 2_000) || null;
   const category = sanitizePlainText(raw.category, 120) as ArticleCategory;
   const language = sanitizePlainText(raw.language, 20) as ArticleLanguage;
+  const contentResult = prepareArticleContentForSave(raw.content);
 
   if (!title) return { ok: false as const, error: "Title is required." };
   if (!slug) return { ok: false as const, error: "A valid slug is required." };
-  if (!content) return { ok: false as const, error: "Content is required." };
+  if (!contentResult.ok) return contentResult;
   if (!category) return { ok: false as const, error: "Category is required." };
   if (!language) return { ok: false as const, error: "Language is required." };
   if (!ARTICLE_CATEGORIES.includes(category)) {
@@ -230,7 +231,7 @@ export function validatePrismaArticleInput(raw: Record<string, unknown>) {
   const value: PrismaArticleInput = {
     title,
     slug,
-    content,
+    content: contentResult.value,
     excerpt,
     imageUrl: image.value,
     category,
