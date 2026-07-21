@@ -250,7 +250,7 @@ const translations = {
     contactDescription:
       "Editorial, business, and partnership enquiries for Shrimp.News.",
     contactBody:
-      "General Enquiries:\n\nEditorial: editor@shrimp.news\n\nBusiness: sales@shrimp.news\n\nWe welcome editorial ideas, partnerships, advertising inquiries, and story submissions connected to the global shrimp industry.",
+      "General Enquiries\nEditorial: editor@shrimp.news\nBusiness: sales@shrimp.news\n\nWe welcome editorial ideas, partnerships, advertising inquiries, and story submissions connected to the global shrimp industry.",
 
     askPageEyebrow: "Ask Prana",
     askPageTitle: "Ask a focused shrimp intelligence assistant",
@@ -319,8 +319,8 @@ const translations = {
     relatedArticles: "సంబంధిత వ్యాసాలు",
 
     heroEyebrow: "భారతదేశానికి ప్రాధాన్యం · ప్రపంచ అవగాహన",
-    heroTitleStart: "ప్రపంచ రొయ్యల",
-    heroTitleMiddle: "రంగపు",
+    heroTitleStart: "ప్రపంచ రొయ్యల రంగపు",
+    heroTitleMiddle: "",
     heroTitleHighlight: "స్పందన",
     heroDescription:
       "రొయ్యల పెంపకం, వాణిజ్యం మరియు వినియోగంతో సంబంధం ఉన్న వారికి వార్తలు, ధరలు, మార్కెట్ సమాచారం, సాగు సూచనలు మరియు ఉపయోగకరమైన జ్ఞానం.",
@@ -480,8 +480,7 @@ const translations = {
     contactTitle: "మమ్మల్ని సంప్రదించండి",
     contactDescription:
       "ఎడిటోరియల్, వ్యాపారం మరియు భాగస్వామ్య విచారణల కోసం సంప్రదింపు అనుభవం ఇక్కడ నిర్మించబడుతుంది.",
-    contactBody:
-      "సాధారణ విచారణలు:\n\nEditorial: editor@shrimp.news\n\nBusiness: sales@shrimp.news\n\nఎడిటోరియల్ ఆలోచనలు, భాగస్వామ్యాలు, ప్రకటనలు, కథన సూచనలను స్వాగతిస్తాము.",
+    contactBody: "సాధారణ విచారణలు\nEditorial: editor@shrimp.news\nBusiness: sales@shrimp.news\n\nఎడిటోరియల్ ఆలోచనలు, భాగస్వామ్యాలు, ప్రకటనలు, కథన సూచనలను స్వాగతిస్తాము.",
 
     askPageEyebrow: "Ask Pranaని అడగండి",
     askPageTitle: "రొయ్యల సమాచార సహాయకుడిని అడగండి",
@@ -711,8 +710,7 @@ const translations = {
     contactTitle: "हमसे संपर्क करें",
     contactDescription:
       "संपादकीय, व्यवसाय और साझेदारी पूछताछ के लिए संपर्क अनुभव यहाँ बनाया जाएगा.",
-    contactBody:
-      "सामान्य पूछताछ:\n\nEditorial: editor@shrimp.news\n\nBusiness: sales@shrimp.news\n\nहम संपादकीय विचार, साझेदारी, विज्ञापन और कहानी सुझावों का स्वागत करते हैं.",
+    contactBody: "सामान्य पूछताछ\nEditorial: editor@shrimp.news\nBusiness: sales@shrimp.news\n\nहम संपादकीय विचार, साझेदारी, विज्ञापन और कहानी सुझावों का स्वागत करते हैं.",
 
     askPageEyebrow: "Ask Prana से पूछें",
     askPageTitle: "झींगा जानकारी सहायक से पूछें",

@@ -420,6 +420,38 @@ html:is([lang="te"], [lang="hi"]) :is(p, li, blockquote) {
   margin-top: 1.25rem;
 }
 
+/* Tighter, news-style spacing for older seed articles only. */
+.article-prose-legacy > * + * {
+  margin-top: 0.9rem;
+}
+
+.article-prose-legacy p {
+  margin-top: 0;
+}
+
+.article-prose-legacy h2 {
+  margin-top: 1.5rem;
+  padding-top: 0.25rem;
+}
+
+.article-prose-legacy h2:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.article-prose-legacy h3 {
+  margin-top: 1.15rem;
+}
+
+.article-prose-legacy h3:first-child {
+  margin-top: 0;
+}
+
+.article-prose-legacy ul,
+.article-prose-legacy ol {
+  margin: 0.75rem 0;
+}
+
 .article-editor:focus {
   outline: none;
 }

@@ -8,6 +8,7 @@ import { ArticleGrid } from "@/components/articles/article-grid";
 import { PAGE_CONTENT_PANEL_CLASS } from "@/components/layout/page-shell";
 import { useLanguage } from "@/context/language-context";
 import { readingTime, type PublicArticle } from "@/lib/article-types";
+import { isLegacyLaunchArticleSlug } from "@/lib/legacy-articles";
 import { baseSlug } from "@/lib/public-articles-shared";
 
 type ArticleDetailViewProps = {
@@ -101,7 +102,10 @@ export function ArticleDetailView({
         </div>
 
         <article className={PAGE_CONTENT_PANEL_CLASS}>
-          <ArticleContentBody content={article.content} />
+          <ArticleContentBody
+            content={article.content}
+            compactLegacySpacing={isLegacyLaunchArticleSlug(article.slug)}
+          />
         </article>
 
         {related.length > 0 ? (

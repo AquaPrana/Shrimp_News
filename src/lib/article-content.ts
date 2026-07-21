@@ -370,6 +370,17 @@ export function prepareArticleContentForDisplay(content: string) {
   return html;
 }
 
+/**
+ * Display-only cleanup for older seed/launch articles that were stored with
+ * excess blank lines. Does not alter saved content or the admin editor path.
+ */
+export function collapseLegacyArticleWhitespace(html: string) {
+  return html
+    .replace(/<p>(?:\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, "")
+    .replace(/(<br\s*\/?>\s*){2,}/gi, "<br>")
+    .trim();
+}
+
 /** Normalize editor HTML on paste or toolbar actions. */
 export function normalizeEditorHtml(html: string) {
   if (!html.trim()) return "";
