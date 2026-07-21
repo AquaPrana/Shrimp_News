@@ -7,7 +7,8 @@ import type { PublicArticle } from "@/lib/article-types";
 import { baseSlug } from "@/lib/public-articles-shared";
 
 export function HeroSection({ featuredArticle }: { featuredArticle?: PublicArticle }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isTeluguHero = language === "te";
 
   return (
     <section className="relative overflow-hidden bg-white px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-10 lg:px-8 lg:pb-24 lg:pt-12">
@@ -25,7 +26,11 @@ export function HeroSection({ featuredArticle }: { featuredArticle?: PublicArtic
 
           <div className="space-y-8">
             <h1
-              className="hero-fade-in max-w-[780px] text-[34px] font-black leading-[0.95] tracking-[-0.045em] text-[#0B3A6E] sm:text-[52px] sm:leading-[0.92] sm:tracking-[-0.055em] lg:text-[72px] xl:text-[80px]"
+              className={`hero-fade-in font-black tracking-[-0.045em] text-[#0B3A6E] sm:tracking-[-0.055em] ${
+                isTeluguHero
+                  ? "max-w-[20ch] text-[30px] leading-[1.12] sm:max-w-[18ch] sm:text-[44px] sm:leading-[1.1] lg:text-[56px] xl:text-[62px]"
+                  : "max-w-[780px] text-[34px] leading-[0.95] sm:text-[52px] sm:leading-[0.92] lg:text-[72px] xl:text-[80px]"
+              }`}
               style={{ animationDelay: "0.15s" }}
             >
               <span className="block">{t("heroTitleStart")}</span>
@@ -69,7 +74,7 @@ export function HeroSection({ featuredArticle }: { featuredArticle?: PublicArtic
 
         {/* Right Image */}
         <div className="relative flex items-center justify-center lg:justify-end">
-          <div className="hero-glow-pulse absolute h-[75%] w-[75%] rounded-full bg-cyan-200/25 blur-[45px]" />
+          <div className="hero-glow-pulse absolute h-[75%] w-[75%] rounded-full bg-[#2563EB]/25 blur-[45px]" />
 
           <div className="hero-image-reveal">
             <div className="hero-image-float relative rounded-[34px] p-[3px]">
@@ -79,7 +84,7 @@ export function HeroSection({ featuredArticle }: { featuredArticle?: PublicArtic
 
               <div className="relative z-10 overflow-hidden rounded-[31px] bg-[#03172d]">
                 <Image
-                  src="/images/Shrimp-Home.png"
+                  src="/images/Shrimp-Home2.png"
                   alt="Shrimp industry benefits including growth, protein, nutrients, global demand and sustainable aquaculture"
                   width={1200}
                   height={1200}
@@ -134,20 +139,21 @@ export function HeroSection({ featuredArticle }: { featuredArticle?: PublicArtic
         .animated-image-border {
           background: linear-gradient(
             120deg,
-            #00c7e8,
+            #2563eb,
             #0b3a6e,
-            #ff5a2f,
-            #00c7e8
+            #3b82f6,
+            #2563eb
           );
           background-size: 300% 300%;
           animation: animatedBorder 8s linear infinite;
+          box-shadow: 0 0 35px rgba(37, 99, 235, 0.35);
         }
 
         .image-border-glow {
           background: linear-gradient(
             120deg,
-            rgba(0, 199, 232, 0.55),
-            rgba(255, 90, 47, 0.5),
+            rgba(37, 99, 235, 0.55),
+            rgba(59, 130, 246, 0.45),
             rgba(11, 58, 110, 0.55)
           );
           background-size: 300% 300%;
@@ -179,20 +185,20 @@ export function HeroSection({ featuredArticle }: { featuredArticle?: PublicArtic
         .corner-light-one {
           left: -2px;
           top: 40px;
-          background: rgba(0, 217, 255, 0.85);
+          background: rgba(37, 99, 235, 0.85);
           box-shadow:
-            0 0 8px rgba(0, 217, 255, 0.6),
-            0 0 16px rgba(0, 217, 255, 0.35);
+            0 0 8px rgba(37, 99, 235, 0.6),
+            0 0 16px rgba(37, 99, 235, 0.35);
         }
 
         .corner-light-two {
           right: -2px;
           bottom: 40px;
           animation-delay: 1.5s;
-          background: rgba(255, 90, 47, 0.85);
+          background: rgba(59, 130, 246, 0.85);
           box-shadow:
-            0 0 8px rgba(255, 90, 47, 0.6),
-            0 0 16px rgba(255, 90, 47, 0.35);
+            0 0 8px rgba(59, 130, 246, 0.6),
+            0 0 16px rgba(59, 130, 246, 0.35);
         }
 
         @keyframes heroFadeInUp {

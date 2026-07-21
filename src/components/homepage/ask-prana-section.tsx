@@ -9,7 +9,7 @@ type ChatResponse = {
   error?: string;
 };
 
-export function AskAquaGPTSection() {
+export function AskPranaSection() {
   const { t, language } = useLanguage();
 
   const [question, setQuestion] = useState("");

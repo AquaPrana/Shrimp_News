@@ -15,7 +15,7 @@ export const mainNav: NavItem[] = [
   { label: "About Us", href: "/about" },
   { label: "Founder’s Message", href: "/founder" },
   { label: "Contact Us", href: "/contact" },
-  { label: "Ask AquaPrana", href: "/ask-aquaprana" },
+  { label: "Ask Prana", href: "/ask-aquaprana" },
 ];
 
 export const footerLinks = [

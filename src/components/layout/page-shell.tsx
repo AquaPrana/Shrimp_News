@@ -52,8 +52,16 @@ export function PageShell({
 
         {children ??
           (bodyKey ? (
-            <div className={`${PAGE_CONTENT_PANEL_CLASS} whitespace-pre-line`}>
-              {t(bodyKey)}
+            <div className={PAGE_CONTENT_PANEL_CLASS}>
+              {t(bodyKey)
+                .split(/\n{2,}/)
+                .map((paragraph) => paragraph.trim())
+                .filter(Boolean)
+                .map((paragraph, index) => (
+                  <p key={index} className="mb-4 last:mb-0">
+                    {paragraph}
+                  </p>
+                ))}
             </div>
           ) : null)}
       </div>

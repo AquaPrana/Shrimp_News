@@ -227,7 +227,7 @@ export function SiteFooter() {
 
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-3 text-sm">
               <Link
-                href="/privacy"
+                href="/privacy-policy"
                 className="text-white/85 transition hover:text-cyan-300"
               >
                 {t("privacyPolicy")}

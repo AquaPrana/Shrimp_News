@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useLanguage, type Language } from "@/context/language-context";
 import { useMarketPrices } from "@/hooks/use-market-prices";
+import type { MarketPriceItem } from "@/lib/market-data/client";
 import {
   getLocalizedMarketLabel,
   getLocalizedMarketUnit,
@@ -82,12 +83,61 @@ function formatLastUpdated(iso: string | null | undefined, language: Language) {
   });
 }
 
+function TickerItemRow({
+  item,
+  language,
+  copy,
+  isStale,
+}: {
+  item: MarketPriceItem;
+  language: Language;
+  copy: (typeof marketTickerCopy)[Language];
+  isStale: boolean;
+}) {
+  const changeLabel = formatChange(item.changePercent, item.direction);
+
+  return (
+    <div
+      className="flex h-full shrink-0 items-center gap-2 border-r border-white/25 px-4 text-[11px] sm:px-5 sm:text-xs lg:px-6"
+      role="listitem"
+    >
+      <span className="ticker-localized-text font-semibold text-white">
+        {getLocalizedMarketLabel(item.symbol, item.label, language)}
+      </span>
+
+      <span className="ticker-localized-text font-extrabold text-white">
+        {formatPrice(item.price, item.currency, item.unit, language)}
+      </span>
+
+      <span
+        className="font-semibold text-[#0f172a]"
+        aria-label={`${copy.directions[item.direction]} ${copy.change}`}
+      >
+        {changeLabel ?? "—"}
+      </span>
+
+      {item.isLive && (
+        <span className="rounded-full border border-white/40 bg-white/20 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.12em] text-white">
+          {copy.live}
+        </span>
+      )}
+
+      {isStale && (
+        <span className="rounded-full border border-white/35 bg-black/15 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.12em] text-white">
+          {copy.delayed}
+        </span>
+      )}
+    </div>
+  );
+}
+
 export function MarketTicker() {
   const { language } = useLanguage();
   const copy = marketTickerCopy[language];
   const { data, isLoading, error, isStale, lastUpdated, refetch } =
     useMarketPrices();
 
+  // One unique logical set — never flatten a duplicated array into the data.
   const tickerItems = useMemo(() => {
     const seen = new Set<string>();
     return data.filter((item) => {
@@ -96,15 +146,6 @@ export function MarketTicker() {
       return true;
     });
   }, [data]);
-
-  // Exactly two copies of the unique set for seamless CSS infinite scroll.
-  const duplicatedItems = useMemo(
-    () =>
-      tickerItems.length === 0
-        ? []
-        : [...tickerItems, ...tickerItems],
-    [tickerItems],
-  );
 
   const loadingItems = useMemo(() => Array.from({ length: 8 }), []);
 
@@ -146,57 +187,35 @@ export function MarketTicker() {
                 </div>
               ))}
 
-            {tickerItems.length > 0 &&
-              duplicatedItems.map((item, index) => {
-                const changeLabel = formatChange(
-                  item.changePercent,
-                  item.direction,
-                );
-
-                return (
-                  <div
-                    key={`${item.symbol}-${index}`}
-                    className="flex h-full shrink-0 items-center gap-2 border-r border-white/25 px-4 text-[11px] sm:px-5 sm:text-xs lg:px-6"
-                    role="listitem"
-                  >
-                    <span className="ticker-localized-text font-semibold text-white">
-                      {getLocalizedMarketLabel(
-                        item.symbol,
-                        item.label,
-                        language,
-                      )}
-                    </span>
-
-                    <span className="ticker-localized-text font-extrabold text-white">
-                      {formatPrice(
-                        item.price,
-                        item.currency,
-                        item.unit,
-                        language,
-                      )}
-                    </span>
-
-                    <span
-                      className="font-semibold text-[#0f172a]"
-                      aria-label={`${copy.directions[item.direction]} ${copy.change}`}
-                    >
-                      {changeLabel ?? "—"}
-                    </span>
-
-                    {item.isLive && (
-                      <span className="rounded-full border border-white/40 bg-white/20 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.12em] text-white">
-                        {copy.live}
-                      </span>
-                    )}
-
-                    {isStale && (
-                      <span className="rounded-full border border-white/35 bg-black/15 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.12em] text-white">
-                        {copy.delayed}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
+            {tickerItems.length > 0 ? (
+              <>
+                {/* Primary unique set — one of each market item. */}
+                {tickerItems.map((item) => (
+                  <TickerItemRow
+                    key={item.symbol}
+                    item={item}
+                    language={language}
+                    copy={copy}
+                    isStale={isStale}
+                  />
+                ))}
+                {/*
+                  Seamless CSS loop clone only (translateX -50%).
+                  Hidden from assistive tech so prices are announced once.
+                */}
+                <div className="flex h-full" aria-hidden="true">
+                  {tickerItems.map((item) => (
+                    <TickerItemRow
+                      key={`loop-${item.symbol}`}
+                      item={item}
+                      language={language}
+                      copy={copy}
+                      isStale={isStale}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : null}
 
             {!isLoading && tickerItems.length === 0 && (
               <div className="flex h-full shrink-0 items-center gap-2 px-4 text-xs text-white">

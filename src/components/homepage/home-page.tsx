@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AskAquaGPTSection } from "@/components/homepage/ask-aqua-gpt-section";
+import { AskPranaSection } from "@/components/homepage/ask-prana-section";
 import { HeroSection } from "@/components/homepage/hero-section";
 import { MarketTicker } from "@/components/homepage/market-ticker";
 import { ArticleCard } from "@/components/homepage/article-card";
@@ -31,14 +31,6 @@ export function HomePage({
   const homeArticles = articles
     .filter((article) => article.slug !== featuredArticle?.slug)
     .slice(0, 12);
-
-  const farmingArticles = articles
-    .filter(
-      (article) =>
-        article.category === "Shrimp Farming" ||
-        article.category === "Shrimp Health",
-    )
-    .slice(0, 3);
 
   if (!featuredArticle) {
     return (
@@ -142,73 +134,6 @@ export function HomePage({
               ))}
             </div>
           </div>
-
-          <div className="grid gap-5 lg:grid-cols-2">
-            <div className="market-floating-card rounded-[24px] border border-cyan-300/20 bg-[#0B4F7A] p-8 shadow-[0_24px_70px_rgba(11,79,122,0.22)] transition duration-300 hover:-translate-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-orange-300">
-                {t("domesticConsumption")}
-              </p>
-              <h3 className="mt-4 text-2xl font-semibold text-white">
-                {t("domesticTitle")}
-              </h3>
-              <p className="mt-4 text-sm leading-7 text-cyan-50/85">
-                {t("domesticDescription")}
-              </p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <span className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-cyan-50">
-                  {t("whyConsumptionLags")}
-                </span>
-                <span className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-cyan-50">
-                  {t("healthNutritionStories")}
-                </span>
-              </div>
-            </div>
-
-            <div className="market-floating-card rounded-[24px] border border-cyan-300/20 bg-[#0B4F7A] p-8 shadow-[0_24px_70px_rgba(11,79,122,0.22)] transition duration-300 hover:-translate-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-orange-300">
-                {t("marketsLabel")}
-              </p>
-              <h3 className="mt-4 text-2xl font-semibold text-white">
-                {t("marketsTitle")}
-              </h3>
-              <p className="mt-4 text-sm leading-7 text-cyan-50/85">
-                {t("marketsDescription")}
-              </p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <span className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-cyan-50">
-                  {t("farmgatePriceDrivers")}
-                </span>
-                <span className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-cyan-50">
-                  {t("exportVsDomestic")}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="relative overflow-hidden bg-white px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(255,122,61,0.08),transparent_40%)]" />
-        <div
-          className="home-reveal relative z-10 mx-auto max-w-[1340px] space-y-8"
-          style={{ animationDelay: "0.18s" }}
-        >
-          <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-500">
-              {t("farmingHealthLabel")}
-            </p>
-            <h2 className="max-w-3xl text-3xl font-extrabold tracking-tight text-[#0B3A6E] sm:text-4xl">
-              {t("farmingTitle")}
-            </h2>
-            <p className="max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
-              {t("farmingDescription")}
-            </p>
-          </div>
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {farmingArticles.map((article) => (
-              <ArticleCard key={`farm-${article.slug}`} article={article} />
-            ))}
-          </div>
         </div>
       </section>
 
@@ -220,7 +145,7 @@ export function HomePage({
           className="home-reveal mx-auto max-w-[1340px]"
           style={{ animationDelay: "0.22s" }}
         >
-          <AskAquaGPTSection />
+          <AskPranaSection />
         </div>
       </section>
 

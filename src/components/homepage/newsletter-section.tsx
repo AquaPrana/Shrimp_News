@@ -12,6 +12,7 @@ export function NewsletterSection() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (busy) return;
 
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
@@ -95,7 +96,7 @@ export function NewsletterSection() {
                     disabled={busy}
                     className="h-12 rounded-2xl bg-[#FF4F2E] px-6 text-sm font-bold text-white transition hover:bg-[#FF6548] hover:shadow-[0_8px_24px_rgba(255,79,46,0.28)] disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {busy ? "Subscribing…" : t("newsletterSubscribe")}
+                    {busy ? "Subscribing..." : t("newsletterSubscribe")}
                   </button>
                 </div>
                 {error ? (

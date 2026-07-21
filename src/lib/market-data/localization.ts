@@ -1,6 +1,16 @@
 import type { Language } from "@/context/language-context";
 
 const marketLabels: Record<string, Record<Language, string>> = {
+  VAN_C20: {
+    en: "Vannamei C20",
+    te: "వనామీ C20",
+    hi: "वन्नामी C20",
+  },
+  VAN_C30: {
+    en: "Vannamei C30",
+    te: "వనామీ C30",
+    hi: "वन्नामी C30",
+  },
   VAN_C40: {
     en: "Vannamei C40",
     te: "వనామీ C40",
@@ -10,11 +20,6 @@ const marketLabels: Record<string, Record<Language, string>> = {
     en: "Vannamei C50",
     te: "వనామీ C50",
     hi: "वन्नामी C50",
-  },
-  VAN_C30: {
-    en: "Vannamei C30",
-    te: "వనామీ C30",
-    hi: "वन्नामी C30",
   },
   BLACK_TIGER_C30: {
     en: "Black Tiger C30",

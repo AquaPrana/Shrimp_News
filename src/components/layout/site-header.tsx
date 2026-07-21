@@ -61,7 +61,7 @@ export function SiteHeader() {
         <button
           type="button"
           onClick={openAskPrana}
-          aria-label={t("askAquaGPTButton")}
+          aria-label={t("askPranaButton")}
           className="group ml-3 hidden h-12 w-[320px] shrink-0 items-center gap-2.5 rounded-full border border-[#CBD5E1] bg-white px-2.5 text-left shadow-[0_4px_14px_rgba(15,23,42,0.05)] transition duration-300 hover:border-[#3F475A] hover:shadow-[0_7px_20px_rgba(63,71,90,0.15)] xl:ml-6 xl:flex 2xl:w-[360px]"
         >
           <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] p-1">
@@ -75,7 +75,7 @@ export function SiteHeader() {
           </span>
 
           <span className="min-w-0 flex-1 truncate text-sm text-[#64748B] transition group-hover:text-[#1E3A5F]">
-            {t("askAquaGPTShort")}
+            {t("askPranaShort")}
           </span>
 
           <span className="shrink-0 rounded-full bg-[#3F475A] px-4 py-2 text-sm font-semibold text-white transition duration-300 group-hover:bg-[#2E3444]">
@@ -124,7 +124,7 @@ export function SiteHeader() {
         <button
           type="button"
           onClick={openAskPrana}
-          aria-label={t("askAquaGPTButton")}
+          aria-label={t("askPranaButton")}
           className="group mx-auto flex w-full max-w-3xl min-w-0 items-center gap-2.5 rounded-full border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-left shadow-[0_3px_12px_rgba(15,23,42,0.05)] transition duration-300 hover:border-[#3F475A] hover:shadow-[0_5px_16px_rgba(63,71,90,0.12)]"
         >
           <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] p-1">
@@ -138,7 +138,7 @@ export function SiteHeader() {
           </span>
 
           <span className="min-w-0 flex-1 truncate text-sm text-[#64748B] transition group-hover:text-[#1E3A5F]">
-            {t("askAquaGPTShort")}
+            {t("askPranaShort")}
           </span>
 
           <span className="shrink-0 rounded-full bg-[#3F475A] px-4 py-2 text-sm font-semibold text-white transition duration-300 group-hover:bg-[#2E3444]">

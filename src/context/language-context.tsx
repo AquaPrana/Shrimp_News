@@ -68,9 +68,9 @@ const translations = {
     aboutUs: "About Us",
     foundersMessage: "Founder's Message",
     contactUs: "Contact Us",
-    askAquaGPT: "Ask Prana about shrimp farming",
-    askAquaGPTShort: "Ask Prana...",
-    askAquaGPTButton: "Ask Prana",
+    askPrana: "Ask Prana about shrimp farming",
+    askPranaShort: "Ask Prana...",
+    askPranaButton: "Ask Prana",
     ask: "Ask",
     toggleNavigation: "Toggle navigation",
     noArticlesFound: "No articles found for this topic yet.",
@@ -152,7 +152,7 @@ const translations = {
     newsletterSubscribe: "Subscribe free",
     newsletterEmptyError: "Please enter your email address.",
     newsletterInvalidError: "Please enter a valid email address.",
-    newsletterSuccessPrefix: "Thank you for subscribing to the Shrimp Brief!",
+    newsletterSuccessPrefix: "Thank you for subscribing to the Shrimp Brief.",
     newsletterSuccessSuffix: "",
 
     footerTagline:
@@ -250,32 +250,39 @@ const translations = {
     contactDescription:
       "Editorial, business, and partnership enquiries for Shrimp.News.",
     contactBody:
-      "General Enquiries\nEditorial: editor@shrimp.news\nBusiness: sales@shrimp.news\n\nWe welcome editorial ideas, partnerships, advertising inquiries, and story submissions connected to the global shrimp industry.",
+      "General Enquiries:\n\nEditorial: editor@shrimp.news\n\nBusiness: sales@shrimp.news\n\nWe welcome editorial ideas, partnerships, advertising inquiries, and story submissions connected to the global shrimp industry.",
 
-    askPageEyebrow: "Ask AquaPrana",
+    askPageEyebrow: "Ask Prana",
     askPageTitle: "Ask a focused shrimp intelligence assistant",
     askPageDescription:
       "This experience is being prepared to support shrimp farming, pricing, health, and editorial questions within a safe scope.",
     askPageBody:
-      "The AquaPrana experience will be implemented once the content and interaction model are finalized.",
+      "The Ask Prana experience will be implemented once the content and interaction model are finalized.",
 
     privacyEyebrow: "Privacy Policy",
-    privacyTitle: "Privacy policy",
+    privacyTitle: "Privacy Policy",
     privacyDescription:
-      "This page will host the platform's privacy information once reviewed and finalized.",
-    privacyBody: "Placeholder policy content.",
+      "How Shrimp.News collects, uses, and protects your personal information.",
+    privacyBody:
+      "Shrimp.News respects your privacy and is committed to protecting your personal information.\n\nInformation collected through our website, including contact forms, newsletter subscriptions, cookies, and user interactions, is used solely to improve our services, communicate with our audience, and enhance user experience.\n\nWe do not sell, rent, or share personal information with third parties except where required by law or necessary to operate our services.\n\nBy accessing and using Shrimp.News, you consent to the collection and use of information in accordance with this Privacy Policy.\n\nThis Privacy Policy may be updated periodically without prior notice.",
 
-    termsEyebrow: "Terms and Conditions",
-    termsTitle: "Terms of use",
+    termsEyebrow: "Terms & Conditions",
+    termsTitle: "Terms & Conditions",
     termsDescription:
-      "Platform terms will be documented here as the project matures.",
-    termsBody: "Placeholder terms content.",
+      "The rules that apply when you access and use Shrimp.News.",
+    termsBody:
+      "By accessing and using Shrimp.News, you agree to comply with these Terms and Conditions.\n\nAll content published on Shrimp.News, including articles, images, graphics, videos, reports, and other materials, is protected by applicable intellectual property laws.\n\nContent may be shared for personal and non-commercial purposes with appropriate attribution. Reproduction, modification, or commercial use without prior written permission is prohibited.\n\nThe information published on Shrimp.News is intended for educational, informational, and industry awareness purposes.\n\nShrimp.News reserves the right to modify website content, services, and these Terms & Conditions at any time without prior notice.\n\nContinued use of the website constitutes acceptance of the latest version of these Terms.",
 
     disclaimerEyebrow: "Disclaimer",
     disclaimerTitle: "Disclaimer",
     disclaimerDescription:
-      "This page will contain important product, market, and editorial limitations.",
-    disclaimerBody: "Placeholder disclaimer content.",
+      "Important limitations about the information published on Shrimp.News.",
+    disclaimerBody:
+      "The information available on Shrimp.News is provided for educational, informational, and industry awareness purposes only.\n\nWhile every effort is made to ensure the accuracy and reliability of published content, Shrimp.News does not guarantee that all information is complete, current, or free from errors.\n\nArticles covering shrimp farming, disease management, water quality, nutrition, markets, pricing, technology, exports, and policy should not be considered professional veterinary, financial, legal, investment, or regulatory advice.\n\nReaders are encouraged to consult qualified professionals before making farming, business, financial, or management decisions.\n\nShrimp.News, its publishers, editors, and contributors shall not be held responsible for any direct or indirect loss arising from the use of information published on this website.",
+
+    askPranaHelpTitle: "How can Ask Prana help?",
+    askPranaHelpDescription:
+      "Ask about farming, pond health, feed, water quality, disease or shrimp markets.",
 
     language: "Language",
     english: "English",
@@ -303,17 +310,17 @@ const translations = {
     aboutUs: "మా గురించి",
     foundersMessage: "వ్యవస్థాపకుల సందేశం",
     contactUs: "సంప్రదించండి",
-    askAquaGPT: "రొయ్యల సాగు గురించి Ask Pranaని అడగండి",
-    askAquaGPTShort: "Ask Pranaని అడగండి...",
-    askAquaGPTButton: "Ask Prana",
+    askPrana: "రొయ్యల సాగు గురించి Ask Pranaని అడగండి",
+    askPranaShort: "Ask Pranaని అడగండి...",
+    askPranaButton: "Ask Prana",
     ask: "అడగండి",
     toggleNavigation: "నావిగేషన్ టోగుల్",
     noArticlesFound: "ఈ అంశానికి ఇంకా వ్యాసాలు లేవు.",
     relatedArticles: "సంబంధిత వ్యాసాలు",
 
     heroEyebrow: "భారతదేశానికి ప్రాధాన్యం · ప్రపంచ అవగాహన",
-    heroTitleStart: "ప్రపంచ రొయ్యల రంగపు",
-    heroTitleMiddle: "",
+    heroTitleStart: "ప్రపంచ రొయ్యల",
+    heroTitleMiddle: "రంగపు",
     heroTitleHighlight: "స్పందన",
     heroDescription:
       "రొయ్యల పెంపకం, వాణిజ్యం మరియు వినియోగంతో సంబంధం ఉన్న వారికి వార్తలు, ధరలు, మార్కెట్ సమాచారం, సాగు సూచనలు మరియు ఉపయోగకరమైన జ్ఞానం.",
@@ -387,7 +394,7 @@ const translations = {
     newsletterSubscribe: "ఉచితంగా సబ్‌స్క్రైబ్ చేయండి",
     newsletterEmptyError: "దయచేసి మీ ఇమెయిల్ చిరునామాను నమోదు చేయండి.",
     newsletterInvalidError: "దయచేసి సరైన ఇమెయిల్ చిరునామాను నమోదు చేయండి.",
-    newsletterSuccessPrefix: "Thank you for subscribing to the Shrimp Brief!",
+    newsletterSuccessPrefix: "Thank you for subscribing to the Shrimp Brief.",
     newsletterSuccessSuffix: "",
 
     footerTagline:
@@ -473,31 +480,40 @@ const translations = {
     contactTitle: "మమ్మల్ని సంప్రదించండి",
     contactDescription:
       "ఎడిటోరియల్, వ్యాపారం మరియు భాగస్వామ్య విచారణల కోసం సంప్రదింపు అనుభవం ఇక్కడ నిర్మించబడుతుంది.",
-    contactBody: "సాధారణ విచారణలు\nEditorial: editor@shrimp.news\nBusiness: sales@shrimp.news\n\nఎడిటోరియల్ ఆలోచనలు, భాగస్వామ్యాలు, ప్రకటనలు, కథన సూచనలను స్వాగతిస్తాము.",
+    contactBody:
+      "సాధారణ విచారణలు:\n\nEditorial: editor@shrimp.news\n\nBusiness: sales@shrimp.news\n\nఎడిటోరియల్ ఆలోచనలు, భాగస్వామ్యాలు, ప్రకటనలు, కథన సూచనలను స్వాగతిస్తాము.",
 
-    askPageEyebrow: "AquaPranaని అడగండి",
+    askPageEyebrow: "Ask Pranaని అడగండి",
     askPageTitle: "రొయ్యల సమాచార సహాయకుడిని అడగండి",
     askPageDescription:
       "రొయ్యల సాగు, ధరలు, ఆరోగ్యం మరియు ఎడిటోరియల్ ప్రశ్నలకు మద్దతు ఇవ్వడానికి ఈ అనుభవం సిద్ధం చేయబడుతోంది.",
     askPageBody:
-      "కంటెంట్ మరియు ఇంటరాక్షన్ మోడల్ ఖరారైన తర్వాత AquaPrana అనుభవం అమలు చేయబడుతుంది.",
+      "కంటెంట్ మరియు ఇంటరాక్షన్ మోడల్ ఖరారైన తర్వాత Ask Prana అనుభవం అమలు చేయబడుతుంది.",
 
     privacyEyebrow: "గోప్యతా విధానం",
     privacyTitle: "గోప్యతా విధానం",
     privacyDescription:
-      "సమీక్షించి ఖరారు చేసిన తర్వాత ఈ పేజీ ప్లాట్‌ఫామ్ గోప్యతా సమాచారాన్ని హోస్ట్ చేస్తుంది.",
-    privacyBody: "ప్లేస్‌హోల్డర్ విధాన కంటెంట్.",
+      "Shrimp.News మీ వ్యక్తిగత సమాచారాన్ని ఎలా సేకరిస్తుంది, ఉపయోగిస్తుంది మరియు రక్షిస్తుంది.",
+    privacyBody:
+      "Shrimp.News respects your privacy and is committed to protecting your personal information.\n\nInformation collected through our website, including contact forms, newsletter subscriptions, cookies, and user interactions, is used solely to improve our services, communicate with our audience, and enhance user experience.\n\nWe do not sell, rent, or share personal information with third parties except where required by law or necessary to operate our services.\n\nBy accessing and using Shrimp.News, you consent to the collection and use of information in accordance with this Privacy Policy.\n\nThis Privacy Policy may be updated periodically without prior notice.",
 
     termsEyebrow: "నిబంధనలు మరియు షరతులు",
-    termsTitle: "వినియోగ నిబంధనలు",
-    termsDescription: "ప్రాజెక్ట్ పరిణతి చెందుతున్న కొద్దీ ప్లాట్‌ఫామ్ నిబంధనలు ఇక్కడ నమోదు చేయబడతాయి.",
-    termsBody: "ప్లేస్‌హోల్డర్ నిబంధనల కంటెంట్.",
+    termsTitle: "నిబంధనలు మరియు షరతులు",
+    termsDescription:
+      "Shrimp.Newsను ఉపయోగించేటప్పుడు వర్తించే నియమాలు.",
+    termsBody:
+      "By accessing and using Shrimp.News, you agree to comply with these Terms and Conditions.\n\nAll content published on Shrimp.News, including articles, images, graphics, videos, reports, and other materials, is protected by applicable intellectual property laws.\n\nContent may be shared for personal and non-commercial purposes with appropriate attribution. Reproduction, modification, or commercial use without prior written permission is prohibited.\n\nThe information published on Shrimp.News is intended for educational, informational, and industry awareness purposes.\n\nShrimp.News reserves the right to modify website content, services, and these Terms & Conditions at any time without prior notice.\n\nContinued use of the website constitutes acceptance of the latest version of these Terms.",
 
     disclaimerEyebrow: "డిస్‌క్లైమర్",
     disclaimerTitle: "డిస్‌క్లైమర్",
     disclaimerDescription:
-      "ఈ పేజీలో ముఖ్యమైన ఉత్పత్తి, మార్కెట్ మరియు ఎడిటోరియల్ పరిమితులు ఉంటాయి.",
-    disclaimerBody: "ప్లేస్‌హోల్డర్ డిస్‌క్లైమర్ కంటెంట్.",
+      "Shrimp.Newsలో ప్రచురించిన సమాచారం గురించి ముఖ్యమైన పరిమితులు.",
+    disclaimerBody:
+      "The information available on Shrimp.News is provided for educational, informational, and industry awareness purposes only.\n\nWhile every effort is made to ensure the accuracy and reliability of published content, Shrimp.News does not guarantee that all information is complete, current, or free from errors.\n\nArticles covering shrimp farming, disease management, water quality, nutrition, markets, pricing, technology, exports, and policy should not be considered professional veterinary, financial, legal, investment, or regulatory advice.\n\nReaders are encouraged to consult qualified professionals before making farming, business, financial, or management decisions.\n\nShrimp.News, its publishers, editors, and contributors shall not be held responsible for any direct or indirect loss arising from the use of information published on this website.",
+
+    askPranaHelpTitle: "Ask Prana ఎలా సహాయం చేయగలదు?",
+    askPranaHelpDescription:
+      "సాగు, చెరువు ఆరోగ్యం, మేత, నీటి నాణ్యత, వ్యాధి లేదా రొయ్యల మార్కెట్ల గురించి అడగండి.",
 
     language: "భాష",
     english: "ఇంగ్లీష్",
@@ -525,9 +541,9 @@ const translations = {
     aboutUs: "हमारे बारे में",
     foundersMessage: "संस्थापक का संदेश",
     contactUs: "संपर्क करें",
-    askAquaGPT: "झींगा पालन के बारे में Ask Prana से पूछें",
-    askAquaGPTShort: "Ask Prana से पूछें...",
-    askAquaGPTButton: "Ask Prana",
+    askPrana: "झींगा पालन के बारे में Ask Prana से पूछें",
+    askPranaShort: "Ask Prana से पूछें...",
+    askPranaButton: "Ask Prana",
     ask: "पूछें",
     toggleNavigation: "नेविगेशन टॉगल करें",
     noArticlesFound: "इस विषय के लिए अभी कोई लेख नहीं मिला.",
@@ -609,7 +625,7 @@ const translations = {
     newsletterSubscribe: "मुफ़्त सदस्यता लें",
     newsletterEmptyError: "कृपया अपना ईमेल पता दर्ज करें.",
     newsletterInvalidError: "कृपया एक मान्य ईमेल पता दर्ज करें.",
-    newsletterSuccessPrefix: "Thank you for subscribing to the Shrimp Brief!",
+    newsletterSuccessPrefix: "Thank you for subscribing to the Shrimp Brief.",
     newsletterSuccessSuffix: "",
 
     footerTagline:
@@ -695,31 +711,40 @@ const translations = {
     contactTitle: "हमसे संपर्क करें",
     contactDescription:
       "संपादकीय, व्यवसाय और साझेदारी पूछताछ के लिए संपर्क अनुभव यहाँ बनाया जाएगा.",
-    contactBody: "सामान्य पूछताछ\nEditorial: editor@shrimp.news\nBusiness: sales@shrimp.news\n\nहम संपादकीय विचार, साझेदारी, विज्ञापन और कहानी सुझावों का स्वागत करते हैं.",
+    contactBody:
+      "सामान्य पूछताछ:\n\nEditorial: editor@shrimp.news\n\nBusiness: sales@shrimp.news\n\nहम संपादकीय विचार, साझेदारी, विज्ञापन और कहानी सुझावों का स्वागत करते हैं.",
 
-    askPageEyebrow: "AquaPrana से पूछें",
+    askPageEyebrow: "Ask Prana से पूछें",
     askPageTitle: "झींगा जानकारी सहायक से पूछें",
     askPageDescription:
       "झींगा पालन, कीमतों, स्वास्थ्य और संपादकीय प्रश्नों का समर्थन करने के लिए यह अनुभव तैयार किया जा रहा है.",
     askPageBody:
-      "सामग्री और इंटरैक्शन मॉडल तय होने के बाद AquaPrana अनुभव लागू किया जाएगा.",
+      "सामग्री और इंटरैक्शन मॉडल तय होने के बाद Ask Prana अनुभव लागू किया जाएगा.",
 
     privacyEyebrow: "गोपनीयता नीति",
     privacyTitle: "गोपनीयता नीति",
     privacyDescription:
-      "समीक्षा और अंतिम रूप के बाद यह पेज प्लेटफ़ॉर्म की गोपनीयता जानकारी होस्ट करेगा.",
-    privacyBody: "प्लेसहोल्डर नीति सामग्री.",
+      "Shrimp.News आपकी व्यक्तिगत जानकारी कैसे एकत्र करता है, उपयोग करता है और सुरक्षित रखता है.",
+    privacyBody:
+      "Shrimp.News respects your privacy and is committed to protecting your personal information.\n\nInformation collected through our website, including contact forms, newsletter subscriptions, cookies, and user interactions, is used solely to improve our services, communicate with our audience, and enhance user experience.\n\nWe do not sell, rent, or share personal information with third parties except where required by law or necessary to operate our services.\n\nBy accessing and using Shrimp.News, you consent to the collection and use of information in accordance with this Privacy Policy.\n\nThis Privacy Policy may be updated periodically without prior notice.",
 
     termsEyebrow: "नियम और शर्तें",
-    termsTitle: "उपयोग की शर्तें",
-    termsDescription: "प्रोजेक्ट परिपक्व होने के साथ प्लेटफ़ॉर्म नियम यहाँ दर्ज किए जाएँगे.",
-    termsBody: "प्लेसहोल्डर नियम सामग्री.",
+    termsTitle: "नियम और शर्तें",
+    termsDescription:
+      "Shrimp.News का उपयोग करते समय लागू होने वाले नियम.",
+    termsBody:
+      "By accessing and using Shrimp.News, you agree to comply with these Terms and Conditions.\n\nAll content published on Shrimp.News, including articles, images, graphics, videos, reports, and other materials, is protected by applicable intellectual property laws.\n\nContent may be shared for personal and non-commercial purposes with appropriate attribution. Reproduction, modification, or commercial use without prior written permission is prohibited.\n\nThe information published on Shrimp.News is intended for educational, informational, and industry awareness purposes.\n\nShrimp.News reserves the right to modify website content, services, and these Terms & Conditions at any time without prior notice.\n\nContinued use of the website constitutes acceptance of the latest version of these Terms.",
 
     disclaimerEyebrow: "अस्वीकरण",
     disclaimerTitle: "अस्वीकरण",
     disclaimerDescription:
-      "इस पेज में महत्वपूर्ण उत्पाद, बाज़ार और संपादकीय सीमाएँ होंगी.",
-    disclaimerBody: "प्लेसहोल्डर अस्वीकरण सामग्री.",
+      "Shrimp.News पर प्रकाशित जानकारी से जुड़ी महत्वपूर्ण सीमाएँ.",
+    disclaimerBody:
+      "The information available on Shrimp.News is provided for educational, informational, and industry awareness purposes only.\n\nWhile every effort is made to ensure the accuracy and reliability of published content, Shrimp.News does not guarantee that all information is complete, current, or free from errors.\n\nArticles covering shrimp farming, disease management, water quality, nutrition, markets, pricing, technology, exports, and policy should not be considered professional veterinary, financial, legal, investment, or regulatory advice.\n\nReaders are encouraged to consult qualified professionals before making farming, business, financial, or management decisions.\n\nShrimp.News, its publishers, editors, and contributors shall not be held responsible for any direct or indirect loss arising from the use of information published on this website.",
+
+    askPranaHelpTitle: "Ask Prana कैसे मदद कर सकता है?",
+    askPranaHelpDescription:
+      "पालन, तालाब स्वास्थ्य, फ़ीड, जल गुणवत्ता, रोग या झींगा बाज़ारों के बारे में पूछें.",
 
     language: "भाषा",
     english: "अंग्रेज़ी",

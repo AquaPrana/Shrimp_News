@@ -181,7 +181,7 @@ export function MobileNav({
         <div className="mt-5">
           <Link href="/ask-aquaprana" className="block" onClick={onClose}>
             <Button variant="primary" size="lg" fullWidth>
-              {t("askAquaGPTButton")}
+              {t("askPranaButton")}
             </Button>
           </Link>
         </div>

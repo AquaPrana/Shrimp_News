@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/context/language-context";
 
 type ChatMessage = {
   id: string;
@@ -41,8 +42,9 @@ function detectLanguage(text: string) {
   return "English";
 }
 
-export default function AskAquaPranaPage() {
+export default function AskPranaPage() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -211,11 +213,10 @@ ${prompt}`
             <div className="flex flex-1 items-center justify-center text-center">
               <div>
                 <p className="text-xl font-semibold text-[#0B3A6E]">
-                  How can Ask Prana help?
+                  {t("askPranaHelpTitle")}
                 </p>
                 <p className="mt-2 text-sm text-slate-500">
-                  Ask about farming, pond health, feed, water
-                  quality, disease or shrimp markets.
+                  {t("askPranaHelpDescription")}
                 </p>
               </div>
             </div>
