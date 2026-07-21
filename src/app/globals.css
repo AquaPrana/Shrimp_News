@@ -389,6 +389,11 @@ html:is([lang="te"], [lang="hi"]) :is(p, li, blockquote) {
   margin-top: 0;
 }
 
+.article-prose p:has(br:only-child),
+.article-editor p:has(br:only-child) {
+  min-height: 1rem;
+}
+
 .article-prose ul,
 .article-prose ol,
 .article-editor ul,

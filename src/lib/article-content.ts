@@ -1,6 +1,7 @@
 import DOMPurify from "isomorphic-dompurify";
 
 const ALLOWED_TAGS = [
+  "a",
   "p",
   "h2",
   "h3",
@@ -14,7 +15,7 @@ const ALLOWED_TAGS = [
   "br",
 ];
 
-const ALLOWED_ATTR: string[] = [];
+const ALLOWED_ATTR = ["href", "target", "rel"];
 
 const HEADING_MAX_LENGTH = 120;
 const BULLET_PATTERN = /^[\s]*(?:[•\-\*·▪◦‣–—]|\d+[.)])\s+(.+)$/;
@@ -81,6 +82,10 @@ function wrapParagraph(text: string) {
   if (!trimmed) return "";
   if (isHtmlArticleContent(trimmed)) return trimmed;
   return `<p>${escapeHtml(trimmed)}</p>`;
+}
+
+function wrapEmptyParagraph() {
+  return "<p><br></p>";
 }
 
 function wrapHeading(text: string, level: "h2" | "h3" = "h2") {
@@ -159,10 +164,17 @@ export function plainTextToArticleHtml(value: string) {
   const normalized = normalizePlainTextNewlines(value);
   if (!normalized) return "";
 
-  const blocks = normalized.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
-  const html = blocks.length
-    ? blocks.map(plainBlockToHtml).join("")
-    : plainBlockToHtml(normalized);
+  const chunks = normalized.split(/(\n{2,})/);
+  const html = chunks
+    .map((chunk) => {
+      if (!chunk) return "";
+      if (/^\n{2,}$/.test(chunk)) {
+        const blankCount = Math.max(1, chunk.length - 1);
+        return Array.from({ length: blankCount }, () => wrapEmptyParagraph()).join("");
+      }
+      return plainBlockToHtml(chunk);
+    })
+    .join("");
 
   return sanitizeArticleHtml(normalizeBlockHtml(html));
 }
@@ -177,9 +189,7 @@ export function cleanWordHtml(html: string) {
     .replace(/\sstyle="[^"]*"/gi, "")
     .replace(/<font[^>]*>([\s\S]*?)<\/font>/gi, "$1")
     .replace(/<span[^>]*>([\s\S]*?)<\/span>/gi, "$1")
-    .replace(/<a[^>]*>([\s\S]*?)<\/a>/gi, "$1")
     .replace(/<li[^>]*>\s*<p[^>]*>([\s\S]*?)<\/p>\s*<\/li>/gi, "<li>$1</li>")
-    .replace(/<p[^>]*>\s*<\/p>/gi, "")
     .replace(/<h1([^>]*)>/gi, "<h2$1>")
     .replace(/<\/h1>/gi, "</h2>")
     .replace(/<h[4-6]([^>]*)>/gi, "<h3$1>")
@@ -195,15 +205,12 @@ function convertDivsToParagraphs(html: string) {
 
 function splitParagraphsOnBreaks(html: string) {
   return html.replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, (match, inner: string) => {
-    const segments = inner
-      .split(/<br\s*\/?>/gi)
-      .map((segment) => segment.trim())
-      .filter(Boolean);
+    const segments = inner.split(/<br\s*\/?>/gi).map((segment) => segment.trim());
 
     if (segments.length <= 1) return match;
 
     return segments
-      .map((segment) => `<p>${segment}</p>`)
+      .map((segment) => (segment ? `<p>${segment}</p>` : wrapEmptyParagraph()))
       .join("");
   });
 }
@@ -292,8 +299,10 @@ export function sanitizeArticleHtml(html: string) {
     ALLOWED_TAGS,
     ALLOWED_ATTR,
     KEEP_CONTENT: true,
+    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|\/|#)/i,
   })
-    .replace(/<p>\s*<\/p>/g, "")
+    .replace(/<a\b[^>]*href="(?!https?:|mailto:|tel:|\/|#)[^"]*"[^>]*>([\s\S]*?)<\/a>/gi, "$1")
+    .replace(/<p>\s*<\/p>/g, "<p><br></p>")
     .replace(/(<br\s*\/?>\s*){3,}/gi, "<br><br>")
     .trim();
 
