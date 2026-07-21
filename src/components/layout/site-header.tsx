@@ -29,7 +29,7 @@ export function SiteHeader() {
     };
   }, []);
 
-  function openAquaGPT() {
+  function openAskPrana() {
     setOpen(false);
     router.push("/ask-aquaprana");
   }
@@ -60,14 +60,14 @@ export function SiteHeader() {
 
         <button
           type="button"
-          onClick={openAquaGPT}
+          onClick={openAskPrana}
           aria-label={t("askAquaGPTButton")}
           className="group ml-3 hidden h-12 w-[320px] shrink-0 items-center gap-2.5 rounded-full border border-[#CBD5E1] bg-white px-2.5 text-left shadow-[0_4px_14px_rgba(15,23,42,0.05)] transition duration-300 hover:border-[#3F475A] hover:shadow-[0_7px_20px_rgba(63,71,90,0.15)] xl:ml-6 xl:flex 2xl:w-[360px]"
         >
           <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] p-1">
             <Image
               src="/images/aquagpt-logo.png"
-              alt="AquaGPT"
+              alt="Ask Prana"
               width={30}
               height={30}
               className="h-7 w-7 object-contain"
@@ -123,14 +123,14 @@ export function SiteHeader() {
       <div className="border-t border-[#E5E7EB] bg-white px-3 py-2 sm:px-6 xl:hidden">
         <button
           type="button"
-          onClick={openAquaGPT}
+          onClick={openAskPrana}
           aria-label={t("askAquaGPTButton")}
           className="group mx-auto flex w-full max-w-3xl min-w-0 items-center gap-2.5 rounded-full border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-left shadow-[0_3px_12px_rgba(15,23,42,0.05)] transition duration-300 hover:border-[#3F475A] hover:shadow-[0_5px_16px_rgba(63,71,90,0.12)]"
         >
           <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] p-1">
             <Image
               src="/images/aquagpt-logo.png"
-              alt="AquaGPT"
+              alt="Ask Prana"
               width={30}
               height={30}
               className="h-7 w-7 object-contain"

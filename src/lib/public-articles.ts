@@ -12,6 +12,12 @@ import {
 export const TOPIC_CATEGORIES = SHARED_TOPIC_CATEGORIES as Record<string, ArticleCategory[]>;
 export { TOPIC_LABELS, isArticleTopic };
 
+/** Prefer real aquaculture covers over the shared placeholder. */
+const ARTICLE_IMAGE_OVERRIDES: Record<string, string> = {
+  "andhra-pradesh-seeks-centres-support-to-protect-aquaculture-sector-amid-rising-shrimp-feed-costs":
+    "/images/articles/andrapradesh-aqua-culture.jpeg",
+};
+
 const CATEGORY_TOPICS = Object.entries(TOPIC_CATEGORIES).reduce<Record<string, string[]>>(
   (result, [topic, categories]) => {
     for (const category of categories) (result[category] ??= []).push(topic);
@@ -20,15 +26,24 @@ const CATEGORY_TOPICS = Object.entries(TOPIC_CATEGORIES).reduce<Record<string, s
   {},
 );
 
+function resolvePublicImageUrl(slug: string, imageUrl: string | null) {
+  // Prefer the value saved in the database for daily publishing.
+  if (imageUrl?.trim() && !imageUrl.includes("ArticleImage.jpeg")) {
+    return imageUrl.trim();
+  }
+  return ARTICLE_IMAGE_OVERRIDES[slug] ?? imageUrl;
+}
+
 export function mapPublicArticle(article: PrismaArticle): PublicArticle {
   const createdAt = article.createdAt.toISOString();
+  const featuredImageUrl = resolvePublicImageUrl(article.slug, article.imageUrl);
   return {
     id: article.id,
     title: article.title,
     slug: article.slug,
     excerpt: article.excerpt || "",
     content: article.content,
-    featuredImageUrl: article.imageUrl,
+    featuredImageUrl,
     featuredImageAlt: article.title,
     category: article.category as ArticleCategory,
     language: article.language as ArticleLanguage,

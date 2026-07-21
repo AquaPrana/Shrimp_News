@@ -68,9 +68,9 @@ const translations = {
     aboutUs: "About Us",
     foundersMessage: "Founder's Message",
     contactUs: "Contact Us",
-    askAquaGPT: "Ask AquaGPT about shrimp farming",
-    askAquaGPTShort: "Ask AquaGPT...",
-    askAquaGPTButton: "Ask AquaGPT",
+    askAquaGPT: "Ask Prana about shrimp farming",
+    askAquaGPTShort: "Ask Prana...",
+    askAquaGPTButton: "Ask Prana",
     ask: "Ask",
     toggleNavigation: "Toggle navigation",
     noArticlesFound: "No articles found for this topic yet.",
@@ -129,15 +129,15 @@ const translations = {
     readArticle: "Read article →",
     imagePlaceholder: "Image placeholder",
 
-    aquaGptEyebrow: "Ask AquaGPT",
+    aquaGptEyebrow: "Ask Prana",
     aquaGptTitle: "Aquaculture-only AI assistant",
     aquaGptDescription:
-      "Ask about shrimp farming, water quality, prices, markets, health, and technology. This mock assistant helps you explore trusted insights while keeping the scope focused on aquaculture.",
+      "Ask about shrimp farming, water quality, prices, markets, health, and technology. This assistant helps you explore trusted insights while keeping the scope focused on aquaculture.",
     aquaGptOnline: "Online",
     aquaGptPlaceholder: "e.g. What drives shrimp prices in India?",
     aquaGptEmpty: "Please enter a shrimp-related question to get started.",
     aquaGptMockPrefix:
-      'AquaGPT suggests reading related shrimp articles and checking industry best practices. This is a mock response for:',
+      "Ask Prana suggests reading related shrimp articles and checking industry best practices. This is a mock response for:",
     aquaPrompt1: "What affects shrimp farmgate prices?",
     aquaPrompt2: "How to prevent shrimp disease in ponds?",
     aquaPrompt3: "Best shrimp feed practices for India",
@@ -146,12 +146,14 @@ const translations = {
     newsletterTitle: "The Shrimp Brief",
     newsletterDescription:
       "Prices, disease alerts, policy updates and market intelligence — delivered every Monday. Free forever.",
+    newsletterMondayNote:
+      "You'll receive the Shrimp Brief every Monday — free forever.",
     newsletterEmailLabel: "Email address",
     newsletterSubscribe: "Subscribe free",
     newsletterEmptyError: "Please enter your email address.",
     newsletterInvalidError: "Please enter a valid email address.",
-    newsletterSuccessPrefix: "Thanks,",
-    newsletterSuccessSuffix: "You're on the list.",
+    newsletterSuccessPrefix: "Thank you for subscribing to the Shrimp Brief!",
+    newsletterSuccessSuffix: "",
 
     footerTagline:
       "Shrimp News delivers market prices, farming intelligence, disease updates, technology insights and industry news for the global shrimp ecosystem.",
@@ -301,9 +303,9 @@ const translations = {
     aboutUs: "మా గురించి",
     foundersMessage: "వ్యవస్థాపకుల సందేశం",
     contactUs: "సంప్రదించండి",
-    askAquaGPT: "రొయ్యల సాగు గురించి AquaGPTని అడగండి",
-    askAquaGPTShort: "AquaGPTని అడగండి...",
-    askAquaGPTButton: "AquaGPTని అడగండి",
+    askAquaGPT: "రొయ్యల సాగు గురించి Ask Pranaని అడగండి",
+    askAquaGPTShort: "Ask Pranaని అడగండి...",
+    askAquaGPTButton: "Ask Prana",
     ask: "అడగండి",
     toggleNavigation: "నావిగేషన్ టోగుల్",
     noArticlesFound: "ఈ అంశానికి ఇంకా వ్యాసాలు లేవు.",
@@ -362,7 +364,7 @@ const translations = {
     readArticle: "వ్యాసం చదవండి →",
     imagePlaceholder: "చిత్రం స్థానం",
 
-    aquaGptEyebrow: "AquaGPTని అడగండి",
+    aquaGptEyebrow: "Ask Prana",
     aquaGptTitle: "ఆక్వాకల్చర్-మాత్రమే AI సహాయకుడు",
     aquaGptDescription:
       "రొయ్యల సాగు, నీటి నాణ్యత, ధరలు, మార్కెట్లు, ఆరోగ్యం మరియు సాంకేతికత గురించి అడగండి. ఈ మాక్ సహాయకుడు ఆక్వాకల్చర్ పరిధిలో నమ్మకమైన అంతర్దృష్టులను అందిస్తుంది.",
@@ -370,7 +372,7 @@ const translations = {
     aquaGptPlaceholder: "ఉదా. భారత్‌లో రొయ్యల ధరలను ఏమి నిర్ణయిస్తుంది?",
     aquaGptEmpty: "ప్రారంభించడానికి రొయ్యలకు సంబంధించిన ప్రశ్నను నమోదు చేయండి.",
     aquaGptMockPrefix:
-      "AquaGPT సంబంధిత వ్యాసాలు చదవమని మరియు పరిశ్రమ ఉత్తమ పద్ధతులను చూడమని సూచిస్తుంది. ఇది మాక్ ప్రతిస్పందన:",
+      "Ask Prana సంబంధిత వ్యాసాలు చదవమని మరియు పరిశ్రమ ఉత్తమ పద్ధతులను చూడమని సూచిస్తుంది. ఇది మాక్ ప్రతిస్పందన:",
     aquaPrompt1: "రొయ్యల ఫారమ్‌గేట్ ధరలను ఏమి ప్రభావితం చేస్తుంది?",
     aquaPrompt2: "చెరువుల్లో రొయ్యల వ్యాధిని ఎలా నివారించాలి?",
     aquaPrompt3: "భారత్‌కు ఉత్తమ రొయ్యల మేత పద్ధతులు",
@@ -379,12 +381,14 @@ const translations = {
     newsletterTitle: "ది ష్రింప్ బ్రీఫ్",
     newsletterDescription:
       "ధరలు, వ్యాధి హెచ్చరికలు, విధాన అప్‌డేట్లు మరియు మార్కెట్ సమాచారం — ప్రతి సోమవారం. ఎప్పటికీ ఉచితం.",
+    newsletterMondayNote:
+      "You'll receive the Shrimp Brief every Monday — free forever.",
     newsletterEmailLabel: "ఇమెయిల్ చిరునామా",
     newsletterSubscribe: "ఉచితంగా సబ్‌స్క్రైబ్ చేయండి",
     newsletterEmptyError: "దయచేసి మీ ఇమెయిల్ చిరునామాను నమోదు చేయండి.",
     newsletterInvalidError: "దయచేసి సరైన ఇమెయిల్ చిరునామాను నమోదు చేయండి.",
-    newsletterSuccessPrefix: "ధన్యవాదాలు,",
-    newsletterSuccessSuffix: "మీరు జాబితాలో ఉన్నారు.",
+    newsletterSuccessPrefix: "Thank you for subscribing to the Shrimp Brief!",
+    newsletterSuccessSuffix: "",
 
     footerTagline:
       "Shrimp News ప్రపంచ రొయ్యల పరిశ్రమకు మార్కెట్ ధరలు, సాగు సమాచారం, వ్యాధి నవీకరణలు, సాంకేతిక అంతర్దృష్టులు మరియు పరిశ్రమ వార్తలను అందిస్తుంది.",
@@ -521,9 +525,9 @@ const translations = {
     aboutUs: "हमारे बारे में",
     foundersMessage: "संस्थापक का संदेश",
     contactUs: "संपर्क करें",
-    askAquaGPT: "झींगा पालन के बारे में AquaGPT से पूछें",
-    askAquaGPTShort: "AquaGPT से पूछें...",
-    askAquaGPTButton: "AquaGPT से पूछें",
+    askAquaGPT: "झींगा पालन के बारे में Ask Prana से पूछें",
+    askAquaGPTShort: "Ask Prana से पूछें...",
+    askAquaGPTButton: "Ask Prana",
     ask: "पूछें",
     toggleNavigation: "नेविगेशन टॉगल करें",
     noArticlesFound: "इस विषय के लिए अभी कोई लेख नहीं मिला.",
@@ -582,7 +586,7 @@ const translations = {
     readArticle: "लेख पढ़ें →",
     imagePlaceholder: "छवि प्लेसहोल्डर",
 
-    aquaGptEyebrow: "AquaGPT से पूछें",
+    aquaGptEyebrow: "Ask Prana",
     aquaGptTitle: "केवल एक्वाकल्चर AI सहायक",
     aquaGptDescription:
       "झींगा पालन, जल गुणवत्ता, कीमतों, बाज़ार, स्वास्थ्य और तकनीक के बारे में पूछें. यह मॉक सहायक एक्वाकल्चर तक सीमित विश्वसनीय जानकारी खोजने में मदद करता है.",
@@ -590,7 +594,7 @@ const translations = {
     aquaGptPlaceholder: "उदा. भारत में झींगा कीमतें क्या तय करती हैं?",
     aquaGptEmpty: "शुरू करने के लिए झींगा से संबंधित प्रश्न दर्ज करें.",
     aquaGptMockPrefix:
-      "AquaGPT संबंधित लेख पढ़ने और उद्योग की सर्वोत्तम प्रथाएँ देखने का सुझाव देता है. यह एक मॉक प्रतिक्रिया है:",
+      "Ask Prana संबंधित लेख पढ़ने और उद्योग की सर्वोत्तम प्रथाएँ देखने का सुझाव देता है. यह एक मॉक प्रतिक्रिया है:",
     aquaPrompt1: "झींगा फार्मगेट कीमतों को क्या प्रभावित करता है?",
     aquaPrompt2: "तालाबों में झींगा रोग कैसे रोकें?",
     aquaPrompt3: "भारत के लिए सर्वश्रेष्ठ झींगा फ़ीड पद्धतियाँ",
@@ -599,12 +603,14 @@ const translations = {
     newsletterTitle: "द श्रिंप ब्रीफ़",
     newsletterDescription:
       "कीमतें, रोग अलर्ट, नीति अपडेट और बाज़ार जानकारी — हर सोमवार. हमेशा मुफ़्त.",
+    newsletterMondayNote:
+      "You'll receive the Shrimp Brief every Monday — free forever.",
     newsletterEmailLabel: "ईमेल पता",
     newsletterSubscribe: "मुफ़्त सदस्यता लें",
     newsletterEmptyError: "कृपया अपना ईमेल पता दर्ज करें.",
     newsletterInvalidError: "कृपया एक मान्य ईमेल पता दर्ज करें.",
-    newsletterSuccessPrefix: "धन्यवाद,",
-    newsletterSuccessSuffix: "आप सूची में हैं.",
+    newsletterSuccessPrefix: "Thank you for subscribing to the Shrimp Brief!",
+    newsletterSuccessSuffix: "",
 
     footerTagline:
       "Shrimp News वैश्विक झींगा पारिस्थितिकी तंत्र के लिए बाज़ार कीमतें, पालन जानकारी, रोग अपडेट, तकनीक अंतर्दृष्टि और उद्योग समाचार प्रदान करता है.",

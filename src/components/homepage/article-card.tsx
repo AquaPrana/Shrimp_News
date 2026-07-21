@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import { ArticleCoverImage } from "@/components/articles/article-cover-image";
 import { useLanguage } from "@/context/language-context";
 import { readingTime, type PublicArticle } from "@/lib/article-types";
 
@@ -11,13 +11,12 @@ export function ArticleCard({ article }: { article: PublicArticle }) {
     <article className="market-floating-card h-full overflow-hidden rounded-[24px] border border-cyan-400/40 bg-gradient-to-br from-white via-white to-sky-50 shadow-[0_16px_40px_rgba(11,79,122,0.12)]">
       <Link href={`/articles/${article.slug}`} className="flex h-full flex-col" aria-label={`${t("readArticle")}: ${article.title}`}>
         <div className="relative aspect-[3/2] w-full shrink-0 overflow-hidden bg-sky-50">
-          <Image
-            src={article.featuredImageUrl || "/images/articles/ArticleImage.jpeg"}
+          <ArticleCoverImage
+            src={article.featuredImageUrl}
             alt={article.featuredImageAlt || article.title}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
             className="object-cover object-center"
-            priority={false}
           />
         </div>
         <div className="flex flex-1 flex-col space-y-3 p-4 sm:space-y-4 sm:p-6">

@@ -40,7 +40,7 @@ export function NewsletterSection() {
         setError(body.error || "Unable to subscribe right now.");
         return;
       }
-      setMessage(`${t("newsletterSuccessPrefix")} ${trimmedEmail}! ${t("newsletterSuccessSuffix")}`);
+      setMessage(t("newsletterSuccessPrefix"));
       setEmail("");
     } catch {
       setError("Unable to subscribe right now.");
@@ -74,6 +74,9 @@ export function NewsletterSection() {
                 className="w-full max-w-xl space-y-3"
                 noValidate
               >
+                <p className="text-sm font-medium text-slate-600">
+                  {t("newsletterMondayNote")}
+                </p>
                 <label htmlFor="newsletter-email" className="sr-only">
                   {t("newsletterEmailLabel")}
                 </label>
@@ -84,21 +87,26 @@ export function NewsletterSection() {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="you@company.com"
-                    className="h-12 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-800 outline-none placeholder:text-slate-400 transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20"
+                    disabled={busy}
+                    className="h-12 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-800 outline-none placeholder:text-slate-400 transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 disabled:opacity-60"
                   />
                   <button
                     type="submit"
                     disabled={busy}
-                    className="h-12 rounded-2xl bg-[#FF4F2E] px-6 text-sm font-bold text-white transition hover:bg-[#FF6548] hover:shadow-[0_8px_24px_rgba(255,79,46,0.28)]"
+                    className="h-12 rounded-2xl bg-[#FF4F2E] px-6 text-sm font-bold text-white transition hover:bg-[#FF6548] hover:shadow-[0_8px_24px_rgba(255,79,46,0.28)] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {busy ? "Subscribing…" : t("newsletterSubscribe")}
                   </button>
                 </div>
                 {error ? (
-                  <p className="text-sm text-orange-600">{error}</p>
+                  <p role="alert" className="text-sm text-orange-600">
+                    {error}
+                  </p>
                 ) : null}
                 {message ? (
-                  <p className="text-sm text-emerald-600">{message}</p>
+                  <p role="status" className="text-sm text-emerald-600">
+                    {message}
+                  </p>
                 ) : null}
               </form>
             </div>

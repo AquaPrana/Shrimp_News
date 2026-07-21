@@ -3,7 +3,7 @@ const siteData = {
     { label: "Feed", href: "/pages/feed.html", active: true },
     { label: "Markets", href: "/pages/markets.html" },
     { label: "Tools", href: "/pages/tools.html" },
-    { label: "Ask AquaGPT", href: "/pages/ask-aquaprana.html" },
+    { label: "Ask Prana", href: "/pages/ask-aquaprana.html" },
     { label: "Learn", href: "/pages/learn.html" },
     { label: "Events", href: "/pages/events.html" },
     { label: "About", href: "/pages/about.html" }
@@ -85,7 +85,7 @@ const siteData = {
   ],
   featureCards: [
     {
-      title: "Ask AquaGPT",
+      title: "Ask Prana",
       label: "AI online",
       description: "Ask a shrimp-focused assistant about disease, water, feed, prices, and market context.",
       cta: "Open chat",

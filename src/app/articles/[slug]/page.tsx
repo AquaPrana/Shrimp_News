@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArticleCoverImage } from "@/components/articles/article-cover-image";
 import { ArticleGrid } from "@/components/articles/article-grid";
 import { PAGE_CONTENT_PANEL_CLASS } from "@/components/layout/page-shell";
 import { readingTime } from "@/lib/article-types";
@@ -40,7 +40,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
             {article.title}
           </h1>
           <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[24px] bg-sky-50 shadow-[0_18px_50px_rgba(11,79,122,0.14)] sm:rounded-[30px]">
-            <Image
+            <ArticleCoverImage
               src={cover}
               alt={article.featuredImageAlt || article.title}
               fill

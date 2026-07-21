@@ -14,7 +14,7 @@ function renderHeader(container, currentPath = "") {
 
           <div class="header-center">
             <a class="ask-control" href="/pages/ask-aquaprana.html">
-              <span class="ask-label"><span>✦</span> Ask AquaGPT — disease, water, feed, prices...</span>
+              <span class="ask-label"><span>✦</span> Ask Prana — disease, water, feed, prices...</span>
               <span class="ask-badge">AI</span>
             </a>
           </div>
@@ -184,7 +184,7 @@ function renderFooter(container) {
           <a href="/pages/about.html">About</a>
           <a href="/pages/feed.html">Feed</a>
           <a href="/pages/markets.html">Markets</a>
-          <a href="/pages/ask-aquaprana.html">Ask AquaGPT</a>
+          <a href="/pages/ask-aquaprana.html">Ask Prana</a>
         </div>
         <div>v1.0.0 · Built for the Shrimp.News launch</div>
       </div>

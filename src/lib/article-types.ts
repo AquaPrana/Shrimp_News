@@ -50,5 +50,6 @@ export const LANGUAGE_NAMES: Record<ArticleLanguage, string> = {
 };
 
 export function readingTime(content: string) {
-  return `${Math.max(1, Math.ceil(content.trim().split(/\s+/).length / 220))} min read`;
+  const words = content.trim().split(/\s+/).filter(Boolean).length;
+  return `${Math.max(1, Math.ceil(words / 200))} min read`;
 }

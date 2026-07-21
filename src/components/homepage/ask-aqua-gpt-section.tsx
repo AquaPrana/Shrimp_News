@@ -63,7 +63,7 @@ export function AskAquaGPTSection() {
       setResponse(
         error instanceof Error
           ? error.message
-          : "AquaGPT could not answer right now.",
+          : "Ask Prana could not answer right now.",
       );
     } finally {
       setIsLoading(false);
@@ -103,7 +103,7 @@ export function AskAquaGPTSection() {
               }`}
             />
             <span>
-              {isLoading ? "AquaGPT is thinking..." : t("aquaGptOnline")}
+              {isLoading ? "Ask Prana is thinking..." : t("aquaGptOnline")}
             </span>
           </div>
 
@@ -158,7 +158,7 @@ export function AskAquaGPTSection() {
                 <div className="whitespace-pre-wrap">{response}</div>
               ) : (
                 <p className="text-cyan-100/55">
-                  AquaGPT is preparing your answer...
+                  Ask Prana is preparing your answer...
                 </p>
               )}
             </div>

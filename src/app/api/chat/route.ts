@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
         {
           role: "system",
           content: `
-You are AquaGPT, the AI assistant for Shrimp News.
+You are Ask Prana, the AI assistant for Shrimp News.
 
 Only answer questions related to:
 - shrimp farming
@@ -88,14 +88,14 @@ If information may have changed recently, clearly say it should be verified.
 
     if (!answer) {
       return NextResponse.json(
-        { error: "AquaGPT returned an empty answer." },
+        { error: "Ask Prana returned an empty answer." },
         { status: 502 }
       );
     }
 
     return NextResponse.json({ answer });
   } catch (error) {
-    console.error("Groq AquaGPT error:", error);
+    console.error("Groq Ask Prana error:", error);
 
     if (error instanceof OpenAI.APIError) {
       let message = error.message;
@@ -104,7 +104,7 @@ If information may have changed recently, clearly say it should be verified.
         message = "The Groq API key is invalid.";
       } else if (error.status === 429) {
         message =
-          "AquaGPT has reached the temporary free usage limit. Please wait and try again.";
+          "Ask Prana has reached the temporary free usage limit. Please wait and try again.";
       } else if (error.status === 404) {
         message =
           "The selected Groq model was not found. Check the model name.";
@@ -121,7 +121,7 @@ If information may have changed recently, clearly say it should be verified.
         error:
           error instanceof Error
             ? error.message
-            : "AquaGPT could not answer right now.",
+            : "Ask Prana could not answer right now.",
       },
       { status: 500 }
     );

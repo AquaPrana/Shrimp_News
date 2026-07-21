@@ -68,7 +68,7 @@ export default function AskAquaPranaPage() {
     scrollToLatestMessage();
   }, [messages, isLoading]);
 
-  async function askAquaGPT(value?: string) {
+  async function askPrana(value?: string) {
     const prompt = (value ?? question).trim();
 
     if (!prompt || isLoading) {
@@ -92,7 +92,7 @@ export default function AskAquaPranaPage() {
         .slice(-6)
         .map((message) => {
           const speaker =
-            message.role === "user" ? "User" : "AquaGPT";
+            message.role === "user" ? "User" : "Ask Prana";
 
           return `${speaker}: ${message.content}`;
         })
@@ -123,7 +123,7 @@ ${prompt}`
 
       if (!request.ok) {
         throw new Error(
-          data.error || "AquaGPT could not answer right now.",
+          data.error || "Ask Prana could not answer right now.",
         );
       }
 
@@ -143,7 +143,7 @@ ${prompt}`
         content:
           error instanceof Error
             ? error.message
-            : "AquaGPT could not answer right now.",
+            : "Ask Prana could not answer right now.",
       };
 
       setMessages((current) => [...current, errorMessage]);
@@ -158,7 +158,7 @@ ${prompt}`
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void askAquaGPT();
+    void askPrana();
   }
 
   return (
@@ -169,7 +169,7 @@ ${prompt}`
             <div className="flex items-center gap-2">
               <span className="text-xl text-cyan-500">✦</span>
               <h1 className="text-lg font-extrabold text-[#0B3A6E] sm:text-xl">
-                Ask AquaGPT
+                Ask Prana
               </h1>
             </div>
 
@@ -186,7 +186,7 @@ ${prompt}`
           <button
             type="button"
             onClick={() => router.back()}
-            aria-label="Close AquaGPT"
+            aria-label="Close Ask Prana"
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-2xl text-slate-500 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-[#0B3A6E]"
           >
             ×
@@ -196,7 +196,7 @@ ${prompt}`
 
       <div className="shrink-0 px-4 pt-4 sm:px-5">
         <div className="mx-auto max-w-5xl rounded-xl border border-slate-200 bg-[#F7FBFF] px-4 py-3 text-sm leading-6 text-slate-700 sm:px-5">
-          Namaste! I’m AquaGPT — ask me anything about shrimp
+          Namaste! I’m Ask Prana — ask me anything about shrimp
           farming, water quality, disease, feed or markets. English,
           తెలుగు లేదా हिंदीలో అడగండి.
         </div>
@@ -211,7 +211,7 @@ ${prompt}`
             <div className="flex flex-1 items-center justify-center text-center">
               <div>
                 <p className="text-xl font-semibold text-[#0B3A6E]">
-                  How can AquaGPT help?
+                  How can Ask Prana help?
                 </p>
                 <p className="mt-2 text-sm text-slate-500">
                   Ask about farming, pond health, feed, water
@@ -248,7 +248,7 @@ ${prompt}`
                   <span className="h-2 w-2 animate-bounce rounded-full bg-cyan-400 [animation-delay:-0.15s]" />
                   <span className="h-2 w-2 animate-bounce rounded-full bg-cyan-400" />
                 </div>
-                AquaGPT is thinking...
+                Ask Prana is thinking...
               </div>
             </div>
           ) : null}
@@ -287,7 +287,7 @@ ${prompt}`
                 key={suggestion}
                 type="button"
                 disabled={isLoading}
-                onClick={() => void askAquaGPT(suggestion)}
+                onClick={() => void askPrana(suggestion)}
                 className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-[#0B3A6E] disabled:opacity-50 sm:text-sm"
               >
                 {suggestion}

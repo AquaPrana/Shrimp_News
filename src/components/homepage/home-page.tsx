@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { AskAquaGPTSection } from "@/components/homepage/ask-aqua-gpt-section";
 import { HeroSection } from "@/components/homepage/hero-section";
 import { MarketTicker } from "@/components/homepage/market-ticker";
 import { ArticleCard } from "@/components/homepage/article-card";
+import { ArticleCoverImage } from "@/components/articles/article-cover-image";
 import { NewsletterSection } from "@/components/homepage/newsletter-section";
 import { useLanguage } from "@/context/language-context";
 import { useArticles } from "@/hooks/use-articles";
@@ -29,7 +29,7 @@ export function HomePage({
 
   const homeArticles = articles
     .filter((article) => article.slug !== featuredArticle?.slug)
-    .slice(0, 6);
+    .slice(0, 12);
 
   const farmingArticles = articles
     .filter(
@@ -102,7 +102,7 @@ export function HomePage({
             </div>
 
             <div className="relative z-10 overflow-hidden rounded-[28px] border border-white/10 bg-[#03172d]">
-              <Image
+              <ArticleCoverImage
                 src={
                   featuredArticle.featuredImageUrl ||
                   "/images/articles/ArticleImage.jpeg"
@@ -212,7 +212,7 @@ export function HomePage({
       </section>
 
       <section
-        id="ask-aquagpt"
+        id="ask-prana"
         className="relative scroll-mt-28 overflow-hidden bg-white px-4 pb-16 sm:px-6 lg:px-8"
       >
         <div

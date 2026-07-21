@@ -259,11 +259,7 @@ export function SiteFooter() {
 
         {/* Bottom Bar */}
         <div className="mt-9 flex flex-col gap-4 border-t border-white/15 pt-5 text-sm text-white/70 sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            <span className="font-semibold text-white">Shrimp News</span>
-            {" · "}
-            © {new Date().getFullYear()} {t("allRightsReserved")}
-          </p>
+          <p>{t("allRightsReserved")}</p>
 
           <button
             type="button"
