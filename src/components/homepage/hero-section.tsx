@@ -79,7 +79,7 @@ export function HeroSection({ featuredArticle }: { featuredArticle?: PublicArtic
 
               <div className="relative z-10 overflow-hidden rounded-[31px] bg-[#03172d]">
                 <Image
-                  src="/images/Shrimp-home.png"
+                  src="/images/Shrimp-Home.png"
                   alt="Shrimp industry benefits including growth, protein, nutrients, global demand and sustainable aquaculture"
                   width={1200}
                   height={1200}
