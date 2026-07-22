@@ -46,13 +46,10 @@ const demoSecret = new TextEncoder().encode(
 );
 
 function sessionSecret() {
-  const value = process.env.ADMIN_SESSION_SECRET?.trim() || process.env.AUTH_SECRET?.trim();
-  if (value && value.length >= 32) return new TextEncoder().encode(value);
-  if (process.env.NODE_ENV === "production") {
-    console.error("[admin-auth] ADMIN_SESSION_SECRET must contain at least 32 characters.");
-    throw new Error("Admin session secret is not configured.");
-  }
-  return demoSecret;
+  const value = process.env.AUTH_SECRET?.trim();
+  if (value) return new TextEncoder().encode(value);
+  if (process.env.NODE_ENV !== "production") return demoSecret;
+  throw new Error("Admin session secret is not configured.");
 }
 
 export async function createAdminToken(admin: AdminSession) {
@@ -60,7 +57,7 @@ export async function createAdminToken(admin: AdminSession) {
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(String(admin.id))
     .setIssuedAt()
-    .setExpirationTime("7d")
+    .setExpirationTime("8h")
     .sign(sessionSecret());
 }
 

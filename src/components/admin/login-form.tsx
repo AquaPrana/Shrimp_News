@@ -16,15 +16,24 @@ export function LoginForm() {
     try {
       const response = await fetch("/api/admin/login", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: data.get("email"), password: data.get("password") }),
+        credentials: "same-origin",
       });
-      const body = await response.json();
+      const body = await response.json().catch(() => ({})) as { error?: string };
+      if (response.status === 401) {
+        setError("Invalid email or password.");
+        return;
+      }
+      if (response.status === 500) {
+        setError("Server configuration error. Please check Vercel logs.");
+        return;
+      }
       if (!response.ok) {
         setError(body.error || "Unable to sign in.");
         return;
       }
-      router.replace("/admin/articles");
+      router.replace("/admin");
       router.refresh();
     } catch {
       setError("Unable to sign in right now.");
