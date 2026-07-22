@@ -11,6 +11,7 @@ const TRANSLATION_LANGUAGES = ["te", "hi"] as const;
 function sharedArticleFields(english: Article, input: PrismaArticleInput) {
   return {
     imageUrl: input.imageUrl,
+    mainCategory: input.mainCategory,
     category: input.category,
     isPublished: input.isPublished,
     createdAt: english.createdAt,
@@ -69,6 +70,7 @@ export async function syncArticleTranslations(
       content: input.content,
       excerpt: input.excerpt,
       imageUrl: input.imageUrl,
+      mainCategory: input.mainCategory,
       category: input.category,
       language: "en",
       isPublished: input.isPublished,
@@ -84,6 +86,7 @@ export async function syncArticleTranslations(
       data: {
         isPublished: false,
         imageUrl: input.imageUrl,
+        mainCategory: input.mainCategory,
         category: input.category,
       },
     });

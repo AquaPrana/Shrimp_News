@@ -11,6 +11,7 @@
     "admin:create": "tsx scripts/create-admin.ts",
     "db:seed-articles": "tsx scripts/seed-existing-articles.ts",
     "db:seed-ticker": "tsx --env-file=.env.local scripts/seed-ticker.ts",
+    "db:migrate-categories": "tsx --env-file=.env.local scripts/migrate-article-categories.ts",
     "import:articles": "tsx --env-file=.env.local scripts/import-articles.ts"
   },
   "dependencies": {

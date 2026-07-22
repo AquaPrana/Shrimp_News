@@ -2,8 +2,12 @@ import {
   ARTICLE_CATEGORIES,
   ARTICLE_LANGUAGES,
   ARTICLE_STATUSES,
+  isValidMainCategory,
+  isValidSubcategory,
+  resolveArticleTaxonomy,
   type ArticleCategory,
   type ArticleLanguage,
+  type ArticleMainCategory,
   type ArticleStatus,
 } from "@/lib/article-types";
 import { prepareArticleContentForSave } from "@/lib/article-content";
@@ -197,6 +201,7 @@ export type PrismaArticleInput = {
   content: string;
   excerpt: string | null;
   imageUrl: string | null;
+  mainCategory: ArticleMainCategory;
   category: ArticleCategory;
   language: ArticleLanguage;
   isPublished: boolean;
@@ -206,23 +211,37 @@ export function validatePrismaArticleInput(raw: Record<string, unknown>) {
   const title = sanitizePlainText(raw.title, 255);
   const slug = slugify(String(raw.slug || title));
   const excerpt = sanitizePlainText(raw.excerpt, 2_000) || null;
-  const category = sanitizePlainText(raw.category, 120) as ArticleCategory;
   const language = sanitizePlainText(raw.language, 20) as ArticleLanguage;
   const contentResult = prepareArticleContentForSave(raw.content);
 
   if (!title) return { ok: false as const, error: "Title is required." };
   if (!slug) return { ok: false as const, error: "A valid slug is required." };
   if (!contentResult.ok) return contentResult;
-  if (!category) return { ok: false as const, error: "Category is required." };
   if (!language) return { ok: false as const, error: "Language is required." };
-  if (!ARTICLE_CATEGORIES.includes(category)) {
-    return { ok: false as const, error: "Choose a valid category." };
-  }
   if (!ARTICLE_LANGUAGES.includes(language)) {
     return { ok: false as const, error: "Choose a valid language." };
   }
   if (raw.isPublished !== undefined && typeof raw.isPublished !== "boolean") {
     return { ok: false as const, error: "Published status must be true or false." };
+  }
+
+  const taxonomy = resolveArticleTaxonomy({
+    mainCategory:
+      typeof raw.mainCategory === "string" ? raw.mainCategory : undefined,
+    category: typeof raw.category === "string" ? raw.category : undefined,
+  });
+
+  if (!isValidMainCategory(taxonomy.mainCategory)) {
+    return { ok: false as const, error: "Choose India or Global as the main category." };
+  }
+  if (!isValidSubcategory(taxonomy.category, taxonomy.mainCategory)) {
+    return {
+      ok: false as const,
+      error:
+        taxonomy.mainCategory === "Global" && taxonomy.category === "Domestic Consumption"
+          ? "Domestic Consumption is only available for India articles."
+          : "Choose a valid subcategory.",
+    };
   }
 
   const image = normalizeArticleImageUrl(raw.imageUrl);
@@ -234,7 +253,8 @@ export function validatePrismaArticleInput(raw: Record<string, unknown>) {
     content: contentResult.value,
     excerpt,
     imageUrl: image.value,
-    category,
+    mainCategory: taxonomy.mainCategory,
+    category: taxonomy.category,
     language,
     isPublished: raw.isPublished === true,
   };

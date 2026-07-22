@@ -42,11 +42,11 @@ const categoryLinks: FooterLink[] = [
   },
   {
     labelKey: "researchInnovation",
-    href: "/articles?topic=research-innovations",
+    href: "/articles?topic=research",
   },
   {
     labelKey: "technologyEquipment",
-    href: "/articles?topic=technology-equipment",
+    href: "/articles?topic=technology",
   },
   {
     labelKey: "prices",

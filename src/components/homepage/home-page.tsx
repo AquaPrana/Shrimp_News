@@ -1,16 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { AskPranaSection } from "@/components/homepage/ask-prana-section";
-import { HeroSection } from "@/components/homepage/hero-section";
+import { EditorialHero } from "@/components/homepage/editorial-hero";
+import { LatestArticlesGrid } from "@/components/homepage/latest-articles-grid";
 import { MarketTicker } from "@/components/homepage/market-ticker";
-import { ArticleCard } from "@/components/homepage/article-card";
-import { ArticleCoverImage } from "@/components/articles/article-cover-image";
+import { NewsSidebar } from "@/components/homepage/news-sidebar";
 import { NewsletterSection } from "@/components/homepage/newsletter-section";
+import { ShrimpFarmingGrid } from "@/components/homepage/shrimp-farming-grid";
 import { useLanguage } from "@/context/language-context";
 import { useArticles } from "@/hooks/use-articles";
-import { readingTime, type PublicArticle } from "@/lib/article-types";
-import { baseSlug } from "@/lib/public-articles-shared";
+import type { PublicArticle } from "@/lib/article-types";
 
 export function HomePage({
   initialArticles = [],
@@ -26,31 +25,22 @@ export function HomePage({
       ? initialArticles
       : fetchedArticles;
   const featuredArticle = articles[0];
-  const featuredTitle = featuredArticle?.title || "";
 
   const homeArticles = articles
     .filter((article) => article.slug !== featuredArticle?.slug)
     .slice(0, 12);
 
-  const farmingArticles = articles
-    .filter(
-      (article) =>
-        article.category === "Shrimp Farming" ||
-        article.category === "Shrimp Health",
-    )
-    .slice(0, 3);
-
   if (!featuredArticle) {
     return (
-      <div className="min-h-full overflow-hidden bg-white">
+      <div className="min-h-full bg-white">
         <MarketTicker />
-        <HeroSection />
+        <EditorialHero articles={articles} />
         <section className="bg-white px-4 py-16 sm:px-6 lg:px-8">
           <div
             role="status"
             className="mx-auto max-w-[1340px] rounded-[24px] border border-slate-200 bg-[#F7FBFF] p-8 text-slate-600"
           >
-            {loading ? "Loading articles…" : error || t("noArticlesFound")}
+            {loading ? t("loadingArticles") : error || t("noArticlesFound")}
           </div>
         </section>
         <NewsletterSection />
@@ -59,120 +49,30 @@ export function HomePage({
   }
 
   return (
-    <div className="min-h-full overflow-hidden bg-white">
+    <div className="min-h-full bg-white">
       <MarketTicker />
 
-      <HeroSection featuredArticle={featuredArticle} />
+      <EditorialHero articles={articles} />
 
-      <section className="relative overflow-hidden bg-white px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(6,182,212,0.08),transparent_38%)]" />
-        <div className="pointer-events-none absolute bottom-0 left-0 h-80 w-80 rounded-full bg-orange-100/30 blur-[100px]" />
-
-        <div
-          className="home-reveal relative z-10 mx-auto grid max-w-[1340px] gap-14"
-          style={{ animationDelay: "0.12s" }}
-        >
-          <article className="market-dashboard-card relative grid gap-8 overflow-hidden rounded-[28px] border border-cyan-300/20 bg-[#0B4F7A] p-8 shadow-[0_24px_70px_rgba(11,79,122,0.28)] lg:grid-cols-[1.4fr_0.9fr] xl:p-10">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.14),transparent_42%)]" />
-
-            <div className="relative z-10 space-y-6">
-              <span className="inline-flex rounded-full border border-orange-400/30 bg-orange-500/15 px-4 py-2 text-xs uppercase tracking-[0.32em] text-orange-300">
-                {featuredArticle.category}
-              </span>
-
-              <div className="space-y-4">
-                <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                  {featuredTitle}
-                </h2>
-                <p className="max-w-3xl text-base leading-8 text-cyan-50/85 sm:text-lg">
-                  {featuredArticle.excerpt}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-4">
-                <Link
-                  href={`/articles/${baseSlug(featuredArticle.slug)}`}
-                  className="inline-flex rounded-full bg-orange-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-[0_0_30px_rgba(249,115,22,0.18)] transition hover:-translate-y-0.5 hover:bg-orange-400"
-                >
-                  {t("readFeaturedStory")}
-                </Link>
-                <span className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-cyan-50/80">
-                  {readingTime(featuredArticle.content)}
-                </span>
-              </div>
-            </div>
-
-            <div className="relative z-10 overflow-hidden rounded-[28px] border border-white/10 bg-[#03172d]">
-              <ArticleCoverImage
-                src={
-                  featuredArticle.featuredImageUrl ||
-                  "/images/articles/ArticleImage.jpeg"
-                }
-                alt={featuredTitle}
-                width={900}
-                height={700}
-                className="h-full min-h-[280px] w-full object-cover transition-transform duration-700 hover:scale-[1.03] sm:min-h-[320px]"
-                sizes="(max-width: 1024px) 100vw, 40vw"
-              />
-            </div>
-          </article>
-
-          <div className="space-y-8">
-            <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-500">
-                {t("latestArticles")}
-              </p>
-              <h2 className="max-w-3xl text-3xl font-extrabold tracking-tight text-[#0B3A6E] sm:text-4xl lg:text-5xl">
-                {t("latestTitle")}
-              </h2>
-              <p className="max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-                {t("latestDescription")}
-              </p>
-            </div>
-
-            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {homeArticles.map((article, index) => (
-                <div
-                  key={article.slug}
-                  className="home-reveal"
-                  style={{ animationDelay: `${0.16 + index * 0.06}s` }}
-                >
-                  <ArticleCard article={article} />
-                </div>
-              ))}
-            </div>
+      <section className="bg-[#f8fafc] px-4 pb-14 pt-6 sm:px-6 sm:pt-8 lg:px-8 lg:pb-16 lg:pt-8">
+        <div className="homepage-news-layout mx-auto max-w-[1280px]">
+          <div className="homepage-news-main space-y-14">
+            <LatestArticlesGrid
+              articles={homeArticles}
+              heading={t("latestArticles")}
+            />
+            <ShrimpFarmingGrid articles={articles} />
           </div>
-        </div>
-      </section>
 
-      <section className="relative overflow-hidden bg-white px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(255,122,61,0.08),transparent_40%)]" />
-        <div
-          className="home-reveal relative z-10 mx-auto max-w-[1340px] space-y-8"
-          style={{ animationDelay: "0.18s" }}
-        >
-          <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-500">
-              {t("farmingHealthLabel")}
-            </p>
-            <h2 className="max-w-3xl text-3xl font-extrabold tracking-tight text-[#0B3A6E] sm:text-4xl">
-              {t("farmingTitle")}
-            </h2>
-            <p className="max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
-              {t("farmingDescription")}
-            </p>
-          </div>
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {farmingArticles.map((article) => (
-              <ArticleCard key={`farm-${article.slug}`} article={article} />
-            ))}
-          </div>
+          <aside className="homepage-news-sidebar">
+            <NewsSidebar articles={homeArticles} />
+          </aside>
         </div>
       </section>
 
       <section
         id="ask-prana"
-        className="relative scroll-mt-28 overflow-hidden bg-white px-4 pb-16 sm:px-6 lg:px-8"
+        className="relative scroll-mt-28 bg-white px-4 pb-16 sm:px-6 lg:px-8"
       >
         <div
           className="home-reveal mx-auto max-w-[1340px]"

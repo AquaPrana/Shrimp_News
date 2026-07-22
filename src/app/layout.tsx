@@ -60,11 +60,11 @@ export default function RootLayout({
     >
       <body
         id="top"
-        className="flex min-h-full flex-col overflow-x-hidden bg-white text-slate-800"
+        className="flex min-h-full flex-col overflow-x-clip bg-white text-slate-800"
       >
         <LanguageProvider>
           <SiteHeader />
-          <main className="min-w-0 flex-1 overflow-x-hidden">{children}</main>
+          <main className="min-w-0 flex-1 overflow-x-clip">{children}</main>
           <SiteFooter />
         </LanguageProvider>
       </body>

@@ -20,6 +20,9 @@ model Article {
   content            String   @db.LongText
   excerpt            String?
   imageUrl           String?
+  /// India | Global — used by News → India / Global filters.
+  mainCategory       String   @default("India")
+  /// Topic subcategory (Shrimp Farming, Markets & Industry, etc.).
   category           String
   language           String
   translationGroupId String?
@@ -28,6 +31,8 @@ model Article {
   updatedAt          DateTime @updatedAt
 
   @@index([translationGroupId])
+  @@index([mainCategory])
+  @@index([category])
 }
 
 model Subscriber {

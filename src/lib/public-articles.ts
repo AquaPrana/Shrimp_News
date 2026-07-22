@@ -1,7 +1,13 @@
 import "server-only";
 
 import type { Article as PrismaArticle, Prisma } from "@prisma/client";
-import type { ArticleCategory, ArticleLanguage, PublicArticle } from "@/lib/article-types";
+import type {
+  ArticleCategory,
+  ArticleLanguage,
+  ArticleMainCategory,
+  PublicArticle,
+} from "@/lib/article-types";
+import { resolveArticleTaxonomy } from "@/lib/article-types";
 import { logDatabaseError, prisma } from "@/lib/prisma";
 import {
   TOPIC_CATEGORIES as SHARED_TOPIC_CATEGORIES,
@@ -11,7 +17,7 @@ import {
   languageFromSlug,
 } from "@/lib/public-articles-shared";
 
-export const TOPIC_CATEGORIES = SHARED_TOPIC_CATEGORIES as Record<string, ArticleCategory[]>;
+export const TOPIC_CATEGORIES = SHARED_TOPIC_CATEGORIES;
 export { TOPIC_LABELS, isArticleTopic, baseSlug, languageFromSlug };
 
 /** Prefer real aquaculture covers over the shared placeholder. */
@@ -20,16 +26,15 @@ const ARTICLE_IMAGE_OVERRIDES: Record<string, string> = {
     "/images/articles/andrapradesh-aqua-culture.jpeg",
 };
 
-const CATEGORY_TOPICS = Object.entries(TOPIC_CATEGORIES).reduce<Record<string, string[]>>(
-  (result, [topic, categories]) => {
-    for (const category of categories) (result[category] ??= []).push(topic);
-    return result;
-  },
-  {},
-);
+const SUBCATEGORY_TOPICS = Object.entries(TOPIC_CATEGORIES).reduce<
+  Record<string, string[]>
+>((result, [topic, values]) => {
+  if (topic === "national" || topic === "international") return result;
+  for (const value of values) (result[value] ??= []).push(topic);
+  return result;
+}, {});
 
 function resolvePublicImageUrl(slug: string, imageUrl: string | null) {
-  // Prefer the value saved in the database for daily publishing.
   if (imageUrl?.trim() && !imageUrl.includes("ArticleImage.jpeg")) {
     return imageUrl.trim();
   }
@@ -39,6 +44,14 @@ function resolvePublicImageUrl(slug: string, imageUrl: string | null) {
 export function mapPublicArticle(article: PrismaArticle): PublicArticle {
   const createdAt = article.createdAt.toISOString();
   const featuredImageUrl = resolvePublicImageUrl(article.slug, article.imageUrl);
+  const taxonomy = resolveArticleTaxonomy({
+    mainCategory: article.mainCategory,
+    category: article.category,
+  });
+  const regionTopic =
+    taxonomy.mainCategory === "Global" ? "international" : "national";
+  const topicTopics = SUBCATEGORY_TOPICS[taxonomy.category] || [];
+
   return {
     id: article.id,
     title: article.title,
@@ -47,14 +60,15 @@ export function mapPublicArticle(article: PrismaArticle): PublicArticle {
     content: article.content,
     featuredImageUrl,
     featuredImageAlt: article.title,
-    category: article.category as ArticleCategory,
+    mainCategory: taxonomy.mainCategory,
+    category: taxonomy.category,
     language: article.language as ArticleLanguage,
     author: "Shrimp.News Editorial",
     status: "published",
     seoTitle: article.title,
     seoDescription: article.excerpt || "",
     sourceUrl: null,
-    topics: CATEGORY_TOPICS[article.category] || [],
+    topics: [regionTopic, ...topicTopics],
     createdAt,
     updatedAt: article.updatedAt.toISOString(),
     publishedAt: createdAt,
@@ -70,10 +84,13 @@ type ListOptions = {
   language?: ArticleLanguage;
   topic?: string | null;
   category?: string | null;
+  mainCategory?: string | null;
   limit?: number;
 };
 
-export async function getPublishedArticles(options: ListOptions = {}): Promise<PublicArticle[]> {
+export async function getPublishedArticles(
+  options: ListOptions = {},
+): Promise<PublicArticle[]> {
   const language = options.language || "en";
   const limit = Math.min(Math.max(options.limit || 60, 1), 100);
   const where: Prisma.ArticleWhereInput = {
@@ -81,8 +98,14 @@ export async function getPublishedArticles(options: ListOptions = {}): Promise<P
     language,
   };
 
-  if (options.topic && TOPIC_CATEGORIES[options.topic]) {
+  if (options.topic === "national") {
+    where.mainCategory = "India";
+  } else if (options.topic === "international") {
+    where.mainCategory = "Global";
+  } else if (options.topic && TOPIC_CATEGORIES[options.topic]) {
     where.category = { in: TOPIC_CATEGORIES[options.topic] };
+  } else if (options.mainCategory === "India" || options.mainCategory === "Global") {
+    where.mainCategory = options.mainCategory;
   } else if (options.category) {
     where.category = options.category;
   }
@@ -154,7 +177,10 @@ export async function getRelatedPublishedArticles(
         id: { not: article.id },
         isPublished: true,
         language: article.language,
-        category: article.category,
+        OR: [
+          { category: article.category },
+          { mainCategory: article.mainCategory },
+        ],
       },
       orderBy: { createdAt: "desc" },
       take: limit,
@@ -165,3 +191,5 @@ export async function getRelatedPublishedArticles(
     return [];
   }
 }
+
+export type { ArticleMainCategory, ArticleCategory };

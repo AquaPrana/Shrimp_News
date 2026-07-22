@@ -4,11 +4,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ARTICLE_CATEGORIES,
   LANGUAGE_NAMES,
+  resolveArticleTaxonomy,
+  subcategoriesForMain,
   type AdminArticle,
   type ArticleCategory,
   type ArticleLanguage,
+  type ArticleMainCategory,
 } from "@/lib/article-types";
 import { editorHtmlToPlainText } from "@/lib/article-content";
 import { normalizeArticleImageUrl, slugify } from "@/lib/validation";
@@ -21,6 +23,7 @@ type FormState = {
   excerpt: string;
   content: string;
   imageUrl: string;
+  mainCategory: ArticleMainCategory;
   category: ArticleCategory;
   language: ArticleLanguage;
   isPublished: boolean;
@@ -35,7 +38,8 @@ const empty: FormState = {
   excerpt: "",
   content: "",
   imageUrl: "",
-  category: "National",
+  mainCategory: "India",
+  category: "Shrimp Farming",
   language: "en",
   isPublished: false,
 };
@@ -60,13 +64,18 @@ function resolveFormImageUrl(article?: AdminArticle) {
 
 function toFormState(article?: AdminArticle): FormState {
   if (!article) return empty;
+  const taxonomy = resolveArticleTaxonomy({
+    mainCategory: article.mainCategory,
+    category: article.category,
+  });
   return {
     title: article.title,
     slug: article.slug,
     excerpt: article.excerpt || "",
     content: article.content,
     imageUrl: resolveFormImageUrl(article),
-    category: article.category,
+    mainCategory: taxonomy.mainCategory,
+    category: taxonomy.category,
     language: article.language,
     isPublished: article.isPublished,
   };
@@ -478,7 +487,28 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
             </div>
           </section>
           <section className="space-y-4 rounded-2xl border bg-white p-5 shadow-sm">
-            <Field label="Category">
+            <Field label="Main news category">
+              <select
+                value={form.mainCategory}
+                onChange={(event) => {
+                  const mainCategory = event.target
+                    .value as ArticleMainCategory;
+                  const options = subcategoriesForMain(mainCategory);
+                  setForm((current) => ({
+                    ...current,
+                    mainCategory,
+                    category: options.includes(current.category)
+                      ? current.category
+                      : options[0],
+                  }));
+                }}
+                className={input}
+              >
+                <option value="India">India</option>
+                <option value="Global">Global</option>
+              </select>
+            </Field>
+            <Field label="Subcategory">
               <select
                 value={form.category}
                 onChange={(event) =>
@@ -486,8 +516,10 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                 }
                 className={input}
               >
-                {ARTICLE_CATEGORIES.map((category) => (
-                  <option key={category}>{category}</option>
+                {subcategoriesForMain(form.mainCategory).map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
                 ))}
               </select>
             </Field>
@@ -558,7 +590,7 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
               </button>
             </div>
             <p className="mt-5 text-xs font-bold uppercase tracking-[0.3em] text-cyan-600">
-              {form.category}
+              {form.mainCategory} · {form.category}
             </p>
             <h1 className="mt-3 text-3xl font-extrabold text-[#0B3A6E] sm:text-5xl">
               {form.title || "Untitled article"}

@@ -89,6 +89,16 @@ const translations = {
     latestTitle: "Shrimp intelligence for every part of the chain.",
     latestDescription:
       "Current articles from domestic consumption to pricing, health, and market stability.",
+    viewAll: "View all",
+    recent: "Recent",
+    popular: "Popular",
+    welcomeTitle: "Welcome to Shrimp.News",
+    welcomeDescription:
+      "Your trusted source for shrimp industry news, markets, farming, health and innovation.",
+    loadingArticles: "Loading articles…",
+    mainCategoryLabel: "Main news category",
+    subcategoryLabel: "Subcategory",
+    brandName: "Shrimp.News",
 
     domesticTitle: "India's shrimp future starts at home.",
     domesticDescription:
@@ -364,6 +374,16 @@ const translations = {
     latestTitle: "రొయ్యల సరఫరా శృంఖలంలోని ప్రతి దశకు సమాచారం.",
     latestDescription:
       "దేశీయ వినియోగం, ధరలు, ఆరోగ్యం మరియు మార్కెట్ స్థిరత్వంపై తాజా వ్యాసాలు.",
+    viewAll: "అన్నీ చూడండి",
+    recent: "ఇటీవలి",
+    popular: "జనాదరణ",
+    welcomeTitle: "Shrimp.Newsకు స్వాగతం",
+    welcomeDescription:
+      "రొయ్యల పరిశ్రమ వార్తలు, మార్కెట్లు, సాగు, ఆరోగ్యం మరియు ఆవిష్కరణకు మీ నమ్మకమైన మూలం.",
+    loadingArticles: "వ్యాసాలు లోడ్ అవుతున్నాయి…",
+    mainCategoryLabel: "ప్రధాన వార్తా వర్గం",
+    subcategoryLabel: "ఉపవర్గం",
+    brandName: "Shrimp.News",
 
     domesticTitle: "భారతదేశ రొయ్యల భవిష్యత్తు దేశీయ మార్కెట్ నుంచే ప్రారంభమవుతుంది.",
     domesticDescription:
@@ -628,6 +648,16 @@ const translations = {
     latestTitle: "झींगा आपूर्ति श्रृंखला के हर हिस्से के लिए जानकारी.",
     latestDescription:
       "घरेलू खपत, कीमतों, स्वास्थ्य और बाज़ार स्थिरता पर नवीनतम लेख.",
+    viewAll: "सभी देखें",
+    recent: "हालिया",
+    popular: "लोकप्रिय",
+    welcomeTitle: "Shrimp.News में आपका स्वागत है",
+    welcomeDescription:
+      "झींगा उद्योग समाचार, बाज़ार, पालन, स्वास्थ्य और नवाचार के लिए आपका विश्वसनीय स्रोत.",
+    loadingArticles: "लेख लोड हो रहे हैं…",
+    mainCategoryLabel: "मुख्य समाचार श्रेणी",
+    subcategoryLabel: "उपश्रेणी",
+    brandName: "Shrimp.News",
 
     domesticTitle: "भारत में झींगा का भविष्य घरेलू बाज़ार से शुरू होता है.",
     domesticDescription:
