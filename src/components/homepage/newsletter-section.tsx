@@ -3,6 +3,8 @@
 import { FormEvent, useState } from "react";
 import { useLanguage } from "@/context/language-context";
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function NewsletterSection() {
   const { t } = useLanguage();
   const [email, setEmail] = useState("");
@@ -15,13 +17,7 @@ export function NewsletterSection() {
     if (busy) return;
 
     const trimmedEmail = email.trim();
-    if (!trimmedEmail) {
-      setError(t("newsletterEmptyError"));
-      setMessage("");
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+    if (!trimmedEmail || !EMAIL_PATTERN.test(trimmedEmail)) {
       setError(t("newsletterInvalidError"));
       setMessage("");
       return;
@@ -36,15 +32,32 @@ export function NewsletterSection() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail }),
       });
-      const body = await response.json();
-      if (!response.ok) {
-        setError(body.error || "Unable to subscribe right now.");
+      await response.json().catch(() => null);
+
+      if (response.status === 201) {
+        setMessage(t("newsletterSuccessPrefix"));
+        setEmail("");
         return;
       }
-      setMessage(t("newsletterSuccessPrefix"));
-      setEmail("");
+
+      if (response.status === 409) {
+        setError(t("newsletterAlreadySubscribed"));
+        return;
+      }
+
+      if (response.status === 400) {
+        setError(t("newsletterInvalidError"));
+        return;
+      }
+
+      if (response.status === 429) {
+        setError(t("newsletterRateLimitError"));
+        return;
+      }
+
+      setError(t("newsletterSubmitError"));
     } catch {
-      setError("Unable to subscribe right now.");
+      setError(t("newsletterSubmitError"));
     } finally {
       setBusy(false);
     }
@@ -96,7 +109,7 @@ export function NewsletterSection() {
                     disabled={busy}
                     className="h-12 rounded-2xl bg-[#FF4F2E] px-6 text-sm font-bold text-white transition hover:bg-[#FF6548] hover:shadow-[0_8px_24px_rgba(255,79,46,0.28)] disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {busy ? "Subscribing..." : t("newsletterSubscribe")}
+                    {busy ? t("newsletterSubscribing") : t("newsletterSubscribe")}
                   </button>
                 </div>
                 {error ? (

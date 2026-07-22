@@ -150,9 +150,13 @@ const translations = {
       "You'll receive the Shrimp Brief every Monday — free forever.",
     newsletterEmailLabel: "Email address",
     newsletterSubscribe: "Subscribe free",
-    newsletterEmptyError: "Please enter your email address.",
+    newsletterSubscribing: "Subscribing...",
+    newsletterEmptyError: "Please enter a valid email address.",
     newsletterInvalidError: "Please enter a valid email address.",
-    newsletterSuccessPrefix: "Thank you for subscribing to the Shrimp Brief.",
+    newsletterAlreadySubscribed: "This email is already subscribed.",
+    newsletterRateLimitError: "Too many attempts. Please try again later.",
+    newsletterSubmitError: "Something went wrong. Please try again.",
+    newsletterSuccessPrefix: "Thanks for subscribing!",
     newsletterSuccessSuffix: "",
 
     footerTagline:
@@ -249,8 +253,11 @@ const translations = {
     contactTitle: "Get in touch",
     contactDescription:
       "Editorial, business, and partnership enquiries for Shrimp.News.",
-    contactBody:
-      "General Enquiries\nEditorial: editor@shrimp.news\nBusiness: sales@shrimp.news\n\nWe welcome editorial ideas, partnerships, advertising inquiries, and story submissions connected to the global shrimp industry.",
+    contactGeneralEnquiries: "General Enquiries",
+    contactEditorialLabel: "Editorial",
+    contactBusinessLabel: "Business",
+    contactClosing:
+      "We welcome editorial ideas, partnerships, advertising inquiries, and story submissions connected to the global shrimp industry.",
 
     askPageEyebrow: "Ask Prana",
     askPageTitle: "Ask a focused shrimp intelligence assistant",
@@ -263,22 +270,48 @@ const translations = {
     privacyTitle: "Privacy Policy",
     privacyDescription:
       "How Shrimp.News collects, uses, and protects your personal information.",
-    privacyBody:
-      "Shrimp.News respects your privacy and is committed to protecting your personal information.\n\nInformation collected through our website, including contact forms, newsletter subscriptions, cookies, and user interactions, is used solely to improve our services, communicate with our audience, and enhance user experience.\n\nWe do not sell, rent, or share personal information with third parties except where required by law or necessary to operate our services.\n\nBy accessing and using Shrimp.News, you consent to the collection and use of information in accordance with this Privacy Policy.\n\nThis Privacy Policy may be updated periodically without prior notice.",
+    privacyP1:
+      "Shrimp.News respects your privacy and is committed to protecting your personal information.",
+    privacyP2:
+      "Information collected through our website, including contact forms, newsletter subscriptions, cookies, and user interactions, is used solely to improve our services, communicate with our audience, and enhance user experience.",
+    privacyP3:
+      "We do not sell, rent, or share personal information with third parties except where required by law or necessary to operate our services.",
+    privacyP4:
+      "By accessing and using Shrimp.News, you consent to the collection and use of information in accordance with this Privacy Policy.",
+    privacyP5:
+      "This Privacy Policy may be updated periodically without prior notice.",
 
     termsEyebrow: "Terms & Conditions",
     termsTitle: "Terms & Conditions",
     termsDescription:
       "The rules that apply when you access and use Shrimp.News.",
-    termsBody:
-      "By accessing and using Shrimp.News, you agree to comply with these Terms and Conditions.\n\nAll content published on Shrimp.News, including articles, images, graphics, videos, reports, and other materials, is protected by applicable intellectual property laws.\n\nContent may be shared for personal and non-commercial purposes with appropriate attribution. Reproduction, modification, or commercial use without prior written permission is prohibited.\n\nThe information published on Shrimp.News is intended for educational, informational, and industry awareness purposes.\n\nShrimp.News reserves the right to modify website content, services, and these Terms & Conditions at any time without prior notice.\n\nContinued use of the website constitutes acceptance of the latest version of these Terms.",
+    termsP1:
+      "By accessing and using Shrimp.News, you agree to comply with these Terms and Conditions.",
+    termsP2:
+      "All content published on Shrimp.News, including articles, images, graphics, videos, reports, and other materials, is protected by applicable intellectual property laws.",
+    termsP3:
+      "Content may be shared for personal and non-commercial purposes with appropriate attribution. Reproduction, modification, or commercial use without prior written permission is prohibited.",
+    termsP4:
+      "The information published on Shrimp.News is intended for educational, informational, and industry awareness purposes.",
+    termsP5:
+      "Shrimp.News reserves the right to modify website content, services, and these Terms & Conditions at any time without prior notice.",
+    termsP6:
+      "Continued use of the website constitutes acceptance of the latest version of these Terms.",
 
     disclaimerEyebrow: "Disclaimer",
     disclaimerTitle: "Disclaimer",
     disclaimerDescription:
       "Important limitations about the information published on Shrimp.News.",
-    disclaimerBody:
-      "The information available on Shrimp.News is provided for educational, informational, and industry awareness purposes only.\n\nWhile every effort is made to ensure the accuracy and reliability of published content, Shrimp.News does not guarantee that all information is complete, current, or free from errors.\n\nArticles covering shrimp farming, disease management, water quality, nutrition, markets, pricing, technology, exports, and policy should not be considered professional veterinary, financial, legal, investment, or regulatory advice.\n\nReaders are encouraged to consult qualified professionals before making farming, business, financial, or management decisions.\n\nShrimp.News, its publishers, editors, and contributors shall not be held responsible for any direct or indirect loss arising from the use of information published on this website.",
+    disclaimerP1:
+      "The information available on Shrimp.News is provided for educational, informational, and industry awareness purposes only.",
+    disclaimerP2:
+      "While every effort is made to ensure the accuracy and reliability of published content, Shrimp.News does not guarantee that all information is complete, current, or free from errors.",
+    disclaimerP3:
+      "Articles covering shrimp farming, disease management, water quality, nutrition, markets, pricing, technology, exports, and policy should not be considered professional veterinary, financial, legal, investment, or regulatory advice.",
+    disclaimerP4:
+      "Readers are encouraged to consult qualified professionals before making farming, business, financial, or management decisions.",
+    disclaimerP5:
+      "Shrimp.News, its publishers, editors, and contributors shall not be held responsible for any direct or indirect loss arising from the use of information published on this website.",
 
     askPranaHelpTitle: "How can Ask Prana help?",
     askPranaHelpDescription:
@@ -392,9 +425,13 @@ const translations = {
       "You'll receive the Shrimp Brief every Monday — free forever.",
     newsletterEmailLabel: "ఇమెయిల్ చిరునామా",
     newsletterSubscribe: "ఉచితంగా సబ్‌స్క్రైబ్ చేయండి",
-    newsletterEmptyError: "దయచేసి మీ ఇమెయిల్ చిరునామాను నమోదు చేయండి.",
+    newsletterSubscribing: "సబ్‌స్క్రైబ్ అవుతోంది...",
+    newsletterEmptyError: "దయచేసి సరైన ఇమెయిల్ చిరునామాను నమోదు చేయండి.",
     newsletterInvalidError: "దయచేసి సరైన ఇమెయిల్ చిరునామాను నమోదు చేయండి.",
-    newsletterSuccessPrefix: "Thank you for subscribing to the Shrimp Brief.",
+    newsletterAlreadySubscribed: "ఈ ఇమెయిల్ ఇప్పటికే సబ్‌స్క్రైబ్ అయి ఉంది.",
+    newsletterRateLimitError: "చాలా ప్రయత్నాలు జరిగాయి. దయచేసి తర్వాత మళ్లీ ప్రయత్నించండి.",
+    newsletterSubmitError: "ఏదో తప్పు జరిగింది. దయచేసి మళ్లీ ప్రయత్నించండి.",
+    newsletterSuccessPrefix: "సబ్‌స్క్రైబ్ అయినందుకు ధన్యవాదాలు!",
     newsletterSuccessSuffix: "",
 
     footerTagline:
@@ -479,8 +516,12 @@ const translations = {
     contactEyebrow: "సంప్రదించండి",
     contactTitle: "మమ్మల్ని సంప్రదించండి",
     contactDescription:
-      "ఎడిటోరియల్, వ్యాపారం మరియు భాగస్వామ్య విచారణల కోసం సంప్రదింపు అనుభవం ఇక్కడ నిర్మించబడుతుంది.",
-    contactBody: "సాధారణ విచారణలు\nEditorial: editor@shrimp.news\nBusiness: sales@shrimp.news\n\nఎడిటోరియల్ ఆలోచనలు, భాగస్వామ్యాలు, ప్రకటనలు, కథన సూచనలను స్వాగతిస్తాము.",
+      "Shrimp.News కోసం ఎడిటోరియల్, వ్యాపారం మరియు భాగస్వామ్య విచారణలు.",
+    contactGeneralEnquiries: "సాధారణ విచారణలు",
+    contactEditorialLabel: "ఎడిటోరియల్",
+    contactBusinessLabel: "వ్యాపారం",
+    contactClosing:
+      "ఎడిటోరియల్ ఆలోచనలు, భాగస్వామ్యాలు, ప్రకటనలు మరియు ప్రపంచ రొయ్యల పరిశ్రమకు సంబంధించిన కథన సూచనలను స్వాగతిస్తాము.",
 
     askPageEyebrow: "Ask Pranaని అడగండి",
     askPageTitle: "రొయ్యల సమాచార సహాయకుడిని అడగండి",
@@ -493,22 +534,48 @@ const translations = {
     privacyTitle: "గోప్యతా విధానం",
     privacyDescription:
       "Shrimp.News మీ వ్యక్తిగత సమాచారాన్ని ఎలా సేకరిస్తుంది, ఉపయోగిస్తుంది మరియు రక్షిస్తుంది.",
-    privacyBody:
-      "Shrimp.News respects your privacy and is committed to protecting your personal information.\n\nInformation collected through our website, including contact forms, newsletter subscriptions, cookies, and user interactions, is used solely to improve our services, communicate with our audience, and enhance user experience.\n\nWe do not sell, rent, or share personal information with third parties except where required by law or necessary to operate our services.\n\nBy accessing and using Shrimp.News, you consent to the collection and use of information in accordance with this Privacy Policy.\n\nThis Privacy Policy may be updated periodically without prior notice.",
+    privacyP1:
+      "Shrimp.News మీ గోప్యతను గౌరవిస్తుంది మరియు మీ వ్యక్తిగత సమాచారాన్ని రక్షించడానికి కట్టుబడి ఉంది.",
+    privacyP2:
+      "మా వెబ్‌సైట్ ద్వారా సేకరించిన సమాచారం—సంప్రదింపు ఫారమ్‌లు, న్యూస్‌లెటర్ సబ్‌స్క్రిప్షన్లు, కుకీలు మరియు వినియోగదారు పరస్పర చర్యలు—మా సేవలను మెరుగుపరచడానికి, ప్రేక్షకులతో సంప్రదించడానికి మరియు వినియోగదారు అనుభవాన్ని పెంచడానికి మాత్రమే ఉపయోగించబడుతుంది.",
+    privacyP3:
+      "చట్టం ప్రకారం అవసరమైనా లేదా మా సేవలను నడపడానికి అవసరమైనా తప్ప, మేము వ్యక్తిగత సమాచారాన్ని మూడవ పక్షాలకు అమ్మము, అద్దెకు ఇవ్వము లేదా పంచుకోము.",
+    privacyP4:
+      "Shrimp.Newsను యాక్సెస్ చేసి ఉపయోగించడం ద్వారా, మీరు ఈ గోప్యతా విధానం ప్రకారం సమాచార సేకరణ మరియు ఉపయోగానికి సమ్మతి తెలుపుతున్నారు.",
+    privacyP5:
+      "ఈ గోప్యతా విధానం ముందస్తు నోటీసు లేకుండా కాలానుగుణంగా నవీకరించబడవచ్చు.",
 
     termsEyebrow: "నిబంధనలు మరియు షరతులు",
     termsTitle: "నిబంధనలు మరియు షరతులు",
     termsDescription:
       "Shrimp.Newsను ఉపయోగించేటప్పుడు వర్తించే నియమాలు.",
-    termsBody:
-      "By accessing and using Shrimp.News, you agree to comply with these Terms and Conditions.\n\nAll content published on Shrimp.News, including articles, images, graphics, videos, reports, and other materials, is protected by applicable intellectual property laws.\n\nContent may be shared for personal and non-commercial purposes with appropriate attribution. Reproduction, modification, or commercial use without prior written permission is prohibited.\n\nThe information published on Shrimp.News is intended for educational, informational, and industry awareness purposes.\n\nShrimp.News reserves the right to modify website content, services, and these Terms & Conditions at any time without prior notice.\n\nContinued use of the website constitutes acceptance of the latest version of these Terms.",
+    termsP1:
+      "Shrimp.Newsను యాక్సెస్ చేసి ఉపయోగించడం ద్వారా, మీరు ఈ నిబంధనలు మరియు షరతులను పాటించడానికి అంగీకరిస్తున్నారు.",
+    termsP2:
+      "Shrimp.Newsలో ప్రచురించిన అన్ని కంటెంట్—వ్యాసాలు, చిత్రాలు, గ్రాఫిక్స్, వీడియోలు, నివేదికలు మరియు ఇతర సామగ్రి—వర్తించే మేధో సంపత్తి చట్టాల ద్వారా రక్షించబడుతుంది.",
+    termsP3:
+      "సరైన ఆపాదనతో వ్యక్తిగత మరియు వాణిజ్యేతర ప్రయోజనాల కోసం కంటెంట్‌ను పంచుకోవచ్చు. ముందస్తు రాతపూర్వక అనుమతి లేకుండా పునరుత్పత్తి, సవరణ లేదా వాణిజ్య ఉపయోగం నిషేధించబడింది.",
+    termsP4:
+      "Shrimp.Newsలో ప్రచురించిన సమాచారం విద్యా, సమాచార మరియు పరిశ్రమ అవగాహన ప్రయోజనాల కోసం ఉద్దేశించబడింది.",
+    termsP5:
+      "Shrimp.News వెబ్‌సైట్ కంటెంట్, సేవలు మరియు ఈ నిబంధనలు & షరతులను ముందస్తు నోటీసు లేకుండా ఎప్పుడైనా సవరించే హక్కును కలిగి ఉంది.",
+    termsP6:
+      "వెబ్‌సైట్‌ను కొనసాగించి ఉపయోగించడం ఈ నిబంధనల తాజా వెర్షన్‌ను అంగీకరించడమే.",
 
     disclaimerEyebrow: "డిస్‌క్లైమర్",
     disclaimerTitle: "డిస్‌క్లైమర్",
     disclaimerDescription:
       "Shrimp.Newsలో ప్రచురించిన సమాచారం గురించి ముఖ్యమైన పరిమితులు.",
-    disclaimerBody:
-      "The information available on Shrimp.News is provided for educational, informational, and industry awareness purposes only.\n\nWhile every effort is made to ensure the accuracy and reliability of published content, Shrimp.News does not guarantee that all information is complete, current, or free from errors.\n\nArticles covering shrimp farming, disease management, water quality, nutrition, markets, pricing, technology, exports, and policy should not be considered professional veterinary, financial, legal, investment, or regulatory advice.\n\nReaders are encouraged to consult qualified professionals before making farming, business, financial, or management decisions.\n\nShrimp.News, its publishers, editors, and contributors shall not be held responsible for any direct or indirect loss arising from the use of information published on this website.",
+    disclaimerP1:
+      "Shrimp.Newsలో అందుబాటులో ఉన్న సమాచారం విద్యా, సమాచార మరియు పరిశ్రమ అవగాహన ప్రయోజనాల కోసం మాత్రమే అందించబడుతుంది.",
+    disclaimerP2:
+      "ప్రచురిత కంటెంట్ యొక్క ఖచ్చితత్వం మరియు నమ్మకత్వాన్ని నిర్ధారించడానికి ప్రతి ప్రయత్నం చేసినప్పటికీ, అన్ని సమాచారం పూర్తి, ప్రస్తుత లేదా లోపరహితమని Shrimp.News హామీ ఇవ్వదు.",
+    disclaimerP3:
+      "రొయ్యల సాగు, వ్యాధి నిర్వహణ, నీటి నాణ్యత, పోషకాహారం, మార్కెట్లు, ధరలు, సాంకేతికత, ఎగుమతులు మరియు విధానాలపై వ్యాసాలను వృత్తిపరమైన వెటర్నరీ, ఆర్థిక, చట్టపరమైన, పెట్టుబడి లేదా నియంత్రణ సలహాగా పరిగణించకూడదు.",
+    disclaimerP4:
+      "సాగు, వ్యాపారం, ఆర్థిక లేదా నిర్వహణ నిర్ణయాలు తీసుకునే ముందు అర్హత కలిగిన నిపుణులను సంప్రదించాలని పాఠకులను ప్రోత్సహిస్తున్నాము.",
+    disclaimerP5:
+      "ఈ వెబ్‌సైట్‌లో ప్రచురించిన సమాచారం ఉపయోగం వల్ల కలిగే ఏదైనా ప్రత్యక్ష లేదా పరోక్ష నష్టానికి Shrimp.News, దాని ప్రచురణకర్తలు, ఎడిటర్లు మరియు సహకారులు బాధ్యులు కాదు.",
 
     askPranaHelpTitle: "Ask Prana ఎలా సహాయం చేయగలదు?",
     askPranaHelpDescription:
@@ -622,9 +689,13 @@ const translations = {
       "You'll receive the Shrimp Brief every Monday — free forever.",
     newsletterEmailLabel: "ईमेल पता",
     newsletterSubscribe: "मुफ़्त सदस्यता लें",
-    newsletterEmptyError: "कृपया अपना ईमेल पता दर्ज करें.",
+    newsletterSubscribing: "सदस्यता हो रही है...",
+    newsletterEmptyError: "कृपया एक मान्य ईमेल पता दर्ज करें.",
     newsletterInvalidError: "कृपया एक मान्य ईमेल पता दर्ज करें.",
-    newsletterSuccessPrefix: "Thank you for subscribing to the Shrimp Brief.",
+    newsletterAlreadySubscribed: "यह ईमेल पहले से सदस्यता में है.",
+    newsletterRateLimitError: "बहुत अधिक प्रयास हो चुके हैं. कृपया बाद में पुनः प्रयास करें.",
+    newsletterSubmitError: "कुछ गलत हो गया. कृपया पुनः प्रयास करें.",
+    newsletterSuccessPrefix: "सदस्यता लेने के लिए धन्यवाद!",
     newsletterSuccessSuffix: "",
 
     footerTagline:
@@ -709,8 +780,12 @@ const translations = {
     contactEyebrow: "संपर्क करें",
     contactTitle: "हमसे संपर्क करें",
     contactDescription:
-      "संपादकीय, व्यवसाय और साझेदारी पूछताछ के लिए संपर्क अनुभव यहाँ बनाया जाएगा.",
-    contactBody: "सामान्य पूछताछ\nEditorial: editor@shrimp.news\nBusiness: sales@shrimp.news\n\nहम संपादकीय विचार, साझेदारी, विज्ञापन और कहानी सुझावों का स्वागत करते हैं.",
+      "Shrimp.News के लिए संपादकीय, व्यवसाय और साझेदारी पूछताछ.",
+    contactGeneralEnquiries: "सामान्य पूछताछ",
+    contactEditorialLabel: "संपादकीय",
+    contactBusinessLabel: "व्यवसाय",
+    contactClosing:
+      "हम वैश्विक झींगा उद्योग से जुड़े संपादकीय विचार, साझेदारी, विज्ञापन और कहानी सुझावों का स्वागत करते हैं.",
 
     askPageEyebrow: "Ask Prana से पूछें",
     askPageTitle: "झींगा जानकारी सहायक से पूछें",
@@ -723,22 +798,48 @@ const translations = {
     privacyTitle: "गोपनीयता नीति",
     privacyDescription:
       "Shrimp.News आपकी व्यक्तिगत जानकारी कैसे एकत्र करता है, उपयोग करता है और सुरक्षित रखता है.",
-    privacyBody:
-      "Shrimp.News respects your privacy and is committed to protecting your personal information.\n\nInformation collected through our website, including contact forms, newsletter subscriptions, cookies, and user interactions, is used solely to improve our services, communicate with our audience, and enhance user experience.\n\nWe do not sell, rent, or share personal information with third parties except where required by law or necessary to operate our services.\n\nBy accessing and using Shrimp.News, you consent to the collection and use of information in accordance with this Privacy Policy.\n\nThis Privacy Policy may be updated periodically without prior notice.",
+    privacyP1:
+      "Shrimp.News आपकी गोपनीयता का सम्मान करता है और आपकी व्यक्तिगत जानकारी की सुरक्षा के लिए प्रतिबद्ध है.",
+    privacyP2:
+      "हमारी वेबसाइट के माध्यम से एकत्र जानकारी—संपर्क फ़ॉर्म, न्यूज़लेटर सदस्यता, कुकीज़ और उपयोगकर्ता इंटरैक्शन—का उपयोग केवल हमारी सेवाओं को बेहतर बनाने, दर्शकों से संवाद करने और उपयोगकर्ता अनुभव बढ़ाने के लिए किया जाता है.",
+    privacyP3:
+      "कानून द्वारा आवश्यक होने या हमारी सेवाएँ संचालित करने के लिए आवश्यक होने के अलावा, हम व्यक्तिगत जानकारी को तीसरे पक्ष को बेचते, किराए पर देते या साझा नहीं करते.",
+    privacyP4:
+      "Shrimp.News का उपयोग करके, आप इस गोपनीयता नीति के अनुसार जानकारी के संग्रह और उपयोग के लिए सहमति देते हैं.",
+    privacyP5:
+      "यह गोपनीयता नीति बिना पूर्व सूचना के समय-समय पर अपडेट की जा सकती है.",
 
     termsEyebrow: "नियम और शर्तें",
     termsTitle: "नियम और शर्तें",
     termsDescription:
       "Shrimp.News का उपयोग करते समय लागू होने वाले नियम.",
-    termsBody:
-      "By accessing and using Shrimp.News, you agree to comply with these Terms and Conditions.\n\nAll content published on Shrimp.News, including articles, images, graphics, videos, reports, and other materials, is protected by applicable intellectual property laws.\n\nContent may be shared for personal and non-commercial purposes with appropriate attribution. Reproduction, modification, or commercial use without prior written permission is prohibited.\n\nThe information published on Shrimp.News is intended for educational, informational, and industry awareness purposes.\n\nShrimp.News reserves the right to modify website content, services, and these Terms & Conditions at any time without prior notice.\n\nContinued use of the website constitutes acceptance of the latest version of these Terms.",
+    termsP1:
+      "Shrimp.News का उपयोग करके, आप इन नियमों और शर्तों का पालन करने के लिए सहमत होते हैं.",
+    termsP2:
+      "Shrimp.News पर प्रकाशित सभी सामग्री—लेख, चित्र, ग्राफ़िक्स, वीडियो, रिपोर्ट और अन्य सामग्री—लागू बौद्धिक संपदा कानूनों द्वारा संरक्षित है.",
+    termsP3:
+      "उचित श्रेय के साथ व्यक्तिगत और गैर-व्यावसायिक उद्देश्यों के लिए सामग्री साझा की जा सकती है. पूर्व लिखित अनुमति के बिना पुनरुत्पादन, संशोधन या व्यावसायिक उपयोग निषिद्ध है.",
+    termsP4:
+      "Shrimp.News पर प्रकाशित जानकारी शैक्षिक, सूचनात्मक और उद्योग जागरूकता उद्देश्यों के लिए है.",
+    termsP5:
+      "Shrimp.News बिना पूर्व सूचना के किसी भी समय वेबसाइट सामग्री, सेवाएँ और इन नियमों व शर्तों को संशोधित करने का अधिकार रखता है.",
+    termsP6:
+      "वेबसाइट का निरंतर उपयोग इन नियमों के नवीनतम संस्करण की स्वीकृति माना जाता है.",
 
     disclaimerEyebrow: "अस्वीकरण",
     disclaimerTitle: "अस्वीकरण",
     disclaimerDescription:
       "Shrimp.News पर प्रकाशित जानकारी से जुड़ी महत्वपूर्ण सीमाएँ.",
-    disclaimerBody:
-      "The information available on Shrimp.News is provided for educational, informational, and industry awareness purposes only.\n\nWhile every effort is made to ensure the accuracy and reliability of published content, Shrimp.News does not guarantee that all information is complete, current, or free from errors.\n\nArticles covering shrimp farming, disease management, water quality, nutrition, markets, pricing, technology, exports, and policy should not be considered professional veterinary, financial, legal, investment, or regulatory advice.\n\nReaders are encouraged to consult qualified professionals before making farming, business, financial, or management decisions.\n\nShrimp.News, its publishers, editors, and contributors shall not be held responsible for any direct or indirect loss arising from the use of information published on this website.",
+    disclaimerP1:
+      "Shrimp.News पर उपलब्ध जानकारी केवल शैक्षिक, सूचनात्मक और उद्योग जागरूकता उद्देश्यों के लिए प्रदान की जाती है.",
+    disclaimerP2:
+      "प्रकाशित सामग्री की सटीकता और विश्वसनीयता सुनिश्चित करने का हर प्रयास किया जाता है, फिर भी Shrimp.News यह गारंटी नहीं देता कि सभी जानकारी पूर्ण, वर्तमान या त्रुटिरहित है.",
+    disclaimerP3:
+      "झींगा पालन, रोग प्रबंधन, जल गुणवत्ता, पोषण, बाज़ार, कीमतें, तकनीक, निर्यात और नीति पर लेखों को पेशेवर पशुचिकित्सा, वित्तीय, कानूनी, निवेश या नियामक सलाह नहीं माना जाना चाहिए.",
+    disclaimerP4:
+      "पालन, व्यवसाय, वित्तीय या प्रबंधन निर्णय लेने से पहले योग्य पेशेवरों से परामर्श करने के लिए पाठकों को प्रोत्साहित किया जाता है.",
+    disclaimerP5:
+      "इस वेबसाइट पर प्रकाशित जानकारी के उपयोग से होने वाले किसी भी प्रत्यक्ष या अप्रत्यक्ष नुकसान के लिए Shrimp.News, इसके प्रकाशक, संपादक और योगदानकर्ता जिम्मेदार नहीं होंगे.",
 
     askPranaHelpTitle: "Ask Prana कैसे मदद कर सकता है?",
     askPranaHelpDescription:

@@ -142,48 +142,6 @@ export function HomePage({
               ))}
             </div>
           </div>
-
-          <div className="grid gap-5 lg:grid-cols-2">
-            <div className="market-floating-card rounded-[24px] border border-cyan-300/20 bg-[#0B4F7A] p-8 shadow-[0_24px_70px_rgba(11,79,122,0.22)] transition duration-300 hover:-translate-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-orange-300">
-                {t("domesticConsumption")}
-              </p>
-              <h3 className="mt-4 text-2xl font-semibold text-white">
-                {t("domesticTitle")}
-              </h3>
-              <p className="mt-4 text-sm leading-7 text-cyan-50/85">
-                {t("domesticDescription")}
-              </p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <span className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-cyan-50">
-                  {t("whyConsumptionLags")}
-                </span>
-                <span className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-cyan-50">
-                  {t("healthNutritionStories")}
-                </span>
-              </div>
-            </div>
-
-            <div className="market-floating-card rounded-[24px] border border-cyan-300/20 bg-[#0B4F7A] p-8 shadow-[0_24px_70px_rgba(11,79,122,0.22)] transition duration-300 hover:-translate-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-orange-300">
-                {t("marketsLabel")}
-              </p>
-              <h3 className="mt-4 text-2xl font-semibold text-white">
-                {t("marketsTitle")}
-              </h3>
-              <p className="mt-4 text-sm leading-7 text-cyan-50/85">
-                {t("marketsDescription")}
-              </p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <span className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-cyan-50">
-                  {t("farmgatePriceDrivers")}
-                </span>
-                <span className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-cyan-50">
-                  {t("exportVsDomestic")}
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 

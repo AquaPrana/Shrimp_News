@@ -11,7 +11,10 @@ type PageShellProps = {
   titleKey: TranslationKey;
   descriptionKey: TranslationKey;
   eyebrowKey?: TranslationKey;
+  /** Single body blob (paragraphs separated by blank lines). Prefer bodyKeys for new pages. */
   bodyKey?: TranslationKey;
+  /** Ordered translation keys — one paragraph/block per key for multilingual pages. */
+  bodyKeys?: readonly TranslationKey[];
   hideTitleAndDescription?: boolean;
   children?: ReactNode;
 };
@@ -21,10 +24,20 @@ export function PageShell({
   descriptionKey,
   eyebrowKey,
   bodyKey,
+  bodyKeys,
   hideTitleAndDescription = false,
   children,
 }: PageShellProps) {
   const { t } = useLanguage();
+
+  const resolvedParagraphs =
+    bodyKeys?.map((key) => t(key).trim()).filter(Boolean) ??
+    (bodyKey
+      ? t(bodyKey)
+          .split(/\n{2,}/)
+          .map((paragraph) => paragraph.trim())
+          .filter(Boolean)
+      : []);
 
   return (
     <section className="relative overflow-x-hidden bg-white px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-16">
@@ -51,17 +64,13 @@ export function PageShell({
         </div>
 
         {children ??
-          (bodyKey ? (
+          (resolvedParagraphs.length > 0 ? (
             <div className={PAGE_CONTENT_PANEL_CLASS}>
-              {t(bodyKey)
-                .split(/\n{2,}/)
-                .map((paragraph) => paragraph.trim())
-                .filter(Boolean)
-                .map((paragraph, index) => (
-                  <p key={index} className="mb-4 last:mb-0">
-                    {paragraph}
-                  </p>
-                ))}
+              {resolvedParagraphs.map((paragraph, index) => (
+                <p key={index} className="mb-4 last:mb-0">
+                  {paragraph}
+                </p>
+              ))}
             </div>
           ) : null)}
       </div>
