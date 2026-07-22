@@ -10,8 +10,8 @@ import {
   marketTickerCopy,
 } from "@/lib/market-data/localization";
 
-/** Shown when the market API does not provide a usable timestamp. */
-const STATIC_UPDATED_AT = "2026-07-13T10:00:00.000Z";
+/** Fallback only if admin has not saved a Last Updated value yet. */
+const FALLBACK_UPDATED_AT = "2026-07-15T12:30:00.000Z";
 
 function formatPrice(
   value: number,
@@ -68,31 +68,34 @@ function formatChange(
   return `${rounded}%`;
 }
 
-function formatLastUpdated(iso: string | null | undefined, language: Language) {
-  const raw = iso && !Number.isNaN(Date.parse(iso)) ? iso : STATIC_UPDATED_AT;
+function formatLastUpdated(iso: string | null | undefined) {
+  const raw = iso && !Number.isNaN(Date.parse(iso)) ? iso : FALLBACK_UPDATED_AT;
   const date = new Date(raw);
-  const locale =
-    language === "te" ? "te-IN" : language === "hi" ? "hi-IN" : "en-IN";
 
-  return date.toLocaleString(locale, {
-    day: "numeric",
+  // Format the admin-saved timestamp in IST without using the current clock.
+  const ist = new Date(date.getTime() + 5.5 * 60 * 60 * 1000);
+  const day = ist.getUTCDate();
+  const month = ist.toLocaleString("en-GB", {
     month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+    timeZone: "UTC",
   });
+  const year = ist.getUTCFullYear();
+  let hours = ist.getUTCHours();
+  const minutes = String(ist.getUTCMinutes()).padStart(2, "0");
+  const meridiem = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+
+  return `${day} ${month.toUpperCase()} ${year}, ${String(hours).padStart(2, "0")}:${minutes} ${meridiem}`;
 }
 
 function TickerItemRow({
   item,
   language,
   copy,
-  isStale,
 }: {
   item: MarketPriceItem;
   language: Language;
   copy: (typeof marketTickerCopy)[Language];
-  isStale: boolean;
 }) {
   const changeLabel = formatChange(item.changePercent, item.direction);
 
@@ -115,18 +118,6 @@ function TickerItemRow({
       >
         {changeLabel ?? "—"}
       </span>
-
-      {item.isLive && (
-        <span className="rounded-full border border-white/40 bg-white/20 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.12em] text-white">
-          {copy.live}
-        </span>
-      )}
-
-      {isStale && (
-        <span className="rounded-full border border-white/35 bg-black/15 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.12em] text-white">
-          {copy.delayed}
-        </span>
-      )}
     </div>
   );
 }
@@ -134,7 +125,7 @@ function TickerItemRow({
 export function MarketTicker() {
   const { language } = useLanguage();
   const copy = marketTickerCopy[language];
-  const { data, isLoading, error, isStale, lastUpdated, refetch } =
+  const { data, isLoading, error, lastUpdated, refetch } =
     useMarketPrices();
 
   // One unique logical set — never flatten a duplicated array into the data.
@@ -149,12 +140,7 @@ export function MarketTicker() {
 
   const loadingItems = useMemo(() => Array.from({ length: 8 }), []);
 
-  const updatedLabel = formatLastUpdated(
-    lastUpdated ||
-      tickerItems[0]?.updatedAt ||
-      tickerItems[0]?.observedAt,
-    language,
-  );
+  const updatedLabel = formatLastUpdated(lastUpdated);
 
   return (
     <section
@@ -196,7 +182,6 @@ export function MarketTicker() {
                     item={item}
                     language={language}
                     copy={copy}
-                    isStale={isStale}
                   />
                 ))}
                 {/*
@@ -210,7 +195,6 @@ export function MarketTicker() {
                       item={item}
                       language={language}
                       copy={copy}
-                      isStale={isStale}
                     />
                   ))}
                 </div>

@@ -21,7 +21,8 @@ export interface MarketPricesApiResponse {
   fetchedAt: string;
 }
 
-const externalApiUrl = process.env.NEXT_PUBLIC_MARKET_DATA_API_URL?.trim();
+/** Fallback Last Updated when DB ticker is empty: 15 Jul 2026, 06:00 PM IST. */
+const FALLBACK_LAST_UPDATED = "2026-07-15T12:30:00.000Z";
 
 export function buildDemoMarketPricesPayload(): MarketPricesApiResponse {
   return {
@@ -34,13 +35,13 @@ export function buildDemoMarketPricesPayload(): MarketPricesApiResponse {
       changePercent: item.changePercent ?? null,
       direction: item.direction,
       sourceName: item.sourceName,
-      isLive: item.isLive,
-      observedAt: item.observedAt,
-      updatedAt: item.updatedAt,
+      isLive: false,
+      observedAt: FALLBACK_LAST_UPDATED,
+      updatedAt: FALLBACK_LAST_UPDATED,
     })),
-    source: "demo-api",
-    isFallback: false,
-    fetchedAt: new Date().toISOString(),
+    source: "demo-fallback",
+    isFallback: true,
+    fetchedAt: FALLBACK_LAST_UPDATED,
   };
 }
 
@@ -78,11 +79,7 @@ function isMarketPricesApiResponse(
 }
 
 export async function fetchMarketPrices(): Promise<MarketPricesApiResponse> {
-  if (!externalApiUrl) {
-    return buildDemoMarketPricesPayload();
-  }
-
-  const response = await fetch(externalApiUrl, {
+  const response = await fetch("/api/ticker", {
     headers: { Accept: "application/json" },
     cache: "no-store",
   });

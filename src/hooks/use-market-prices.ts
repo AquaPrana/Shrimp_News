@@ -7,18 +7,16 @@ import {
 } from "@/lib/market-data/client";
 
 const REFRESH_MS = 3 * 60 * 1000;
-const STALE_MS = 10 * 60 * 1000;
 
 export function useMarketPrices() {
   const initialPayload = useMemo(() => buildDemoMarketPricesPayload(), []);
   const [data, setData] = useState(initialPayload);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFallback, setIsFallback] = useState(initialPayload.isFallback);
   const [lastUpdated, setLastUpdated] = useState<string | null>(
     initialPayload.fetchedAt,
   );
-  const [isStale, setIsStale] = useState(false);
   const intervalRef = useRef<number | null>(null);
 
   const fetchPrices = async () => {
@@ -28,10 +26,6 @@ export function useMarketPrices() {
       setData(payload);
       setIsFallback(Boolean(payload.isFallback));
       setLastUpdated(payload.fetchedAt);
-      const fetchedAt = Date.parse(payload.fetchedAt);
-      setIsStale(
-        Number.isFinite(fetchedAt) && Date.now() - fetchedAt > STALE_MS,
-      );
       setError(null);
       return payload;
     } catch (err) {
@@ -77,7 +71,7 @@ export function useMarketPrices() {
     error,
     isFallback,
     lastUpdated,
-    isStale,
+    isStale: false,
     refetch: fetchPrices,
   };
 }

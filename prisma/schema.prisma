@@ -35,3 +35,25 @@ model Subscriber {
   email     String   @unique
   createdAt DateTime @default(now())
 }
+
+/** Manually curated market ticker items shown on the homepage. */
+model TickerItem {
+  id            String   @id @default(cuid())
+  label         String
+  price         Float
+  currency      String   @default("INR")
+  unit          String   @default("kg")
+  changePercent Float?
+  direction     String   @default("neutral")
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  /// Admin-controlled timestamp (not auto-updated).
+  updatedAt     DateTime
+  createdAt     DateTime @default(now())
+}
+
+/** Singleton row for the ticker "Last Updated" label. */
+model TickerMeta {
+  id          String   @id @default("default")
+  lastUpdated DateTime
+}
