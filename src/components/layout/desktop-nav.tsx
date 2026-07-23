@@ -8,7 +8,7 @@ import {
   type TranslationKey,
 } from "@/context/language-context";
 
-type DropdownKey = "news" | "topics" | "about";
+type DropdownKey = "news" | "topics";
 
 type NavItem =
   | { labelKey: TranslationKey; href: string }
@@ -50,15 +50,7 @@ const navItems: NavItem[] = [
     labelKey: "marketsIndustry",
     href: "/markets-industry",
   },
-  {
-    key: "about",
-    labelKey: "about",
-    submenu: [
-      { labelKey: "aboutUs", href: "/about" },
-      { labelKey: "foundersMessage", href: "/founder" },
-      { labelKey: "contactUs", href: "/contact" },
-    ],
-  },
+  { labelKey: "about", href: "/about" },
 ];
 
 function parseHref(href: string) {

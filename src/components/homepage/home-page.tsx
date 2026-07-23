@@ -52,16 +52,18 @@ export function HomePage({
     <div className="min-h-full bg-white">
       <MarketTicker />
 
-      <EditorialHero articles={articles} />
-
-      <section className="bg-[#f8fafc] px-4 pb-14 pt-6 sm:px-6 sm:pt-8 lg:px-8 lg:pb-16 lg:pt-8">
+      <section className="bg-white px-4 pb-14 pt-2 sm:px-6 sm:pt-2.5 lg:px-8 lg:pb-16">
         <div className="homepage-news-layout mx-auto max-w-[1280px]">
-          <div className="homepage-news-main space-y-14">
-            <LatestArticlesGrid
-              articles={homeArticles}
-              heading={t("latestArticles")}
-            />
-            <ShrimpFarmingGrid articles={articles} />
+          <div className="homepage-news-main">
+            <EditorialHero articles={articles} />
+
+            <div className="space-y-14 bg-[#f8fafc] pb-2 pt-8">
+              <LatestArticlesGrid
+                articles={homeArticles}
+                heading={t("latestArticles")}
+              />
+              <ShrimpFarmingGrid articles={articles} />
+            </div>
           </div>
 
           <aside className="homepage-news-sidebar">

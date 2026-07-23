@@ -472,13 +472,26 @@ html:is([lang="te"], [lang="hi"]) :is(p, li, blockquote) {
 
 .homepage-news-sidebar {
   position: sticky;
-  top: 100px;
+  top: 160px;
   align-self: start;
   height: fit-content;
   overflow: visible;
 }
 
-@media (max-width: 1024px) {
+@media (min-width: 768px) and (max-width: 1023px) {
+  .homepage-news-layout {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 24px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .homepage-news-sidebar {
+    top: 100px;
+  }
+}
+
+@media (max-width: 767px) {
   .homepage-news-layout {
     grid-template-columns: 1fr;
   }

@@ -248,7 +248,7 @@ export function SiteFooter() {
               </Link>
 
               <Link
-                href="/contact"
+                href="/about#contact"
                 className="text-white/85 transition hover:text-cyan-300"
               >
                 {t("contact")}

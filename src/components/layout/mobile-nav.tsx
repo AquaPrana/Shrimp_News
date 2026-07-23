@@ -35,14 +35,7 @@ const navItems: NavItem[] = [
   },
   { labelKey: "domesticConsumption", href: "/domestic-consumption" },
   { labelKey: "marketsIndustry", href: "/markets-industry" },
-  {
-    labelKey: "about",
-    submenu: [
-      { labelKey: "aboutUs", href: "/about" },
-      { labelKey: "foundersMessage", href: "/founder" },
-      { labelKey: "contactUs", href: "/contact" },
-    ],
-  },
+  { labelKey: "about", href: "/about" },
 ];
 
 function parseHref(href: string) {

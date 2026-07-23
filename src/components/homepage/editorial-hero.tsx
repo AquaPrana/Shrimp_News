@@ -17,9 +17,8 @@ const FALLBACK = "/images/articles/ArticleImage.jpeg";
 export function EditorialHero({ articles }: { articles: PublicArticle[] }) {
   const { t, language } = useLanguage();
   const slides = articles.slice(0, 5);
-  const latest = articles.slice(1, 7);
   const usedSlugs = new Set(
-    [...slides, ...latest].map((article) => article.slug),
+    slides.map((article) => article.slug),
   );
   const featuredPool = articles.filter((article) => !usedSlugs.has(article.slug));
   const featured =
@@ -60,9 +59,9 @@ export function EditorialHero({ articles }: { articles: PublicArticle[] }) {
   };
 
   return (
-    <section className="overflow-x-hidden bg-white px-4 pb-8 pt-2 sm:px-6 sm:pt-2.5 lg:px-8">
-      <div className="mx-auto max-w-[1280px]">
-        <div className="grid min-w-0 items-start gap-7 xl:grid-cols-[minmax(0,2fr)_minmax(300px,0.8fr)]">
+    <section className="overflow-x-hidden bg-white pb-8">
+      <div>
+        <div className="min-w-0">
           <div className="flex min-w-0 flex-col gap-4">
             <div className="max-w-3xl">
               <h1 className="text-2xl font-black tracking-[-0.025em] text-[#0B3A6E] sm:text-3xl lg:text-[34px]">
@@ -213,59 +212,6 @@ export function EditorialHero({ articles }: { articles: PublicArticle[] }) {
             ) : null}
           </div>
 
-          <aside className="min-w-0 border-t-4 border-[#0B4F7A] bg-white pt-4 xl:border-t-0 xl:pt-6">
-            <div className="flex items-center justify-between border-b border-slate-900 pb-4">
-              <h2 className="text-lg font-black uppercase tracking-[0.08em] text-slate-950">
-                {t("latestNews")}
-              </h2>
-              <Link
-                href="/articles"
-                className="text-xs font-bold uppercase tracking-[0.12em] text-[#0B4F7A] hover:underline"
-              >
-                {t("viewAll")}
-              </Link>
-            </div>
-            <div className="grid sm:grid-cols-2 xl:grid-cols-1">
-              {latest.map((article, index) => (
-                <article
-                  key={`latest-${article.slug}`}
-                  className="group/latest border-b border-slate-200 py-2.5 sm:px-3 xl:px-0"
-                >
-                  <Link
-                    href={`/articles/${baseSlug(article.slug)}`}
-                    className="grid grid-cols-[30px_76px_minmax(0,1fr)] gap-3"
-                  >
-                    <span className="text-xl font-black leading-none text-slate-200 group-hover/latest:text-[#0B4F7A]">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <span className="relative h-14 overflow-hidden bg-slate-100">
-                      <ArticleCoverImage
-                        src={article.featuredImageUrl || FALLBACK}
-                        alt=""
-                        fill
-                        className="object-cover transition duration-500 group-hover/latest:scale-105"
-                        sizes="76px"
-                      />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#0B4F7A]">
-                        {categoryLabel(article.category)}
-                      </span>
-                      <span className="mt-1 line-clamp-2 block text-sm font-bold leading-[1.25rem] text-slate-900 group-hover/latest:text-[#0B4F7A]">
-                        {article.title}
-                      </span>
-                      <span className="mt-1 block text-[11px] text-slate-400">
-                        {formatArticleDate(
-                          article.publishedAt || article.createdAt,
-                          language,
-                        )}
-                      </span>
-                    </span>
-                  </Link>
-                </article>
-              ))}
-            </div>
-          </aside>
         </div>
       </div>
     </section>
