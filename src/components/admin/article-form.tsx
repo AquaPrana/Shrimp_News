@@ -96,27 +96,13 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadInFlightRef = useRef(false);
 
   useEffect(() => {
     return () => {
       if (localPreviewUrl) URL.revokeObjectURL(localPreviewUrl);
     };
   }, [localPreviewUrl]);
-
-  useEffect(() => {
-    setForm(toFormState(article));
-    setSlugEdited(Boolean(article));
-    setPreviewBroken(false);
-    setImageError("");
-    setUploadStatus("idle");
-    setUploadMessage("");
-    setShowUrlInput(false);
-    setLocalPreviewUrl((current) => {
-      if (current) URL.revokeObjectURL(current);
-      return null;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- avoid wiping in-progress edits
-  }, [article?.id, article?.imageUrl, article?.updatedAt]);
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -152,6 +138,9 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
   }
 
   function removeImage() {
+    if (!window.confirm("Remove the featured image from this article?")) {
+      return;
+    }
     updateImageUrl("");
     clearLocalPreview();
     setUploadStatus("idle");
@@ -161,6 +150,8 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
   }
 
   async function uploadFeaturedImage(file: File) {
+    if (uploadInFlightRef.current) return;
+
     const lowerName = file.name.toLowerCase();
     const hasAllowedExtension = ALLOWED_UPLOAD_EXTENSIONS.some((ext) =>
       lowerName.endsWith(ext),
@@ -180,6 +171,7 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
 
     clearLocalPreview();
     setLocalPreviewUrl(URL.createObjectURL(file));
+    uploadInFlightRef.current = true;
     setUploadStatus("uploading");
     setUploadMessage("Uploading...");
     setPreviewBroken(false);
@@ -193,21 +185,39 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
         method: "POST",
         body: formData,
       });
-      const body = await response.json();
+      let body: { error?: string; url?: string };
+      try {
+        body = await response.json() as { error?: string; url?: string };
+      } catch {
+        setUploadStatus("error");
+        setUploadMessage("The upload server returned an invalid response.");
+        return;
+      }
       if (!response.ok) {
         setUploadStatus("error");
-        setUploadMessage(body.error || "Upload failed.");
+        setUploadMessage(
+          body.error || "The image upload server is unavailable. Please try again.",
+        );
         return;
       }
 
-      updateImageUrl(typeof body.url === "string" ? body.url : "");
+      if (typeof body.url !== "string" || !/^https:\/\//i.test(body.url)) {
+        setUploadStatus("error");
+        setUploadMessage("The upload server returned an invalid image URL.");
+        return;
+      }
+
+      updateImageUrl(body.url);
       setUploadStatus("success");
       setUploadMessage("Upload successful.");
       clearLocalPreview();
     } catch {
       setUploadStatus("error");
-      setUploadMessage("Upload failed. Please try again.");
+      setUploadMessage(
+        "The image upload server is unavailable. Check your connection and try again.",
+      );
     } finally {
+      uploadInFlightRef.current = false;
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
@@ -254,7 +264,12 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
       return;
     }
 
-    if (editorHtmlToPlainText(form.content).length < 50) {
+    const contentForSave =
+      form.content.trim() || !article ? form.content : article.content;
+    const excerptForSave =
+      form.excerpt.trim() || !article?.excerpt ? form.excerpt : article.excerpt;
+
+    if (editorHtmlToPlainText(contentForSave).length < 50) {
       setIsError(true);
       setMessage("Article content must be at least 50 characters.");
       setBusy(false);
@@ -264,6 +279,8 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
     try {
       const payload = {
         ...form,
+        content: contentForSave,
+        excerpt: excerptForSave,
         imageUrl: image.value || "",
       };
       const response = await fetch(
@@ -391,16 +408,20 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
+                  disabled={isUploading || busy}
                   className="h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-[#0B4F7A] disabled:opacity-50"
                 >
-                  {hasPreview ? "Replace image" : "Choose image"}
+                  {isUploading
+                    ? "Uploading..."
+                    : hasPreview
+                      ? "Replace image"
+                      : "Upload image"}
                 </button>
                 {hasPreview ? (
                   <button
                     type="button"
                     onClick={removeImage}
-                    disabled={isUploading}
+                    disabled={isUploading || busy}
                     className="h-11 rounded-xl border border-red-200 px-4 text-sm font-bold text-red-600 disabled:opacity-50"
                   >
                     Remove

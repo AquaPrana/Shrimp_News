@@ -1,10 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import {
-  PAGE_CONTENT_PANEL_CLASS,
-  PageShell,
-} from "@/components/layout/page-shell";
+import { PAGE_CONTENT_PANEL_CLASS } from "@/components/layout/page-shell";
 import {
   useLanguage,
   type Language,
@@ -172,71 +169,72 @@ export default function AboutPage() {
     .filter(Boolean);
 
   return (
-    <PageShell
-      eyebrowKey="aboutEyebrow"
-      titleKey="aboutTitle"
-      descriptionKey="aboutDescription"
-    >
-      <div className="space-y-16 sm:space-y-20">
-        <section id="about-us" className="scroll-mt-32">
-          <h2 className="mb-6 text-2xl font-extrabold tracking-tight text-[#0B3A6E] sm:text-3xl">
-            {t("aboutUs")}
-          </h2>
+    <section className="relative overflow-x-hidden bg-white px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-16">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(6,182,212,0.08),transparent_38%)]" />
+      <div className="pointer-events-none absolute bottom-0 left-0 h-72 w-72 rounded-full bg-orange-100/30 blur-[100px]" />
 
-          <div className={PAGE_CONTENT_PANEL_CLASS}>
-            {aboutParagraphs.map((paragraph, index) => (
-              <p key={index} className="mb-4 whitespace-pre-line last:mb-0">
-                {paragraph}
+      <div className="relative z-10 mx-auto w-full max-w-7xl">
+        <h1 className="text-2xl font-extrabold tracking-tight text-[#0B3A6E] sm:text-4xl lg:text-5xl">
+          {t("aboutTitle")}
+        </h1>
+
+        <div className="mt-6 space-y-16 sm:mt-8 sm:space-y-20">
+          <section id="about-us" className="scroll-mt-32">
+            <div className={PAGE_CONTENT_PANEL_CLASS}>
+              {aboutParagraphs.map((paragraph, index) => (
+                <p key={index} className="mb-4 whitespace-pre-line last:mb-0">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          </section>
+
+          <FounderSection
+            founder={founders[0]}
+            heading={labels.foundersMessage}
+            role={labels.founderRole}
+            priority
+          />
+
+          <FounderSection
+            founder={founders[1]}
+            heading={labels.coFoundersMessage}
+            role={labels.coFounderRole}
+          />
+
+          <section id="contact" className="scroll-mt-32">
+            <h2 className="text-2xl font-extrabold tracking-tight text-[#0B3A6E] sm:text-3xl">
+              {t("contactUs")}
+            </h2>
+            <p className="mt-3 mb-6 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">
+              {t("contactDescription")}
+            </p>
+
+            <div className={PAGE_CONTENT_PANEL_CLASS}>
+              <p className="mb-4">{t("contactGeneralEnquiries")}</p>
+              <p className="mb-4">
+                {t("contactEditorialLabel")}:{" "}
+                <a
+                  href={`mailto:${EDITORIAL_EMAIL}`}
+                  className="underline underline-offset-2"
+                >
+                  {EDITORIAL_EMAIL}
+                </a>
               </p>
-            ))}
-          </div>
-        </section>
-
-        <FounderSection
-          founder={founders[0]}
-          heading={labels.foundersMessage}
-          role={labels.founderRole}
-          priority
-        />
-
-        <FounderSection
-          founder={founders[1]}
-          heading={labels.coFoundersMessage}
-          role={labels.coFounderRole}
-        />
-
-        <section id="contact" className="scroll-mt-32">
-          <h2 className="text-2xl font-extrabold tracking-tight text-[#0B3A6E] sm:text-3xl">
-            {t("contactUs")}
-          </h2>
-          <p className="mt-3 mb-6 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">
-            {t("contactDescription")}
-          </p>
-
-          <div className={PAGE_CONTENT_PANEL_CLASS}>
-            <p className="mb-4">{t("contactGeneralEnquiries")}</p>
-            <p className="mb-4">
-              {t("contactEditorialLabel")}:{" "}
-              <a
-                href={`mailto:${EDITORIAL_EMAIL}`}
-                className="underline underline-offset-2"
-              >
-                {EDITORIAL_EMAIL}
-              </a>
-            </p>
-            <p className="mb-4">
-              Phone:{" "}
-              <a
-                href="tel:+917075527682"
-                className="underline underline-offset-2"
-              >
-                {CONTACT_PHONE}
-              </a>
-            </p>
-            <p className="mb-0">{t("contactClosing")}</p>
-          </div>
-        </section>
+              <p className="mb-4">
+                Phone:{" "}
+                <a
+                  href="tel:+917075527682"
+                  className="underline underline-offset-2"
+                >
+                  {CONTACT_PHONE}
+                </a>
+              </p>
+              <p className="mb-0">{t("contactClosing")}</p>
+            </div>
+          </section>
+        </div>
       </div>
-    </PageShell>
+    </section>
   );
 }

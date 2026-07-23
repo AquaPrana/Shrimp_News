@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
 /**
  * Shrimp.News featured image upload endpoint for Hostinger.
  *
@@ -18,6 +21,7 @@ const UPLOAD_SECRET = 'REPLACE_WITH_THE_SAME_VALUE_AS_HOSTINGER_UPLOAD_SECRET';
 // ---------------------------------------------------------------------------
 
 const MAX_BYTES = 5 * 1024 * 1024;
+const PUBLIC_BASE_URL = 'https://lightsalmon-salamander-813298.hostingersite.com';
 
 const ALLOWED_MIME = [
     'image/jpeg' => 'jpg',
@@ -40,6 +44,14 @@ function respond(int $status, array $payload): void
     echo json_encode($payload, JSON_UNESCAPED_SLASHES);
     exit;
 }
+
+set_exception_handler(static function (Throwable $error): void {
+    error_log('[shrimp-upload] ' . $error->getMessage());
+    respond(500, [
+        'success' => false,
+        'error'   => 'The upload server could not process the image.',
+    ]);
+});
 
 function applyCorsHeaders(): void
 {
@@ -72,12 +84,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ]);
 }
 
+$environmentSecret = getenv('HOSTINGER_UPLOAD_SECRET');
+$configuredSecret = is_string($environmentSecret) && $environmentSecret !== ''
+    ? $environmentSecret
+    : UPLOAD_SECRET;
 $providedSecret = $_SERVER['HTTP_X_UPLOAD_SECRET'] ?? '';
 if (
     !is_string($providedSecret)
     || $providedSecret === ''
-    || UPLOAD_SECRET === 'REPLACE_WITH_THE_SAME_VALUE_AS_HOSTINGER_UPLOAD_SECRET'
-    || !hash_equals(UPLOAD_SECRET, $providedSecret)
+    || $configuredSecret === 'REPLACE_WITH_THE_SAME_VALUE_AS_HOSTINGER_UPLOAD_SECRET'
+    || !hash_equals($configuredSecret, $providedSecret)
 ) {
     respond(401, [
         'success' => false,
@@ -94,10 +110,17 @@ if (!isset($_FILES['file']) || !is_array($_FILES['file'])) {
 
 $file = $_FILES['file'];
 
-if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+$uploadError = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
+if ($uploadError !== UPLOAD_ERR_OK) {
+    $uploadErrorMessage = match ($uploadError) {
+        UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Image must be 5 MB or smaller.',
+        UPLOAD_ERR_PARTIAL => 'The image upload was interrupted. Please try again.',
+        UPLOAD_ERR_NO_FILE => 'No file was uploaded.',
+        default => 'Upload failed. Please try again.',
+    };
     respond(400, [
         'success' => false,
-        'error'   => 'Upload failed. Please try again.',
+        'error'   => $uploadErrorMessage,
     ]);
 }
 
@@ -187,9 +210,7 @@ if (!move_uploaded_file($tmpPath, $destination)) {
     ]);
 }
 
-$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$publicUrl = $scheme . '://' . $host . '/uploads/articles/' . rawurlencode($filename);
+$publicUrl = PUBLIC_BASE_URL . '/uploads/articles/' . rawurlencode($filename);
 
 respond(201, [
     'success'  => true,

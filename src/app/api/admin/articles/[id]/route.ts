@@ -37,16 +37,29 @@ export async function PUT(request: Request, { params }: RouteContext) {
   try {
     const { id } = await params;
     const body = await request.json() as Record<string, unknown>;
-    const validated = validatePrismaArticleInput(body);
+    const existing = await prisma.article.findUnique({
+      where: { id },
+    });
+    if (!existing) return NextResponse.json({ error: "Article not found." }, { status: 404 });
+
+    const mergedInput: Record<string, unknown> = {
+      title: body.title ?? existing.title,
+      slug: body.slug ?? existing.slug,
+      content:
+        typeof body.content === "string" && body.content.trim()
+          ? body.content
+          : existing.content,
+      excerpt: body.excerpt !== undefined ? body.excerpt : existing.excerpt,
+      imageUrl: body.imageUrl !== undefined ? body.imageUrl : existing.imageUrl,
+      mainCategory: body.mainCategory ?? existing.mainCategory,
+      category: body.category ?? existing.category,
+      language: body.language ?? existing.language,
+      isPublished: body.isPublished ?? existing.isPublished,
+    };
+    const validated = validatePrismaArticleInput(mergedInput);
     if (!validated.ok) {
       return NextResponse.json({ error: validated.error }, { status: 400 });
     }
-
-    const existing = await prisma.article.findUnique({
-      where: { id },
-      select: { id: true, language: true, translationGroupId: true },
-    });
-    if (!existing) return NextResponse.json({ error: "Article not found." }, { status: 404 });
 
     if (existing.language === "en") {
       validated.value.language = "en";

@@ -31,7 +31,7 @@ export function ArticleContentEditor({
   className = "",
 }: ArticleContentEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
-  const lastSyncedValue = useRef(value);
+  const lastSyncedValue = useRef<string | null>(null);
 
   useEffect(() => {
     const editor = editorRef.current;
