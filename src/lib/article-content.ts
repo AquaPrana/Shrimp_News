@@ -1,21 +1,41 @@
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 
 const ALLOWED_TAGS = [
   "a",
   "p",
+  "br",
+  "h1",
   "h2",
   "h3",
+  "h4",
+  "ul",
+  "ol",
+  "li",
   "strong",
   "b",
   "em",
   "i",
-  "ul",
-  "ol",
-  "li",
-  "br",
+  "blockquote",
+  "img",
+  "table",
+  "thead",
+  "tbody",
+  "tr",
+  "th",
+  "td",
 ];
 
-const ALLOWED_ATTR = ["href", "target", "rel"];
+const ALLOWED_ATTR = [
+  "href",
+  "target",
+  "rel",
+  "src",
+  "alt",
+  "title",
+  "width",
+  "height",
+  "class",
+];
 
 const HEADING_MAX_LENGTH = 120;
 const BULLET_PATTERN = /^[\s]*(?:[•\-\*·▪◦‣–—]|\d+[.)])\s+(.+)$/;
@@ -295,13 +315,44 @@ export function normalizeBlockHtml(html: string) {
 }
 
 export function sanitizeArticleHtml(html: string) {
-  const cleaned = DOMPurify.sanitize(html, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR,
-    KEEP_CONTENT: true,
-    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|\/|#)/i,
+  const cleaned = sanitizeHtml(html, {
+    allowedTags: ALLOWED_TAGS,
+    allowedAttributes: {
+      "*": ALLOWED_ATTR,
+    },
+    allowedSchemes: ["http", "https", "mailto", "tel"],
+    allowedSchemesByTag: {
+      img: ["http", "https"],
+    },
+    allowProtocolRelative: true,
+    nonTextTags: [
+      "style",
+      "script",
+      "textarea",
+      "option",
+      "noscript",
+      "iframe",
+      "object",
+      "embed",
+    ],
+    transformTags: {
+      a: (_tagName, attribs) => {
+        const isExternalLink = /^(?:https?:)?\/\//i.test(attribs.href ?? "");
+        const opensNewTab = attribs.target?.toLowerCase() === "_blank";
+
+        if (isExternalLink && opensNewTab) {
+          const relValues = new Set(
+            (attribs.rel ?? "").split(/\s+/).filter(Boolean),
+          );
+          relValues.add("noopener");
+          relValues.add("noreferrer");
+          attribs.rel = Array.from(relValues).join(" ");
+        }
+
+        return { tagName: "a", attribs };
+      },
+    },
   })
-    .replace(/<a\b[^>]*href="(?!https?:|mailto:|tel:|\/|#)[^"]*"[^>]*>([\s\S]*?)<\/a>/gi, "$1")
     .replace(/<p>\s*<\/p>/g, "<p><br></p>")
     .replace(/(<br\s*\/?>\s*){3,}/gi, "<br><br>")
     .trim();
