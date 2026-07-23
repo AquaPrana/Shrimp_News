@@ -9,21 +9,17 @@ const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const ALLOWED_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp"]);
 const UPLOAD_TIMEOUT_MS = 30_000;
 
+function jsonError(error: string, code: string, status: number) {
+  return NextResponse.json({ error, code }, { status });
+}
+
 function extensionFromName(name: string) {
   const match = name.toLowerCase().match(/\.([a-z0-9]+)$/);
   return match?.[1] || "";
 }
 
 function getUploadConfig() {
-  const endpoint = [
-    process.env.HOSTINGER_UPLOAD_ENDPOINT,
-    process.env.HOSTINGER_UPLOAD_URL,
-    process.env.UPLOAD_API_URL,
-    process.env.NEXT_PUBLIC_IMAGE_UPLOAD_URL,
-    process.env.NEXT_PUBLIC_UPLOAD_URL,
-  ]
-    .find((value) => value?.trim())
-    ?.trim();
+  const endpoint = process.env.HOSTINGER_UPLOAD_ENDPOINT?.trim();
   const secret = process.env.HOSTINGER_UPLOAD_SECRET?.trim();
 
   if (!endpoint || !secret) {
@@ -36,7 +32,8 @@ function getUploadConfig() {
     return {
       ok: false as const,
       error:
-        "Image uploads are temporarily unavailable. Please contact the website administrator.",
+        "Image upload is not configured on the server. Please contact the website administrator.",
+      code: "UPLOAD_NOT_CONFIGURED",
     };
   }
 
@@ -48,7 +45,8 @@ function getUploadConfig() {
     return {
       ok: false as const,
       error:
-        "Image uploads are temporarily unavailable. Please contact the website administrator.",
+        "The image upload server address is invalid. Please contact the website administrator.",
+      code: "UPLOAD_ENDPOINT_INVALID",
     };
   }
 
@@ -57,7 +55,8 @@ function getUploadConfig() {
     return {
       ok: false as const,
       error:
-        "Image uploads are temporarily unavailable. Please contact the website administrator.",
+        "The image upload server must use HTTPS. Please contact the website administrator.",
+      code: "UPLOAD_ENDPOINT_INSECURE",
     };
   }
 
@@ -66,12 +65,25 @@ function getUploadConfig() {
 
 export async function POST(request: Request) {
   if (!await verifyAdminApi(request)) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    return jsonError(
+      "Your admin session has expired. Please sign in and try again.",
+      "ADMIN_AUTH_REQUIRED",
+      401,
+    );
   }
 
   const config = getUploadConfig();
   if (!config.ok) {
-    return NextResponse.json({ error: config.error }, { status: 503 });
+    return jsonError(config.error, config.code, 503);
+  }
+
+  const contentType = request.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().startsWith("multipart/form-data")) {
+    return jsonError(
+      "The upload request must contain an image file.",
+      "INVALID_MULTIPART_REQUEST",
+      400,
+    );
   }
 
   try {
@@ -79,29 +91,31 @@ export async function POST(request: Request) {
     const file = formData.get("file");
 
     if (!(file instanceof File)) {
-      return NextResponse.json({ error: "Please choose an image file." }, { status: 400 });
+      return jsonError("Please choose an image file.", "FILE_REQUIRED", 400);
     }
 
     if (file.size <= 0) {
-      return NextResponse.json({ error: "The selected file is empty." }, { status: 400 });
+      return jsonError("The selected file is empty.", "FILE_EMPTY", 400);
     }
 
     if (file.size > MAX_BYTES) {
-      return NextResponse.json({ error: "Image must be 5 MB or smaller." }, { status: 400 });
+      return jsonError("Image must be 5 MB or smaller.", "FILE_TOO_LARGE", 400);
     }
 
     const extension = extensionFromName(file.name);
     if (!ALLOWED_EXTENSIONS.has(extension)) {
-      return NextResponse.json(
-        { error: "Only JPG, JPEG, PNG, and WebP images are allowed." },
-        { status: 400 },
+      return jsonError(
+        "Only JPG, JPEG, PNG, and WebP images are allowed.",
+        "FILE_TYPE_NOT_ALLOWED",
+        400,
       );
     }
 
     if (!ALLOWED_MIME_TYPES.has(file.type)) {
-      return NextResponse.json(
-        { error: "Only JPG, JPEG, PNG, and WebP images are allowed." },
-        { status: 400 },
+      return jsonError(
+        "Only JPG, JPEG, PNG, and WebP images are allowed.",
+        "FILE_TYPE_NOT_ALLOWED",
+        400,
       );
     }
 
@@ -132,9 +146,10 @@ export async function POST(request: Request) {
         filename?: string;
       };
     } catch {
-      return NextResponse.json(
-        { error: "Upload service returned an invalid response." },
-        { status: 502 },
+      return jsonError(
+        "The image upload server returned an invalid response. Please try again.",
+        "UPLOAD_INVALID_RESPONSE",
+        502,
       );
     }
 
@@ -145,13 +160,17 @@ export async function POST(request: Request) {
         hasUrl: Boolean(payload.url),
         error: payload.error,
       });
-      const publicError =
-        upstream.status === 401 || upstream.status === 403
-          ? "Image uploads are temporarily unavailable. Please contact the website administrator."
-          : payload.error || "Image upload failed. Please try again.";
-      return NextResponse.json(
-        { error: publicError },
-        { status: upstream.status >= 400 && upstream.status < 600 ? upstream.status : 502 },
+      if (upstream.status === 401 || upstream.status === 403) {
+        return jsonError(
+          "The image upload server rejected its credentials. Please contact the website administrator.",
+          "UPLOAD_SERVER_UNAUTHORIZED",
+          502,
+        );
+      }
+      return jsonError(
+        payload.error || "Image upload failed. Please try again.",
+        "UPLOAD_SERVER_ERROR",
+        upstream.status >= 400 && upstream.status < 600 ? upstream.status : 502,
       );
     }
 
@@ -159,16 +178,18 @@ export async function POST(request: Request) {
     try {
       publicUrl = new URL(payload.url);
     } catch {
-      return NextResponse.json(
-        { error: "Upload service returned an invalid image URL." },
-        { status: 502 },
+      return jsonError(
+        "The image upload server returned an invalid image URL.",
+        "UPLOAD_URL_INVALID",
+        502,
       );
     }
 
     if (publicUrl.protocol !== "https:") {
-      return NextResponse.json(
-        { error: "Upload service returned an invalid image URL." },
-        { status: 502 },
+      return jsonError(
+        "The image upload server returned an invalid image URL.",
+        "UPLOAD_URL_INVALID",
+        502,
       );
     }
 
@@ -182,13 +203,12 @@ export async function POST(request: Request) {
     const timedOut =
       error instanceof Error &&
       (error.name === "TimeoutError" || error.name === "AbortError");
-    return NextResponse.json(
-      {
-        error: timedOut
-          ? "The image upload server took too long to respond. Please try again."
-          : "The image upload server is unavailable. Please try again shortly.",
-      },
-      { status: 502 },
+    return jsonError(
+      timedOut
+        ? "The image upload server took too long to respond. Please try again."
+        : "The image upload server is unavailable. Please try again shortly.",
+      timedOut ? "UPLOAD_TIMEOUT" : "UPLOAD_SERVER_UNAVAILABLE",
+      502,
     );
   }
 }

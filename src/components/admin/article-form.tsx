@@ -181,7 +181,7 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
     formData.append("file", file);
 
     try {
-      const response = await fetch("/api/admin/upload", {
+      const response = await fetch("/api/admin/upload-image", {
         method: "POST",
         body: formData,
       });
