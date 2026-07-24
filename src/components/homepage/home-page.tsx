@@ -9,6 +9,7 @@ import { NewsletterSection } from "@/components/homepage/newsletter-section";
 import { ShrimpFarmingGrid } from "@/components/homepage/shrimp-farming-grid";
 import { useLanguage } from "@/context/language-context";
 import { useArticles } from "@/hooks/use-articles";
+import { useLocalizedArticles } from "@/hooks/use-localized-articles";
 import type { PublicArticle } from "@/lib/article-types";
 
 export function HomePage({
@@ -17,13 +18,11 @@ export function HomePage({
   initialArticles?: PublicArticle[];
 }) {
   const { t, language } = useLanguage();
-  const { articles: fetchedArticles, loading, error } = useArticles({
-    limit: 60,
-  });
-  const articles =
-    language === "en" && initialArticles.length > 0
-      ? initialArticles
-      : fetchedArticles;
+  const { articles: fetchedArticles, loading, error } = useArticles(
+    { limit: 60 },
+    language === "en" ? initialArticles : [],
+  );
+  const articles = useLocalizedArticles(fetchedArticles);
   const featuredArticle = articles[0];
 
   const homeArticles = articles

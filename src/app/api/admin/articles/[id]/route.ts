@@ -81,14 +81,11 @@ export async function PUT(request: Request, { params }: RouteContext) {
     }
 
     let article;
+    let translationWarning: string | null = null;
     if (existing.language === "en") {
       const translation = await syncArticleTranslations(id, validated.value);
       if (!translation.ok) {
-        const savedDraft = await prisma.article.findUnique({ where: { id } });
-        return NextResponse.json(
-          { error: translation.error, article: savedDraft ?? existing },
-          { status: 502 },
-        );
+        translationWarning = translation.error;
       }
       article = await prisma.article.findUnique({ where: { id } });
     } else {
@@ -99,9 +96,15 @@ export async function PUT(request: Request, { params }: RouteContext) {
     }
 
     const saved = await prisma.article.findUnique({ where: { id } });
+    const translationStatus = saved
+      ? await getArticleTranslationStatus(saved)
+      : undefined;
     return NextResponse.json({
-      message: "Article updated successfully.",
-      article: saved ?? article,
+      message: translationWarning || "Article updated successfully.",
+      warning: Boolean(translationWarning),
+      article: saved
+        ? { ...saved, translationStatus }
+        : article,
     });
   } catch (error) {
     logDatabaseError("articles.update", error);

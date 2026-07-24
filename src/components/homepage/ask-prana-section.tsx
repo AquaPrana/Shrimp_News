@@ -103,7 +103,7 @@ export function AskPranaSection() {
               }`}
             />
             <span>
-              {isLoading ? "Ask Prana is thinking..." : t("aquaGptOnline")}
+              {isLoading ? t("askPranaThinking") : t("aquaGptOnline")}
             </span>
           </div>
 

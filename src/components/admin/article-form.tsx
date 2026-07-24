@@ -250,32 +250,26 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
     }));
   }
 
-  async function retryTranslation() {
+  async function retryTranslation(target: "all" | "te" | "hi" = "all") {
     if (!sourceArticleId) return;
     setRetryingTranslation(true);
     setMessage("");
     setIsError(false);
     try {
+      const query = target === "all" ? "" : `?language=${target}`;
       const response = await fetch(
-        `/api/admin/articles/${sourceArticleId}/translate`,
+        `/api/admin/articles/${sourceArticleId}/translate${query}`,
         { method: "POST" },
       );
       const body = await response.json();
+      if (body.translationStatus) {
+        setTranslationStatus(body.translationStatus);
+      }
       if (!response.ok) {
         setIsError(true);
         setMessage(body.error || "Unable to retry translation.");
-        setTranslationStatus((current) =>
-          current
-            ? { ...current, te: "failed", hi: "failed" }
-            : current,
-        );
         return;
       }
-      setTranslationStatus({
-        en: "available",
-        te: "available",
-        hi: "available",
-      });
       setMessage(body.message || "Translations are available.");
     } catch {
       setIsError(true);
@@ -349,11 +343,13 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
         setMessage(body.error || "Unable to save the article.");
         if (typeof body.article?.id === "string") {
           setSourceArticleId(body.article.id);
-          setTranslationStatus({
-            en: "available",
-            te: "failed",
-            hi: "failed",
-          });
+          setTranslationStatus(
+            body.article.translationStatus || {
+              en: "available",
+              te: "failed",
+              hi: "failed",
+            },
+          );
         }
         if (typeof body.error === "string" && /image/i.test(body.error)) {
           setImageError(body.error);
@@ -364,7 +360,17 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
       const savedUrl =
         typeof body.article?.imageUrl === "string" ? body.article.imageUrl : "";
       setField("imageUrl", savedUrl);
+      if (typeof body.article?.id === "string") {
+        setSourceArticleId(body.article.id);
+      }
+      if (body.article?.translationStatus) {
+        setTranslationStatus(body.article.translationStatus);
+      }
       setMessage(body.message || "Article saved successfully.");
+      if (body.warning) {
+        setIsError(true);
+        return;
+      }
       router.push("/admin/articles");
       router.refresh();
     } catch {
@@ -611,16 +617,38 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                 </div>
                 {translationStatus.te !== "available" ||
                 translationStatus.hi !== "available" ? (
-                  <button
-                    type="button"
-                    onClick={retryTranslation}
-                    disabled={retryingTranslation || busy}
-                    className="text-sm font-bold text-cyan-700 disabled:opacity-50"
-                  >
-                    {retryingTranslation
-                      ? "Retrying translation…"
-                      : "Retry Translation"}
-                  </button>
+                  <div className="flex flex-wrap gap-3">
+                    {translationStatus.te !== "available" ? (
+                      <button
+                        type="button"
+                        onClick={() => void retryTranslation("te")}
+                        disabled={retryingTranslation || busy}
+                        className="text-sm font-bold text-cyan-700 disabled:opacity-50"
+                      >
+                        Retry Telugu translation
+                      </button>
+                    ) : null}
+                    {translationStatus.hi !== "available" ? (
+                      <button
+                        type="button"
+                        onClick={() => void retryTranslation("hi")}
+                        disabled={retryingTranslation || busy}
+                        className="text-sm font-bold text-cyan-700 disabled:opacity-50"
+                      >
+                        Retry Hindi translation
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => void retryTranslation("all")}
+                      disabled={retryingTranslation || busy}
+                      className="text-sm font-bold text-cyan-700 disabled:opacity-50"
+                    >
+                      {retryingTranslation
+                        ? "Retrying translation…"
+                        : "Retry all translations"}
+                    </button>
+                  </div>
                 ) : null}
               </div>
             ) : null}

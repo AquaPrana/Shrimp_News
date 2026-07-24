@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { verifyAdminApi } from "@/lib/admin-auth";
-import { syncArticleTranslations } from "@/lib/article-translations-sync";
+import {
+  getArticleTranslationStatus,
+  syncArticleTranslations,
+} from "@/lib/article-translations-sync";
 import { baseSlug } from "@/lib/public-articles";
 import { logDatabaseError, prisma, prismaErrorCode } from "@/lib/prisma";
 import { validatePrismaArticleInput } from "@/lib/validation";
@@ -84,19 +87,31 @@ export async function POST(request: Request) {
       ...validated.value,
       isPublished: requestedPublish,
     });
+    const saved = await prisma.article.findUnique({ where: { id: article.id } });
+    const translationStatus = saved
+      ? await getArticleTranslationStatus(saved)
+      : undefined;
+
     if (!translation.ok) {
-      const savedDraft = await prisma.article.findUnique({
-        where: { id: article.id },
-      });
       return NextResponse.json(
-        { error: translation.error, article: savedDraft ?? article },
-        { status: 502 },
+        {
+          message: translation.error,
+          warning: true,
+          article: saved
+            ? { ...saved, translationStatus }
+            : { ...article, translationStatus },
+        },
+        { status: 201 },
       );
     }
 
-    const saved = await prisma.article.findUnique({ where: { id: article.id } });
     return NextResponse.json(
-      { message: "Article created successfully.", article: saved ?? article },
+      {
+        message: "Article created successfully.",
+        article: saved
+          ? { ...saved, translationStatus }
+          : article,
+      },
       { status: 201 },
     );
   } catch (error) {

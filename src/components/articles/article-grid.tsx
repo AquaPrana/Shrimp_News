@@ -6,6 +6,7 @@ import {
   type TranslationKey,
 } from "@/context/language-context";
 import { useArticles } from "@/hooks/use-articles";
+import { useLocalizedArticles } from "@/hooks/use-localized-articles";
 import type { PublicArticle } from "@/lib/article-types";
 import { TOPIC_TRANSLATION_KEYS } from "@/lib/public-articles-shared";
 
@@ -42,20 +43,20 @@ export function ArticleGrid({
 }) {
   const { t, language } = useLanguage();
   const shouldFetch = !articles;
-  const { articles: fetched, loading, error } = useArticles({
-    topic: shouldFetch ? topic : undefined,
-    limit: 60,
-  });
-  const list =
-    articles ??
-    (language === "en" && initialArticles.length > 0
-      ? initialArticles
-      : fetched);
+  const { articles: fetched, loading, error } = useArticles(
+    {
+      topic: shouldFetch ? topic : undefined,
+      limit: 60,
+    },
+    language === "en" ? initialArticles : [],
+  );
+  const sourceList = articles ?? fetched;
+  const list = useLocalizedArticles(sourceList);
 
   if (shouldFetch && loading && list.length === 0) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-[#F7FBFF] p-6 text-slate-600 sm:rounded-[28px] sm:p-8">
-        Loading articles…
+        {t("loadingArticles")}
       </div>
     );
   }
@@ -79,25 +80,20 @@ export function ArticleGrid({
   const topicTranslationKey = topic
     ? TOPIC_TRANSLATION_KEYS[topic]
     : undefined;
-  const topicLabel = topicTranslationKey
-    ? safeDisplayLabel(
-        t(topicTranslationKey as TranslationKey),
-        topicTranslationKey,
-      )
-    : "";
-  const showTopicLabel = Boolean(
-    topic && !REGION_TOPICS.has(topic) && topicLabel,
-  );
+  const heading =
+    topic && REGION_TOPICS.has(topic)
+      ? ""
+      : safeDisplayLabel(
+          topicTranslationKey ? t(topicTranslationKey as TranslationKey) : "",
+          topicTranslationKey,
+        );
 
   return (
     <div className="space-y-6">
-      {showTopicLabel ? (
-        <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#ff6a3d]">
-          {topicLabel}
-        </p>
+      {heading ? (
+        <h2 className="text-2xl font-black text-[#0B3A6E]">{heading}</h2>
       ) : null}
-
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
         {list.map((article) => (
           <ArticleCard key={article.slug} article={article} />
         ))}
@@ -105,5 +101,3 @@ export function ArticleGrid({
     </div>
   );
 }
-
-export { isArticleTopic } from "@/lib/public-articles-shared";

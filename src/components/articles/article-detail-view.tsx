@@ -35,12 +35,6 @@ export function ArticleDetailView({
   const base = baseSlug(slug);
 
   useEffect(() => {
-    if (language === "en" && initialArticle.language === "en") {
-      setArticle(initialArticle);
-      setRelated(initialRelated);
-      return;
-    }
-
     const controller = new AbortController();
 
     async function loadLocalizedArticle() {
@@ -68,7 +62,7 @@ export function ArticleDetailView({
       }
     }
 
-    loadLocalizedArticle();
+    void loadLocalizedArticle();
     return () => controller.abort();
   }, [base, initialArticle, initialRelated, language]);
 

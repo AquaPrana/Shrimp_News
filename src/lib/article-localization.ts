@@ -10,6 +10,30 @@ type LanguageRecord = {
   content: string;
 };
 
+/** Flat or versioned article fields used by UI localization. */
+export type LocalizableArticleFields = {
+  title?: string | null;
+  excerpt?: string | null;
+  content?: string | null;
+  titleEn?: string | null;
+  summaryEn?: string | null;
+  contentEn?: string | null;
+  titleTe?: string | null;
+  summaryTe?: string | null;
+  contentTe?: string | null;
+  titleHi?: string | null;
+  summaryHi?: string | null;
+  contentHi?: string | null;
+};
+
+export type LocalizedArticleText = {
+  title: string;
+  summary: string;
+  content: string;
+  language: ArticleLanguage;
+  usedFallback: boolean;
+};
+
 const CATEGORY_LABELS: Record<
   ArticleSubcategory,
   Record<ArticleLanguage, string>
@@ -51,6 +75,139 @@ const CATEGORY_LABELS: Record<
   },
 };
 
+const ARTICLE_WORD: Record<ArticleLanguage, string> = {
+  en: "ARTICLE",
+  te: "వ్యాసం",
+  hi: "लेख",
+};
+
+const READ_ARTICLE: Record<ArticleLanguage, string> = {
+  en: "Read Article",
+  te: "వ్యాసం చదవండి",
+  hi: "लेख पढ़ें",
+};
+
+function nonEmpty(value: string | null | undefined) {
+  return Boolean(value?.trim());
+}
+
+function pickText(
+  primary: string | null | undefined,
+  fallback: string | null | undefined,
+) {
+  if (nonEmpty(primary)) return primary!.trim();
+  if (nonEmpty(fallback)) return fallback!.trim();
+  return "";
+}
+
+/**
+ * Central field selector for article text.
+ * English never falls back to te/hi. te/hi only fall back to English.
+ */
+export function getLocalizedArticle(
+  article: LocalizableArticleFields,
+  language: ArticleLanguage,
+): LocalizedArticleText {
+  const englishTitle = pickText(article.titleEn, article.title);
+  const englishSummary = pickText(article.summaryEn, article.excerpt);
+  const englishContent = pickText(article.contentEn, article.content);
+
+  if (language === "en") {
+    return {
+      title: englishTitle,
+      summary: englishSummary,
+      content: englishContent,
+      language: "en",
+      usedFallback: false,
+    };
+  }
+
+  if (language === "te") {
+    const title = pickText(article.titleTe, englishTitle);
+    const summary = pickText(article.summaryTe, englishSummary);
+    const content = pickText(article.contentTe, englishContent);
+    return {
+      title,
+      summary,
+      content,
+      language: nonEmpty(article.titleTe) ? "te" : "en",
+      usedFallback: !nonEmpty(article.titleTe),
+    };
+  }
+
+  const title = pickText(article.titleHi, englishTitle);
+  const summary = pickText(article.summaryHi, englishSummary);
+  const content = pickText(article.contentHi, englishContent);
+  return {
+    title,
+    summary,
+    content,
+    language: nonEmpty(article.titleHi) ? "hi" : "en",
+    usedFallback: !nonEmpty(article.titleHi),
+  };
+}
+
+export function hasCompleteArticleTranslation(article: LanguageRecord) {
+  return Boolean(
+    article.title.trim() &&
+      article.excerpt?.trim() &&
+      article.content.trim(),
+  );
+}
+
+function byLanguage<T extends LanguageRecord>(
+  versions: T[],
+  language: ArticleLanguage,
+) {
+  return versions.find((article) => article.language === language);
+}
+
+/**
+ * Pick a language row from translation-group versions.
+ * Never returns te for English, never returns hi for Telugu, etc.
+ * Temporary fallback: missing te/hi → English only.
+ */
+export function getLocalizedArticleVersion<T extends LanguageRecord>(
+  versions: T[],
+  language: ArticleLanguage,
+): T | undefined {
+  const english =
+    byLanguage(versions, "en") ||
+    versions.find((article) => article.language === "en");
+
+  if (language === "en") {
+    return (
+      versions.find(
+        (article) =>
+          article.language === "en" && hasCompleteArticleTranslation(article),
+      ) || english
+    );
+  }
+
+  const preferred = byLanguage(versions, language);
+  if (preferred && hasCompleteArticleTranslation(preferred)) {
+    return preferred;
+  }
+  if (preferred && nonEmpty(preferred.title)) {
+    return preferred;
+  }
+
+  return (
+    versions.find(
+      (article) =>
+        article.language === "en" && hasCompleteArticleTranslation(article),
+    ) || english
+  );
+}
+
+/** @deprecated Prefer getLocalizedArticleVersion — kept for older imports. */
+export function selectArticleByLanguage<T extends LanguageRecord>(
+  versions: T[],
+  language: ArticleLanguage,
+) {
+  return getLocalizedArticleVersion(versions, language);
+}
+
 export function getCategoryLabel(
   categoryKey: string,
   language: ArticleLanguage,
@@ -78,35 +235,31 @@ export function formatReadTime(
   return `${safeMinutes} min read`;
 }
 
-export function hasCompleteArticleTranslation(article: LanguageRecord) {
-  return Boolean(
-    article.title.trim() &&
-      article.excerpt?.trim() &&
-      article.content.trim(),
-  );
+export function getArticleLabel(language: ArticleLanguage) {
+  return ARTICLE_WORD[language];
 }
 
-/**
- * One selection rule for cards, listings and detail pages:
- * selected language → English → original record.
- */
-export function selectArticleByLanguage<T extends LanguageRecord>(
-  versions: T[],
+export function getReadArticleLabel(language: ArticleLanguage) {
+  return READ_ARTICLE[language];
+}
+
+const DATE_LOCALE: Record<ArticleLanguage, string> = {
+  en: "en-IN",
+  te: "te-IN",
+  hi: "hi-IN",
+};
+
+export function formatLocalizedDate(
+  value: string | Date,
   language: ArticleLanguage,
+  options?: Intl.DateTimeFormatOptions,
 ) {
-  return (
-    versions.find(
-      (article) =>
-        article.language === language &&
-        hasCompleteArticleTranslation(article),
-    ) ||
-    versions.find(
-      (article) =>
-        article.language === "en" &&
-        hasCompleteArticleTranslation(article),
-    ) ||
-    versions.find((article) => article.language === language) ||
-    versions.find((article) => article.language === "en") ||
-    versions[0]
-  );
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat(DATE_LOCALE[language] || "en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    ...options,
+  }).format(date);
 }

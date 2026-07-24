@@ -100,7 +100,7 @@ export function NewsletterSection() {
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    placeholder="you@company.com"
+                    placeholder={t("newsletterEmailPlaceholder")}
                     disabled={busy}
                     className="h-12 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-800 outline-none placeholder:text-slate-400 transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 disabled:opacity-60"
                   />

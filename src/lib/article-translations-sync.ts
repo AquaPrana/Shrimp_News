@@ -2,26 +2,47 @@ import "server-only";
 
 import type { Article, Prisma } from "@prisma/client";
 import { hasCompleteArticleTranslation } from "@/lib/article-localization";
-import { translateArticleToAllLanguages } from "@/lib/article-translation";
+import {
+  translateArticleFields,
+  type TranslatedArticleFields,
+} from "@/lib/article-translation";
 import { baseSlug } from "@/lib/public-articles-shared";
 import { logDatabaseError, prisma } from "@/lib/prisma";
 import type { PrismaArticleInput } from "@/lib/validation";
 
 const TRANSLATION_LANGUAGES = ["te", "hi"] as const;
+type TranslationLanguage = (typeof TRANSLATION_LANGUAGES)[number];
+
+export type TranslationStatusValue =
+  | "available"
+  | "pending"
+  | "failed"
+  | "missing";
 
 export type TranslationSyncResult =
   | { ok: true }
-  | { ok: false; error: string; failures: Array<"te" | "hi"> };
+  | {
+      ok: false;
+      error: string;
+      failures: TranslationLanguage[];
+    };
+
+const LANGUAGE_NAMES: Record<TranslationLanguage, string> = {
+  te: "Telugu",
+  hi: "Hindi",
+};
 
 function translatedData(
   english: Article,
   input: PrismaArticleInput,
   groupId: string,
-  language: (typeof TRANSLATION_LANGUAGES)[number],
-  translated: { title: string; excerpt: string | null; content: string },
+  language: TranslationLanguage,
+  translated: TranslatedArticleFields,
 ) {
   return {
-    ...translated,
+    title: translated.title,
+    excerpt: translated.excerpt,
+    content: translated.content,
     slug: `${baseSlug(input.slug)}-${language}`,
     imageUrl: input.imageUrl,
     mainCategory: input.mainCategory,
@@ -33,36 +54,75 @@ function translatedData(
   };
 }
 
-export async function getArticleTranslationStatus(article: Article) {
-  const versions = await prisma.article.findMany({
-    where: article.translationGroupId
-      ? { translationGroupId: article.translationGroupId }
+function mergeTranslatedFields(
+  existing: Article | undefined,
+  next: TranslatedArticleFields,
+  changed: { title: boolean; excerpt: boolean; content: boolean },
+): TranslatedArticleFields {
+  return {
+    title:
+      changed.title && next.title.trim()
+        ? next.title.trim()
+        : existing?.title?.trim() || next.title.trim(),
+    excerpt:
+      changed.excerpt && next.excerpt?.trim()
+        ? next.excerpt.trim()
+        : existing?.excerpt?.trim() || next.excerpt?.trim() || null,
+    content:
+      changed.content && next.content.trim()
+        ? next.content.trim()
+        : existing?.content?.trim() || next.content.trim(),
+  };
+}
+
+function detectChangedFields(english: Article, input: PrismaArticleInput) {
+  return {
+    title: english.title.trim() !== input.title.trim(),
+    excerpt: (english.excerpt || "").trim() !== (input.excerpt || "").trim(),
+    content: english.content.trim() !== input.content.trim(),
+  };
+}
+
+async function loadGroupVersions(english: Article) {
+  return prisma.article.findMany({
+    where: english.translationGroupId
+      ? { translationGroupId: english.translationGroupId }
       : {
           slug: {
             in: [
-              baseSlug(article.slug),
-              `${baseSlug(article.slug)}-te`,
-              `${baseSlug(article.slug)}-hi`,
+              baseSlug(english.slug),
+              `${baseSlug(english.slug)}-te`,
+              `${baseSlug(english.slug)}-hi`,
             ],
           },
         },
   });
-  const available = (language: "te" | "hi") =>
-    versions.some(
-      (version) =>
-        version.language === language &&
-        hasCompleteArticleTranslation(version),
-    );
+}
+
+export async function getArticleTranslationStatus(article: Article) {
+  const versions = await loadGroupVersions(article);
+  const statusFor = (language: TranslationLanguage): TranslationStatusValue => {
+    const version = versions.find((row) => row.language === language);
+    if (!version) return "missing";
+    if (hasCompleteArticleTranslation(version)) return "available";
+    if (version.title.trim() || version.content.trim()) return "pending";
+    return "failed";
+  };
+
   return {
     en: "available" as const,
-    te: available("te") ? ("available" as const) : ("missing" as const),
-    hi: available("hi") ? ("available" as const) : ("missing" as const),
+    te: statusFor("te"),
+    hi: statusFor("hi"),
   };
 }
 
 export async function syncArticleTranslations(
   englishArticleId: string,
   input: PrismaArticleInput,
+  options: {
+    languages?: TranslationLanguage[];
+    forceFields?: boolean;
+  } = {},
 ): Promise<TranslationSyncResult> {
   if (input.language !== "en") return { ok: true };
 
@@ -91,94 +151,125 @@ export async function syncArticleTranslations(
     translationGroupId: groupId,
   } satisfies Prisma.ArticleUpdateInput;
 
+  // Always persist the English source first — never hide it when translation fails.
+  await prisma.article.update({
+    where: { id: englishArticleId },
+    data: {
+      ...sourceData,
+      isPublished: input.isPublished,
+    },
+  });
+
   if (!input.isPublished) {
-    await prisma.$transaction([
-      prisma.article.update({
-        where: { id: englishArticleId },
-        data: { ...sourceData, isPublished: false },
-      }),
-      prisma.article.updateMany({
-        where: {
-          translationGroupId: groupId,
-          language: { in: [...TRANSLATION_LANGUAGES] },
-        },
+    await prisma.article.updateMany({
+      where: {
+        translationGroupId: groupId,
+        language: { in: [...TRANSLATION_LANGUAGES] },
+      },
+      data: {
+        isPublished: false,
+        imageUrl: input.imageUrl,
+        mainCategory: input.mainCategory,
+        category: input.category,
+      },
+    });
+    return { ok: true };
+  }
+
+  const versions = await loadGroupVersions({
+    ...english,
+    translationGroupId: groupId,
+    slug: normalizedSlug,
+  });
+  const changed = options.forceFields
+    ? { title: true, excerpt: true, content: true }
+    : detectChangedFields(english, input);
+  const needsAnyField = changed.title || changed.excerpt || changed.content;
+  const targets = options.languages?.length
+    ? options.languages
+    : [...TRANSLATION_LANGUAGES];
+
+  const failures: TranslationLanguage[] = [];
+
+  for (const language of targets) {
+    const existing = versions.find((row) => row.language === language);
+    const complete = existing && hasCompleteArticleTranslation(existing);
+    if (complete && !needsAnyField && !options.forceFields) {
+      await prisma.article.update({
+        where: { id: existing.id },
         data: {
-          isPublished: false,
           imageUrl: input.imageUrl,
           mainCategory: input.mainCategory,
           category: input.category,
+          isPublished: true,
+          translationGroupId: groupId,
         },
-      }),
-    ]);
-    return { ok: true };
-  }
+      });
+      continue;
+    }
 
-  const translations = await translateArticleToAllLanguages({
-    title: input.title,
-    excerpt: input.excerpt,
-    content: input.content,
-  });
-  const failures = TRANSLATION_LANGUAGES.filter(
-    (language) => !translations[language].ok,
-  );
+    try {
+      const translated = await translateArticleFields(
+        {
+          title: input.title,
+          excerpt: input.excerpt,
+          content: input.content,
+        },
+        LANGUAGE_NAMES[language],
+      );
+      const merged = mergeTranslatedFields(existing, translated, {
+        title: options.forceFields || changed.title || !existing?.title?.trim(),
+        excerpt:
+          options.forceFields ||
+          changed.excerpt ||
+          !existing?.excerpt?.trim(),
+        content:
+          options.forceFields ||
+          changed.content ||
+          !existing?.content?.trim(),
+      });
+
+      if (!merged.title.trim() || !merged.content.trim()) {
+        failures.push(language);
+        continue;
+      }
+
+      const data = translatedData(
+        english,
+        { ...input, slug: normalizedSlug },
+        groupId,
+        language,
+        merged,
+      );
+      await prisma.article.upsert({
+        where: { slug: data.slug },
+        create: data,
+        update: {
+          ...data,
+          // Never blank out a good translation with an empty value.
+          title: data.title.trim() ? data.title : undefined,
+          excerpt: data.excerpt?.trim() ? data.excerpt : undefined,
+          content: data.content.trim() ? data.content : undefined,
+        },
+      });
+    } catch (error) {
+      logDatabaseError(`article-translations-sync.${language}`, error);
+      failures.push(language);
+    }
+  }
 
   if (failures.length > 0) {
-    await prisma.$transaction([
-      prisma.article.update({
-        where: { id: englishArticleId },
-        data: { ...sourceData, isPublished: false },
-      }),
-      prisma.article.updateMany({
-        where: { translationGroupId: groupId },
-        data: { isPublished: false },
-      }),
-    ]);
     return {
       ok: false,
-      failures: [...failures],
+      failures,
       error:
-        `English was saved safely as a draft, but ${failures.join(" and ")} translation failed. ` +
-        "Use Retry Translation after checking the Groq configuration.",
+        `English article was saved${input.isPublished ? " and published" : ""}, but ${failures
+          .map((code) => LANGUAGE_NAMES[code])
+          .join(" and ")} translation failed. Use Retry Translation.`,
     };
   }
 
-  try {
-    await prisma.$transaction(async (tx) => {
-      await tx.article.update({
-        where: { id: englishArticleId },
-        data: { ...sourceData, isPublished: true },
-      });
-      for (const language of TRANSLATION_LANGUAGES) {
-        const result = translations[language];
-        if (!result.ok) continue;
-        const data = translatedData(
-          english,
-          { ...input, slug: normalizedSlug },
-          groupId,
-          language,
-          result.value,
-        );
-        await tx.article.upsert({
-          where: { slug: data.slug },
-          create: data,
-          update: data,
-        });
-      }
-    });
-    return { ok: true };
-  } catch (error) {
-    logDatabaseError("article-translations-sync.save", error);
-    await prisma.article.update({
-      where: { id: englishArticleId },
-      data: { ...sourceData, isPublished: false },
-    });
-    return {
-      ok: false,
-      failures: ["te", "hi"],
-      error:
-        "English was saved safely as a draft, but translated content could not be saved. Use Retry Translation.",
-    };
-  }
+  return { ok: true };
 }
 
 export async function deleteArticleTranslationGroup(

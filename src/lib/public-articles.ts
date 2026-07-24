@@ -8,7 +8,7 @@ import type {
   PublicArticle,
 } from "@/lib/article-types";
 import { resolveArticleTaxonomy } from "@/lib/article-types";
-import { selectArticleByLanguage } from "@/lib/article-localization";
+import { getLocalizedArticleVersion } from "@/lib/article-localization";
 import { logDatabaseError, prisma } from "@/lib/prisma";
 import {
   TOPIC_CATEGORIES as SHARED_TOPIC_CATEGORIES,
@@ -193,7 +193,7 @@ export async function queryPublishedArticles(
   }
 
   return [...groups.values()]
-    .map((group) => selectArticleByLanguage(group, language))
+    .map((group) => getLocalizedArticleVersion(group, language))
     .filter((article): article is PrismaArticle => Boolean(article))
     .map(mapPublicArticle);
 }
@@ -236,7 +236,7 @@ export async function getPublishedArticleBySlug(
             isPublished: true,
           },
     });
-    const selected = selectArticleByLanguage(versions, requestedLanguage);
+    const selected = getLocalizedArticleVersion(versions, requestedLanguage);
     return selected ? mapPublicArticle(selected) : null;
   } catch (error) {
     logDatabaseError("public-articles.get", error);

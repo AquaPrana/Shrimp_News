@@ -13,15 +13,35 @@ import {
 export type Language = "en" | "te" | "hi";
 
 const LANGUAGE_STORAGE_KEY = "shrimp-news-language";
+const LANGUAGE_COOKIE_KEY = "shrimp-news-language";
 const LANGUAGE_CHANGE_EVENT = "shrimp-news-language-change";
 
 function isLanguage(value: string | null): value is Language {
   return value === "en" || value === "te" || value === "hi";
 }
 
+function readLanguageCookie(): Language | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${LANGUAGE_COOKIE_KEY}=`));
+  if (!match) return null;
+  const value = decodeURIComponent(match.split("=").slice(1).join("="));
+  return isLanguage(value) ? value : null;
+}
+
+function persistLanguage(language: Language) {
+  localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+  const maxAge = 60 * 60 * 24 * 365;
+  document.cookie = `${LANGUAGE_COOKIE_KEY}=${encodeURIComponent(language)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+}
+
 function getStoredLanguage(): Language {
-  const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-  return isLanguage(savedLanguage) ? savedLanguage : "en";
+  const fromStorage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  if (isLanguage(fromStorage)) return fromStorage;
+  const fromCookie = readLanguageCookie();
+  if (fromCookie) return fromCookie;
+  return "en";
 }
 
 function subscribeToLanguage(onStoreChange: () => void) {
@@ -160,6 +180,7 @@ const translations = {
     newsletterMondayNote:
       "You'll receive the Shrimp Brief every Monday — free forever.",
     newsletterEmailLabel: "Email address",
+    newsletterEmailPlaceholder: "you@company.com",
     newsletterSubscribe: "Subscribe free",
     newsletterSubscribing: "Subscribing...",
     newsletterEmptyError: "Please enter a valid email address.",
@@ -169,6 +190,8 @@ const translations = {
     newsletterSubmitError: "Something went wrong. Please try again.",
     newsletterSuccessPrefix: "Thanks for subscribing!",
     newsletterSuccessSuffix: "",
+    articlesLoadError: "Articles are temporarily unavailable. Please try again.",
+    askPranaThinking: "Ask Prana is thinking...",
 
     footerTagline:
       "Shrimp News delivers market prices, farming intelligence, disease updates, technology insights and industry news for the global shrimp ecosystem.",
@@ -178,7 +201,7 @@ const translations = {
     aquaticHealth: "Aquatic Health",
     researchInnovation: "Research & Innovation",
     prices: "Prices",
-    followShrimpNews: "Follow Shrimp News",
+    followShrimpNews: "Follow Shrimp.News",
     allRightsReserved: "© 2026 Shrimp News. All rights reserved.",
     privacyPolicy: "Privacy Policy",
     terms: "Terms",
@@ -439,13 +462,14 @@ const translations = {
     aquaPrompt2: "చెరువుల్లో రొయ్యల వ్యాధిని ఎలా నివారించాలి?",
     aquaPrompt3: "భారత్‌కు ఉత్తమ రొయ్యల మేత పద్ధతులు",
 
-    newsletterEyebrow: "Shrimp News Brief",
+    newsletterEyebrow: "ష్రింప్ న్యూస్ బ్రీఫ్",
     newsletterTitle: "ది ష్రింప్ బ్రీఫ్",
     newsletterDescription:
       "ధరలు, వ్యాధి హెచ్చరికలు, విధాన అప్‌డేట్లు మరియు మార్కెట్ సమాచారం — ప్రతి సోమవారం. ఎప్పటికీ ఉచితం.",
     newsletterMondayNote:
-      "You'll receive the Shrimp Brief every Monday — free forever.",
+      "మీకు ప్రతి సోమవారం ష్రింప్ బ్రీఫ్ అందుతుంది — ఎప్పటికీ ఉచితం.",
     newsletterEmailLabel: "ఇమెయిల్ చిరునామా",
+    newsletterEmailPlaceholder: "you@company.com",
     newsletterSubscribe: "ఉచితంగా సబ్‌స్క్రైబ్ చేయండి",
     newsletterSubscribing: "సబ్‌స్క్రైబ్ అవుతోంది...",
     newsletterEmptyError: "దయచేసి సరైన ఇమెయిల్ చిరునామాను నమోదు చేయండి.",
@@ -455,6 +479,8 @@ const translations = {
     newsletterSubmitError: "ఏదో తప్పు జరిగింది. దయచేసి మళ్లీ ప్రయత్నించండి.",
     newsletterSuccessPrefix: "సబ్‌స్క్రైబ్ అయినందుకు ధన్యవాదాలు!",
     newsletterSuccessSuffix: "",
+    articlesLoadError: "వ్యాసాలు తాత్కాలికంగా అందుబాటులో లేవు. దయచేసి మళ్లీ ప్రయత్నించండి.",
+    askPranaThinking: "Ask Prana ఆలోచిస్తోంది...",
 
     footerTagline:
       "Shrimp News ప్రపంచ రొయ్యల పరిశ్రమకు మార్కెట్ ధరలు, సాగు సమాచారం, వ్యాధి నవీకరణలు, సాంకేతిక అంతర్దృష్టులు మరియు పరిశ్రమ వార్తలను అందిస్తుంది.",
@@ -464,7 +490,7 @@ const translations = {
     aquaticHealth: "జల ఆరోగ్యం",
     researchInnovation: "పరిశోధన & ఆవిష్కరణ",
     prices: "ధరలు",
-    followShrimpNews: "Shrimp Newsను అనుసరించండి",
+    followShrimpNews: "ష్రింప్.న్యూస్‌ను అనుసరించండి",
     allRightsReserved: "© 2026 Shrimp News. అన్ని హక్కులు రక్షించబడ్డాయి.",
     privacyPolicy: "గోప్యతా విధానం",
     terms: "నిబంధనలు",
@@ -714,13 +740,14 @@ const translations = {
     aquaPrompt2: "तालाबों में झींगा रोग कैसे रोकें?",
     aquaPrompt3: "भारत के लिए सर्वश्रेष्ठ झींगा फ़ीड पद्धतियाँ",
 
-    newsletterEyebrow: "Shrimp News Brief",
+    newsletterEyebrow: "श्रिम्प न्यूज़ ब्रीफ़",
     newsletterTitle: "द श्रिंप ब्रीफ़",
     newsletterDescription:
       "कीमतें, रोग अलर्ट, नीति अपडेट और बाज़ार जानकारी — हर सोमवार. हमेशा मुफ़्त.",
     newsletterMondayNote:
-      "You'll receive the Shrimp Brief every Monday — free forever.",
+      "आपको हर सोमवार श्रिम्प ब्रीफ़ मिलेगा — हमेशा मुफ़्त.",
     newsletterEmailLabel: "ईमेल पता",
+    newsletterEmailPlaceholder: "you@company.com",
     newsletterSubscribe: "मुफ़्त सदस्यता लें",
     newsletterSubscribing: "सदस्यता हो रही है...",
     newsletterEmptyError: "कृपया एक मान्य ईमेल पता दर्ज करें.",
@@ -730,6 +757,8 @@ const translations = {
     newsletterSubmitError: "कुछ गलत हो गया. कृपया पुनः प्रयास करें.",
     newsletterSuccessPrefix: "सदस्यता लेने के लिए धन्यवाद!",
     newsletterSuccessSuffix: "",
+    articlesLoadError: "लेख अस्थायी रूप से उपलब्ध नहीं हैं. कृपया पुनः प्रयास करें.",
+    askPranaThinking: "Ask Prana सोच रहा है...",
 
     footerTagline:
       "Shrimp News वैश्विक झींगा पारिस्थितिकी तंत्र के लिए बाज़ार कीमतें, पालन जानकारी, रोग अपडेट, तकनीक अंतर्दृष्टि और उद्योग समाचार प्रदान करता है.",
@@ -739,7 +768,7 @@ const translations = {
     aquaticHealth: "जलीय स्वास्थ्य",
     researchInnovation: "शोध और नवाचार",
     prices: "कीमतें",
-    followShrimpNews: "Shrimp News को फ़ॉलो करें",
+    followShrimpNews: "श्रिम्प.न्यूज़ को फ़ॉलो करें",
     allRightsReserved: "© 2026 Shrimp News. सर्वाधिकार सुरक्षित.",
     privacyPolicy: "गोपनीयता नीति",
     terms: "नियम",
@@ -907,14 +936,28 @@ export function LanguageProvider({
   }, [language]);
 
   const setLanguage = useCallback((newLanguage: Language) => {
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, newLanguage);
+    persistLanguage(newLanguage);
     document.documentElement.lang = newLanguage;
     window.dispatchEvent(new Event(LANGUAGE_CHANGE_EVENT));
   }, []);
 
   const t = useCallback(
-    (key: TranslationKey) =>
-      translations[language][key] ?? translations.en[key] ?? String(key),
+    (key: TranslationKey) => {
+      const value = translations[language][key] ?? translations.en[key];
+      if (value == null || value === "") {
+        if (process.env.NODE_ENV !== "production") {
+          console.warn(`[i18n] Missing translation key: ${String(key)} (${language})`);
+        }
+        return "";
+      }
+      if (typeof value !== "string") {
+        if (process.env.NODE_ENV !== "production") {
+          console.warn(`[i18n] Invalid translation value for key: ${String(key)}`);
+        }
+        return "";
+      }
+      return value;
+    },
     [language],
   );
 

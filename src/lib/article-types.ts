@@ -148,8 +148,8 @@ export type AdminArticle = {
   updatedAt: string;
   translationStatus?: {
     en: "available";
-    te: "available" | "missing" | "failed";
-    hi: "available" | "missing" | "failed";
+    te: "available" | "pending" | "missing" | "failed";
+    hi: "available" | "pending" | "missing" | "failed";
   };
 };
 
