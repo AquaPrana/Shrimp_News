@@ -1,4 +1,6 @@
 export const TOPIC_CATEGORIES: Record<string, string[]> = {
+  india: [],
+  global: [],
   national: ["India"],
   international: ["Global"],
   "domestic-consumption": ["Domestic Consumption"],
@@ -11,6 +13,8 @@ export const TOPIC_CATEGORIES: Record<string, string[]> = {
 };
 
 export const TOPIC_LABELS: Record<string, string> = {
+  india: "India",
+  global: "Global",
   national: "India",
   international: "Global",
   "domestic-consumption": "Domestic Consumption",
@@ -24,15 +28,20 @@ export const TOPIC_LABELS: Record<string, string> = {
 
 /** Translation keys for topic/category labels (language-context). */
 export const TOPIC_TRANSLATION_KEYS: Record<string, string> = {
+  india: "india",
+  global: "global",
   national: "india",
   international: "global",
   "domestic-consumption": "domesticConsumption",
   "shrimp-farming": "shrimpFarming",
   "shrimp-health": "shrimpHealth",
   technology: "technologyEquipment",
+  "technology-equipment": "technologyEquipment",
   research: "researchInnovations",
+  "research-innovations": "researchInnovations",
   "shrimp-prices": "shrimpPrices",
   "markets-industry": "marketsIndustry",
+  "market-industry": "marketsIndustry",
 };
 
 export const CATEGORY_TRANSLATION_KEYS: Record<string, string> = {
@@ -52,7 +61,13 @@ export const CATEGORY_TRANSLATION_KEYS: Record<string, string> = {
 export function isArticleTopic(
   value: string | null | undefined,
 ): value is keyof typeof TOPIC_CATEGORIES {
-  return Boolean(value && value in TOPIC_CATEGORIES);
+  return Boolean(normalizeArticleTopic(value));
+}
+
+export function normalizeArticleTopic(value: string | null | undefined) {
+  if (value === "national") return "india";
+  if (value === "international") return "global";
+  return value && value in TOPIC_CATEGORIES ? value : null;
 }
 
 export function baseSlug(slug: string) {

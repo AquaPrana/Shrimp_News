@@ -64,6 +64,11 @@ function mapArticleResponse(value: unknown): AdminArticle | null {
         : record.status === "published",
     createdAt: stringField(record, ["createdAt"]) ?? "",
     updatedAt: stringField(record, ["updatedAt"]) ?? "",
+    translationStatus:
+      record.translationStatus &&
+      typeof record.translationStatus === "object"
+        ? record.translationStatus as AdminArticle["translationStatus"]
+        : undefined,
   };
 }
 

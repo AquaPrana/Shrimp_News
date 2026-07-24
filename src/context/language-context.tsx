@@ -92,6 +92,7 @@ const translations = {
     viewAll: "View all",
     recent: "Recent",
     popular: "Popular",
+    featured: "Featured",
     welcomeTitle: "Welcome to Shrimp.News",
     welcomeDescription:
       "Your trusted source for shrimp industry news, markets, farming, health and innovation.",
@@ -136,7 +137,7 @@ const translations = {
     newsFeed: "Feed prices ease for the third consecutive week",
 
     readFeaturedStory: "Read featured story",
-    readArticle: "Read article →",
+    readArticle: "Read Article",
     imagePlaceholder: "Image placeholder",
 
     aquaGptEyebrow: "Ask Prana",
@@ -343,7 +344,7 @@ const translations = {
     india: "భారతదేశం",
     global: "గ్లోబల్",
     articles: "వ్యాసాలు",
-    shrimpFarming: "రొయ్యల సాగు",
+    shrimpFarming: "రొయ్యల పెంపకం",
     shrimpPrices: "రొయ్యల ధరలు",
     shrimpHealth: "రొయ్యల ఆరోగ్యం",
     technologyEquipment: "సాంకేతికత & పరికరాలు",
@@ -376,7 +377,8 @@ const translations = {
       "దేశీయ వినియోగం, ధరలు, ఆరోగ్యం మరియు మార్కెట్ స్థిరత్వంపై తాజా వ్యాసాలు.",
     viewAll: "అన్నీ చూడండి",
     recent: "ఇటీవలి",
-    popular: "జనాదరణ",
+    popular: "ప్రజాదరణ పొందినవి",
+    featured: "ప్రత్యేకం",
     welcomeTitle: "Shrimp.Newsకు స్వాగతం",
     welcomeDescription:
       "రొయ్యల పరిశ్రమ వార్తలు, మార్కెట్లు, సాగు, ఆరోగ్యం మరియు ఆవిష్కరణకు మీ నమ్మకమైన మూలం.",
@@ -421,7 +423,7 @@ const translations = {
     newsFeed: "వరుసగా మూడవ వారం మేత ధరలు తగ్గాయి",
 
     readFeaturedStory: "ప్రధాన కథనం చదవండి",
-    readArticle: "వ్యాసం చదవండి →",
+    readArticle: "వ్యాసం చదవండి",
     imagePlaceholder: "చిత్రం స్థానం",
 
     aquaGptEyebrow: "Ask Prana",
@@ -516,7 +518,7 @@ const translations = {
       "సైట్ అనుభవానికి సరిపోయేలా రూపొందించిన ఎడిటోరియల్ కథనాలు, మార్కెట్ అంతర్దృష్టి మరియు రొయ్యల సమాచారం యొక్క లాంచ్ ఆర్కైవ్.",
     newsIndiaTitle: "భారత రొయ్యల పరిశ్రమ అప్‌డేట్‌లతో ఉండండి",
     newsIndiaDescription:
-      "Shrimp.News భారత రొయ్యల రంగం నుంచి తాజా వార్తలు, విధానాలు, సాగు అప్‌డేట్‌లు, వ్యాధి అలర్ట్‌లు, పరిశోధన, పెట్టుబడులు మరియు పరిశ్రమ కార్యక్రమాలను అందిస్తుంది. భారత రొయ్యల సాగు మరియు ఆక్వాకల్చర్‌ను రూపొందిస్తున్న కథనాలపై మిమ్మల్ని అప్‌డేట్‌గా ఉంచుతుంది.",
+      "ష్రింప్.న్యూస్ భారత రొయ్యల రంగం నుంచి తాజా వార్తలు, విధానాలు, సాగు అప్‌డేట్‌లు, వ్యాధి అలర్ట్‌లు, పరిశోధన, పెట్టుబడులు మరియు పరిశ్రమ కార్యక్రమాలను అందిస్తుంది. భారత రొయ్యల సాగు మరియు ఆక్వాకల్చర్‌ను రూపొందిస్తున్న కథనాలపై మిమ్మల్ని అప్‌డేట్‌గా ఉంచుతుంది.",
     newsGlobalTitle: "ముఖ్యమైన గ్లోబల్ పరిణామాలు",
     newsGlobalDescription:
       "ప్రపంచ రొయ్యల పరిశ్రమ నిరంతరం మారుతోంది. Shrimp.News మార్కెట్ ట్రెండ్‌లు, వాణిజ్యం, సాంకేతికత, పరిశోధన, సస్టైనబిలిటీ మరియు ప్రధాన ఉత్పత్తి/వినియోగ దేశాల విధాన అప్‌డేట్‌లతో మిమ్మల్ని గ్లోబల్ రొయ్యల పర్యావరణ వ్యవస్థకు అనుసంధానం చేస్తుంది.",
@@ -620,10 +622,10 @@ const translations = {
     shrimpFarming: "झींगा पालन",
     shrimpPrices: "झींगा कीमतें",
     shrimpHealth: "झींगा स्वास्थ्य",
-    technologyEquipment: "तकनीक और उपकरण",
-    researchInnovations: "शोध और नवाचार",
+    technologyEquipment: "प्रौद्योगिकी एवं उपकरण",
+    researchInnovations: "अनुसंधान एवं नवाचार",
     domesticConsumption: "घरेलू खपत",
-    marketsIndustry: "बाज़ार और उद्योग",
+    marketsIndustry: "बाज़ार एवं उद्योग",
     aboutUs: "हमारे बारे में",
     foundersMessage: "संस्थापक का संदेश",
     contactUs: "संपर्क करें",
@@ -649,8 +651,9 @@ const translations = {
     latestDescription:
       "घरेलू खपत, कीमतों, स्वास्थ्य और बाज़ार स्थिरता पर नवीनतम लेख.",
     viewAll: "सभी देखें",
-    recent: "हालिया",
+    recent: "हाल के",
     popular: "लोकप्रिय",
+    featured: "विशेष",
     welcomeTitle: "Shrimp.News में आपका स्वागत है",
     welcomeDescription:
       "झींगा उद्योग समाचार, बाज़ार, पालन, स्वास्थ्य और नवाचार के लिए आपका विश्वसनीय स्रोत.",
@@ -695,7 +698,7 @@ const translations = {
     newsFeed: "लगातार तीसरे सप्ताह फ़ीड कीमतें घटीं",
 
     readFeaturedStory: "विशेष कहानी पढ़ें",
-    readArticle: "लेख पढ़ें →",
+    readArticle: "लेख पढ़ें",
     imagePlaceholder: "छवि प्लेसहोल्डर",
 
     aquaGptEyebrow: "Ask Prana",
@@ -790,7 +793,7 @@ const translations = {
       "साइट अनुभव से मेल खाते संपादकीय कहानियों, बाज़ार अंतर्दृष्टि और झींगा जानकारी का पॉलिश्ड लॉन्च आर्काइव.",
     newsIndiaTitle: "भारत के झींगा उद्योग से जुड़े रहें",
     newsIndiaDescription:
-      "Shrimp.News भारत के झींगा क्षेत्र की ताज़ा खबरें और विकास लाता है—सरकारी नीतियाँ, फार्मिंग अपडेट, रोग अलर्ट, शोध, निवेश और उद्योग पहलों तक। हमारी राष्ट्रीय कवरेज आपको भारतीय झींगा पालन और एक्वाकल्चर को आकार देने वाली कहानियों से अवगत रखती है।",
+      "श्रिम्प.न्यूज़ भारत के झींगा क्षेत्र की ताज़ा खबरें और विकास लाता है—सरकारी नीतियाँ, फार्मिंग अपडेट, रोग अलर्ट, शोध, निवेश और उद्योग पहलों तक। हमारी राष्ट्रीय कवरेज आपको भारतीय झींगा पालन और एक्वाकल्चर को आकार देने वाली कहानियों से अवगत रखती है।",
     newsGlobalTitle: "महत्वपूर्ण वैश्विक विकास",
     newsGlobalDescription:
       "वैश्विक झींगा उद्योग लगातार बदल रहा है। Shrimp.News बाज़ार रुझान, व्यापार, तकनीक, शोध, स्थिरता और प्रमुख उत्पादक/उपभोक्ता देशों की नीति अपडेट सहित अंतरराष्ट्रीय विकास कवर करता है, ताकि आप वैश्विक झींगा पारिस्थितिकी तंत्र से जुड़े रहें।",

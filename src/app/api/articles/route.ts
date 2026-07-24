@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import type { Prisma } from "@prisma/client";
 import { ARTICLE_CATEGORIES, ARTICLE_LANGUAGES, type ArticleLanguage } from "@/lib/article-types";
-import { logDatabaseError, prisma } from "@/lib/prisma";
-import { mapPublicArticle, TOPIC_CATEGORIES } from "@/lib/public-articles";
+import { logDatabaseError } from "@/lib/prisma";
+import { queryPublishedArticles } from "@/lib/public-articles";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,21 +19,19 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Invalid language." }, { status: 400 });
     }
 
-    const where: Prisma.ArticleWhereInput = { isPublished: true, language };
-    if (topic && TOPIC_CATEGORIES[topic]) {
-      where.category = { in: TOPIC_CATEGORIES[topic] };
-    } else if (category && ARTICLE_CATEGORIES.includes(category as never)) {
-      where.category = category;
+    if (category && !ARTICLE_CATEGORIES.includes(category as never)) {
+      return NextResponse.json({ error: "Invalid category." }, { status: 400 });
     }
 
-    const articles = await prisma.article.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip: (page - 1) * limit,
-      take: limit,
+    const articles = await queryPublishedArticles({
+      language,
+      topic,
+      category,
+      limit,
+      page,
     });
 
-    return NextResponse.json({ articles: articles.map(mapPublicArticle), page, limit });
+    return NextResponse.json({ articles, page, limit });
   } catch (error) {
     logDatabaseError("public-articles.list", error);
     return NextResponse.json({ error: "Unable to load articles." }, { status: 500 });

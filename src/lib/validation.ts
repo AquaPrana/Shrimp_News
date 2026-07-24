@@ -13,14 +13,24 @@ import {
 import { prepareArticleContentForSave } from "@/lib/article-content";
 
 export function slugify(value: string) {
-  return value
+  const normalized = value
     .normalize("NFKD")
     .toLowerCase()
     .trim()
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/[\s_-]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 255);
+
+  if (normalized || !value.trim()) return normalized;
+
+  let hash = 2166136261;
+  for (const character of value.trim()) {
+    hash ^= character.codePointAt(0) || 0;
+    hash = Math.imul(hash, 16777619);
+  }
+  return `article-${(hash >>> 0).toString(36)}`;
 }
 
 export function sanitizePlainText(value: unknown, max: number) {
@@ -224,6 +234,12 @@ export function validatePrismaArticleInput(raw: Record<string, unknown>) {
   if (raw.isPublished !== undefined && typeof raw.isPublished !== "boolean") {
     return { ok: false as const, error: "Published status must be true or false." };
   }
+  if (raw.isPublished === true && !excerpt) {
+    return {
+      ok: false as const,
+      error: "A short description is required before publishing.",
+    };
+  }
 
   const taxonomy = resolveArticleTaxonomy({
     mainCategory:
@@ -238,7 +254,7 @@ export function validatePrismaArticleInput(raw: Record<string, unknown>) {
     return {
       ok: false as const,
       error:
-        taxonomy.mainCategory === "Global" && taxonomy.category === "Domestic Consumption"
+        taxonomy.mainCategory === "global" && taxonomy.category === "Domestic Consumption"
           ? "Domestic Consumption is only available for India articles."
           : "Choose a valid subcategory.",
     };

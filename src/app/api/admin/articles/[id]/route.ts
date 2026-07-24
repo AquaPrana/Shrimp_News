@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { verifyAdminApi } from "@/lib/admin-auth";
 import {
   deleteArticleTranslationGroup,
+  getArticleTranslationStatus,
   syncArticleTranslations,
 } from "@/lib/article-translations-sync";
 import { baseSlug } from "@/lib/public-articles";
@@ -22,7 +23,10 @@ export async function GET(request: Request, { params }: RouteContext) {
     const { id } = await params;
     const article = await prisma.article.findUnique({ where: { id } });
     if (!article) return NextResponse.json({ error: "Article not found." }, { status: 404 });
-    return NextResponse.json({ article });
+    const translationStatus = await getArticleTranslationStatus(article);
+    return NextResponse.json({
+      article: { ...article, translationStatus },
+    });
   } catch (error) {
     logDatabaseError("articles.get", error);
     return NextResponse.json({ error: "Failed to load article." }, { status: 500 });
@@ -76,16 +80,25 @@ export async function PUT(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: "Another article already uses this slug." }, { status: 409 });
     }
 
-    const article = await prisma.article.update({
-      where: { id },
-      data: validated.value,
-    });
-
+    let article;
     if (existing.language === "en") {
-      await syncArticleTranslations(article.id, validated.value);
+      const translation = await syncArticleTranslations(id, validated.value);
+      if (!translation.ok) {
+        const savedDraft = await prisma.article.findUnique({ where: { id } });
+        return NextResponse.json(
+          { error: translation.error, article: savedDraft ?? existing },
+          { status: 502 },
+        );
+      }
+      article = await prisma.article.findUnique({ where: { id } });
+    } else {
+      article = await prisma.article.update({
+        where: { id },
+        data: validated.value,
+      });
     }
 
-    const saved = await prisma.article.findUnique({ where: { id: article.id } });
+    const saved = await prisma.article.findUnique({ where: { id } });
     return NextResponse.json({
       message: "Article updated successfully.",
       article: saved ?? article,

@@ -1,10 +1,11 @@
 "use client";
 
 import { Suspense } from "react";
-import { ArticleGrid, isArticleTopic } from "@/components/articles/article-grid";
+import { ArticleGrid } from "@/components/articles/article-grid";
 import { PageShell } from "@/components/layout/page-shell";
 import type { TranslationKey } from "@/context/language-context";
 import type { PublicArticle } from "@/lib/article-types";
+import { normalizeArticleTopic } from "@/lib/public-articles-shared";
 
 function ArticlesContent({
   topic,
@@ -14,23 +15,23 @@ function ArticlesContent({
   initialArticles: PublicArticle[];
 }) {
   const eyebrowKey: TranslationKey | undefined =
-    topic === "national"
+    topic === "india"
       ? "india"
-      : topic === "international"
+      : topic === "global"
         ? "global"
         : "articlesEyebrow";
 
   const titleKey: TranslationKey =
-    topic === "national"
+    topic === "india"
       ? "newsIndiaTitle"
-      : topic === "international"
+      : topic === "global"
         ? "newsGlobalTitle"
         : "articlesTitle";
 
   const descriptionKey: TranslationKey =
-    topic === "national"
+    topic === "india"
       ? "newsIndiaDescription"
-      : topic === "international"
+      : topic === "global"
         ? "newsGlobalDescription"
         : "articlesDescription";
 
@@ -53,7 +54,7 @@ export function ArticlesPageClient({
   topicParam: string | null;
   initialArticles: PublicArticle[];
 }) {
-  const topic = isArticleTopic(topicParam) ? topicParam : null;
+  const topic = normalizeArticleTopic(topicParam);
 
   return (
     <Suspense fallback={null}>

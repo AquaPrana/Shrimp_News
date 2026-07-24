@@ -2,13 +2,11 @@
 
 import Link from "next/link";
 import { ArticleCoverImage } from "@/components/articles/article-cover-image";
-import { useLanguage, type TranslationKey } from "@/context/language-context";
+import { useLanguage } from "@/context/language-context";
 import type { PublicArticle } from "@/lib/article-types";
 import { formatArticleDate } from "@/lib/format-date";
-import {
-  CATEGORY_TRANSLATION_KEYS,
-  baseSlug,
-} from "@/lib/public-articles-shared";
+import { getCategoryLabel } from "@/lib/article-localization";
+import { baseSlug } from "@/lib/public-articles-shared";
 
 export function LatestArticlesGrid({
   articles,
@@ -35,10 +33,7 @@ export function LatestArticlesGrid({
 
       <div className="grid gap-3 sm:grid-cols-2">
         {articles.slice(0, 4).map((article, index) => {
-          const categoryKey = CATEGORY_TRANSLATION_KEYS[article.category];
-          const categoryLabel = categoryKey
-            ? t(categoryKey as TranslationKey)
-            : article.category;
+          const categoryLabel = getCategoryLabel(article.category, language);
           return (
             <article
               key={`latest-grid-${article.slug}`}

@@ -25,7 +25,7 @@ function createStore(): DemoStore {
       const timestamp = new Date(base - index * 86_400_000).toISOString();
       const isGlobal = article.topics.includes("international");
       const taxonomy = resolveArticleTaxonomy({
-        mainCategory: isGlobal ? "Global" : "India",
+    mainCategory: isGlobal ? "global" : "india",
         category: article.category.en,
       });
       return {

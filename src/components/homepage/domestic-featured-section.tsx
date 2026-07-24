@@ -1,18 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import { ArticleCoverImage } from "@/components/articles/article-cover-image";
+import { useLanguage } from "@/context/language-context";
+import { getCategoryLabel } from "@/lib/article-localization";
 import type { PublicArticle } from "@/lib/article-types";
+import { formatArticleDate } from "@/lib/format-date";
 import { baseSlug } from "@/lib/public-articles-shared";
 
 function publishedTime(article: PublicArticle) {
   return new Date(article.publishedAt || article.createdAt).getTime();
-}
-
-function formatDate(article: PublicArticle) {
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(article.publishedAt || article.createdAt));
 }
 
 export function DomesticFeaturedSection({
@@ -20,6 +17,7 @@ export function DomesticFeaturedSection({
 }: {
   articles: PublicArticle[];
 }) {
+  const { language, t } = useLanguage();
   const featured = articles
     .filter((article) => article.category === "Domestic Consumption")
     .sort((a, b) => publishedTime(b) - publishedTime(a))
@@ -32,7 +30,7 @@ export function DomesticFeaturedSection({
       <div className="mx-auto max-w-[1280px]">
         <div className="mb-6 flex items-center border-b-2 border-[#0B4F7A]">
           <h2 className="bg-[#0B4F7A] px-5 py-3 text-base font-black uppercase tracking-[0.1em] text-white sm:text-lg">
-            Featured
+            {t("featured")}
           </h2>
         </div>
 
@@ -45,7 +43,7 @@ export function DomesticFeaturedSection({
               <Link
                 href={`/articles/${baseSlug(article.slug)}`}
                 className="block"
-                aria-label={`Read ${article.title}`}
+                aria-label={`${t("readArticle")} ${article.title}`}
               >
                 <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
                   <ArticleCoverImage
@@ -58,13 +56,16 @@ export function DomesticFeaturedSection({
                 </div>
                 <div className="p-5">
                   <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0B4F7A]">
-                    {article.category}
+                    {getCategoryLabel(article.category, language)}
                   </span>
                   <h3 className="mt-2 line-clamp-3 text-lg font-extrabold leading-snug text-slate-900 transition-colors group-hover:text-[#0B4F7A]">
                     {article.title}
                   </h3>
                   <time className="mt-3 block text-xs text-slate-500">
-                    {formatDate(article)}
+                    {formatArticleDate(
+                      article.publishedAt || article.createdAt,
+                      language,
+                    )}
                   </time>
                 </div>
               </Link>

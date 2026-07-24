@@ -24,8 +24,8 @@ const navItems: NavItem[] = [
     key: "news",
     labelKey: "news",
     submenu: [
-      { labelKey: "india", href: "/articles?topic=national" },
-      { labelKey: "global", href: "/articles?topic=international" },
+      { labelKey: "india", href: "/articles?topic=india" },
+      { labelKey: "global", href: "/articles?topic=global" },
     ],
   },
   {

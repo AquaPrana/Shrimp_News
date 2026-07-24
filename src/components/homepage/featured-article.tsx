@@ -3,17 +3,24 @@
 import Link from "next/link";
 import { ArticleCoverImage } from "@/components/articles/article-cover-image";
 import { useLanguage } from "@/context/language-context";
-import { readingTime, type PublicArticle } from "@/lib/article-types";
+import {
+  readingTimeMinutes,
+  type PublicArticle,
+} from "@/lib/article-types";
+import {
+  formatReadTime,
+  getCategoryLabel,
+} from "@/lib/article-localization";
 import { baseSlug } from "@/lib/public-articles-shared";
 
 export function FeaturedArticle({ article }: { article: PublicArticle }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   return (
     <article className="market-dashboard-card relative grid gap-8 overflow-hidden rounded-[28px] border border-cyan-300/20 bg-[#0B4F7A] p-8 shadow-[0_24px_70px_rgba(11,79,122,0.28)] lg:grid-cols-[1.4fr_0.9fr] xl:p-10">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.14),transparent_42%)]" />
       <div className="relative z-10 space-y-6">
         <span className="inline-flex rounded-full border border-orange-400/30 bg-orange-500/15 px-4 py-2 text-xs uppercase tracking-[0.32em] text-orange-300">
-          {article.category}
+          {getCategoryLabel(article.category, language)}
         </span>
         <div className="space-y-4">
           <h2 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
@@ -31,7 +38,7 @@ export function FeaturedArticle({ article }: { article: PublicArticle }) {
             {t("readFeaturedStory")}
           </Link>
           <span className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-cyan-50/80">
-            {readingTime(article.content)}
+            {formatReadTime(readingTimeMinutes(article.content), language)}
           </span>
         </div>
       </div>

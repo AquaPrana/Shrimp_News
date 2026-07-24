@@ -38,7 +38,7 @@ const empty: FormState = {
   excerpt: "",
   content: "",
   imageUrl: "",
-  mainCategory: "India",
+  mainCategory: "india",
   category: "Shrimp Farming",
   language: "en",
   isPublished: false,
@@ -84,7 +84,14 @@ function toFormState(article?: AdminArticle): FormState {
 export function ArticleForm({ article }: { article?: AdminArticle }) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(() => toFormState(article));
-  const [slugEdited, setSlugEdited] = useState(Boolean(article));
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(
+    () => Boolean(article && article.slug !== slugify(article.title)),
+  );
+  const [translationStatus, setTranslationStatus] = useState(
+    article?.translationStatus,
+  );
+  const [sourceArticleId, setSourceArticleId] = useState(article?.id || "");
+  const [retryingTranslation, setRetryingTranslation] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
@@ -231,8 +238,51 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
     setForm((current) => ({
       ...current,
       title: value,
-      slug: slugEdited ? current.slug : slugify(value),
+      slug: isSlugManuallyEdited ? current.slug : slugify(value),
     }));
+  }
+
+  function regenerateSlug() {
+    setIsSlugManuallyEdited(false);
+    setForm((current) => ({
+      ...current,
+      slug: slugify(current.title),
+    }));
+  }
+
+  async function retryTranslation() {
+    if (!sourceArticleId) return;
+    setRetryingTranslation(true);
+    setMessage("");
+    setIsError(false);
+    try {
+      const response = await fetch(
+        `/api/admin/articles/${sourceArticleId}/translate`,
+        { method: "POST" },
+      );
+      const body = await response.json();
+      if (!response.ok) {
+        setIsError(true);
+        setMessage(body.error || "Unable to retry translation.");
+        setTranslationStatus((current) =>
+          current
+            ? { ...current, te: "failed", hi: "failed" }
+            : current,
+        );
+        return;
+      }
+      setTranslationStatus({
+        en: "available",
+        te: "available",
+        hi: "available",
+      });
+      setMessage(body.message || "Translations are available.");
+    } catch {
+      setIsError(true);
+      setMessage("Unable to retry translation right now.");
+    } finally {
+      setRetryingTranslation(false);
+    }
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -284,9 +334,11 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
         imageUrl: image.value || "",
       };
       const response = await fetch(
-        article ? `/api/admin/articles/${article.id}` : "/api/admin/articles",
+        sourceArticleId
+          ? `/api/admin/articles/${sourceArticleId}`
+          : "/api/admin/articles",
         {
-          method: article ? "PUT" : "POST",
+          method: sourceArticleId ? "PUT" : "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify(payload),
         },
@@ -295,6 +347,14 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
       if (!response.ok) {
         setIsError(true);
         setMessage(body.error || "Unable to save the article.");
+        if (typeof body.article?.id === "string") {
+          setSourceArticleId(body.article.id);
+          setTranslationStatus({
+            en: "available",
+            te: "failed",
+            hi: "failed",
+          });
+        }
         if (typeof body.error === "string" && /image/i.test(body.error)) {
           setImageError(body.error);
         }
@@ -369,14 +429,25 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
             <input
               value={form.slug}
               onChange={(event) => {
-                setSlugEdited(true);
+                setIsSlugManuallyEdited(true);
                 setField("slug", slugify(event.target.value));
               }}
               required
               maxLength={255}
               className={input}
             />
-            <Hint>Generated from the title and editable. Slugs must be unique.</Hint>
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <Hint>
+                Generated from the title and editable. Slugs must be unique.
+              </Hint>
+              <button
+                type="button"
+                onClick={regenerateSlug}
+                className="shrink-0 text-xs font-bold text-cyan-700"
+              >
+                Regenerate slug
+              </button>
+            </div>
           </Field>
           <Field label="Short description">
             <textarea
@@ -525,10 +596,34 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                 }}
                 className={input}
               >
-                <option value="India">India</option>
-                <option value="Global">Global</option>
+                <option value="india">India</option>
+                <option value="global">Global</option>
               </select>
             </Field>
+            {(article?.language === "en" || sourceArticleId) &&
+            translationStatus ? (
+              <div className="space-y-3 border-t border-slate-100 pt-4">
+                <p className="text-sm font-semibold">Translation status</p>
+                <div className="space-y-1 text-sm text-slate-600">
+                  <p>English: {translationStatus.en}</p>
+                  <p>Telugu: {translationStatus.te}</p>
+                  <p>Hindi: {translationStatus.hi}</p>
+                </div>
+                {translationStatus.te !== "available" ||
+                translationStatus.hi !== "available" ? (
+                  <button
+                    type="button"
+                    onClick={retryTranslation}
+                    disabled={retryingTranslation || busy}
+                    className="text-sm font-bold text-cyan-700 disabled:opacity-50"
+                  >
+                    {retryingTranslation
+                      ? "Retrying translation…"
+                      : "Retry Translation"}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
             <Field label="Subcategory">
               <select
                 value={form.category}

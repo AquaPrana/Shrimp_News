@@ -1,5 +1,5 @@
 import { ArticlesPageClient } from "@/components/articles/articles-page-client";
-import { isArticleTopic } from "@/lib/public-articles-shared";
+import { normalizeArticleTopic } from "@/lib/public-articles-shared";
 import { getPublishedArticles } from "@/lib/public-articles";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,7 @@ type PageProps = {
 
 export default async function ArticlesPage({ searchParams }: PageProps) {
   const { topic: topicParam } = await searchParams;
-  const topic = isArticleTopic(topicParam) ? topicParam : null;
+  const topic = normalizeArticleTopic(topicParam);
   const articles = await getPublishedArticles({
     language: "en",
     topic,

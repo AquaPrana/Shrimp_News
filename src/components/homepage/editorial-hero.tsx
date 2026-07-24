@@ -4,13 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { ArticleCoverImage } from "@/components/articles/article-cover-image";
-import { useLanguage, type TranslationKey } from "@/context/language-context";
+import { useLanguage } from "@/context/language-context";
 import type { PublicArticle } from "@/lib/article-types";
+import { getCategoryLabel } from "@/lib/article-localization";
 import { formatArticleDate } from "@/lib/format-date";
-import {
-  CATEGORY_TRANSLATION_KEYS,
-  baseSlug,
-} from "@/lib/public-articles-shared";
+import { baseSlug } from "@/lib/public-articles-shared";
 
 const FALLBACK = "/images/articles/ArticleImage.jpeg";
 
@@ -51,11 +49,6 @@ export function EditorialHero({ articles }: { articles: PublicArticle[] }) {
   const selectSlide = (index: number) => {
     setActive(index);
     setTimerRevision((value) => value + 1);
-  };
-
-  const categoryLabel = (category: string) => {
-    const key = CATEGORY_TRANSLATION_KEYS[category];
-    return key ? t(key as TranslationKey) : category;
   };
 
   return (
@@ -117,7 +110,7 @@ export function EditorialHero({ articles }: { articles: PublicArticle[] }) {
                     <span className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent" />
                     <span className="absolute inset-x-0 bottom-0 p-6 pb-12 text-white sm:p-8 sm:pb-14 lg:p-9 lg:pb-14">
                       <span className="mb-2.5 inline-flex bg-[#0B4F7A] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] sm:text-[11px]">
-                        {categoryLabel(article.category)}
+                        {getCategoryLabel(article.category, language)}
                       </span>
                       <span className="line-clamp-3 block max-w-[90%] text-[24px] font-extrabold leading-[1.12] tracking-[-0.02em] sm:text-[30px] lg:text-[34px]">
                         {article.title}
@@ -139,7 +132,7 @@ export function EditorialHero({ articles }: { articles: PublicArticle[] }) {
                     type="button"
                     onClick={previous}
                     className="absolute left-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black/50 text-white backdrop-blur-sm transition hover:bg-[#0B4F7A] sm:left-4"
-                    aria-label="Previous featured article"
+                    aria-label={`${t("featured")} - ${t("recent")}`}
                   >
                     <ChevronLeft size={18} />
                   </button>
@@ -147,7 +140,7 @@ export function EditorialHero({ articles }: { articles: PublicArticle[] }) {
                     type="button"
                     onClick={next}
                     className="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black/50 text-white backdrop-blur-sm transition hover:bg-[#0B4F7A] sm:right-4"
-                    aria-label="Next featured article"
+                    aria-label={`${t("featured")} - ${t("latestArticles")}`}
                   >
                     <ChevronRight size={18} />
                   </button>
@@ -175,7 +168,7 @@ export function EditorialHero({ articles }: { articles: PublicArticle[] }) {
               <div className="min-w-0">
                 <div className="mb-3 flex items-center border-b border-slate-300">
                   <h2 className="bg-[#0B4F7A] px-4 py-2 text-sm font-black uppercase tracking-[0.12em] text-white">
-                    Featured
+                    {t("featured")}
                   </h2>
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -184,7 +177,7 @@ export function EditorialHero({ articles }: { articles: PublicArticle[] }) {
                       <Link
                         href={`/articles/${baseSlug(article.slug)}`}
                         className="block"
-                        aria-label={`Read ${article.title}`}
+                        aria-label={`${t("readArticle")} ${article.title}`}
                       >
                         <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
                           <ArticleCoverImage

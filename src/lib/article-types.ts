@@ -1,4 +1,4 @@
-export const ARTICLE_MAIN_CATEGORIES = ["India", "Global"] as const;
+export const ARTICLE_MAIN_CATEGORIES = ["india", "global"] as const;
 export type ArticleMainCategory = (typeof ARTICLE_MAIN_CATEGORIES)[number];
 
 /** Topic subcategories (shared base list). */
@@ -40,7 +40,7 @@ export const GLOBAL_SUBCATEGORIES: readonly ArticleSubcategory[] = [
 export function subcategoriesForMain(
   main: ArticleMainCategory,
 ): readonly ArticleSubcategory[] {
-  return main === "Global" ? GLOBAL_SUBCATEGORIES : INDIA_SUBCATEGORIES;
+  return main === "global" ? GLOBAL_SUBCATEGORIES : INDIA_SUBCATEGORIES;
 }
 
 export function isValidMainCategory(
@@ -54,7 +54,7 @@ export function isValidSubcategory(
   main?: ArticleMainCategory,
 ): value is ArticleSubcategory {
   if (!ARTICLE_SUBCATEGORIES.includes(value as ArticleSubcategory)) return false;
-  if (main === "Global" && value === "Domestic Consumption") return false;
+  if (main === "global" && value === "Domestic Consumption") return false;
   return true;
 }
 
@@ -69,32 +69,28 @@ export function resolveArticleTaxonomy(input: {
   const rawMain = (input.mainCategory || "").trim();
   const rawCategory = (input.category || "").trim();
 
-  if (rawCategory === "International" || rawCategory === "Global") {
-    return { mainCategory: "Global", category: "Markets & Industry" };
+  if (/^(international|global)$/i.test(rawCategory)) {
+    return { mainCategory: "global", category: "Markets & Industry" };
   }
-  if (rawCategory === "National" || rawCategory === "India") {
-    return { mainCategory: "India", category: "Markets & Industry" };
+  if (/^(national|india)$/i.test(rawCategory)) {
+    return { mainCategory: "india", category: "Markets & Industry" };
   }
 
   const mainCategory: ArticleMainCategory =
-    rawMain === "Global" || rawMain === "International"
-      ? "Global"
-      : rawMain === "India" || rawMain === "National"
-        ? "India"
-        : "India";
+    /^(global|international)$/i.test(rawMain) ? "global" : "india";
 
   let category: ArticleSubcategory = "Markets & Industry";
   if (isValidSubcategory(rawCategory, mainCategory)) {
     category = rawCategory;
-  } else if (isValidSubcategory(rawCategory, "India")) {
+  } else if (isValidSubcategory(rawCategory, "india")) {
     // Legacy topic stored as category; keep it and force India if Global forbids it.
     category =
-      mainCategory === "Global" && rawCategory === "Domestic Consumption"
+      mainCategory === "global" && rawCategory === "Domestic Consumption"
         ? "Markets & Industry"
         : (rawCategory as ArticleSubcategory);
   }
 
-  if (mainCategory === "Global" && category === "Domestic Consumption") {
+  if (mainCategory === "global" && category === "Domestic Consumption") {
     category = "Markets & Industry";
   }
 
@@ -150,6 +146,11 @@ export type AdminArticle = {
   isPublished: boolean;
   createdAt: string;
   updatedAt: string;
+  translationStatus?: {
+    en: "available";
+    te: "available" | "missing" | "failed";
+    hi: "available" | "missing" | "failed";
+  };
 };
 
 export type AdminSubscriber = {
@@ -164,12 +165,12 @@ export const LANGUAGE_NAMES: Record<ArticleLanguage, string> = {
   te: "Telugu",
 };
 
-export function readingTime(content: string) {
+export function readingTimeMinutes(content: string) {
   const text = content
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
     .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
     .replace(/<[^>]+>/g, " ")
     .trim();
   const words = text.split(/\s+/).filter(Boolean).length;
-  return `${Math.max(1, Math.ceil(words / 200))} min read`;
+  return Math.max(1, Math.ceil(words / 200));
 }

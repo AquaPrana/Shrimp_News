@@ -42,7 +42,7 @@ async function main() {
       article.mainCategory === "Global" ||
       article.mainCategory === "International"
     ) {
-      taxonomy.mainCategory = "Global";
+      taxonomy.mainCategory = "global";
       if (
         article.category === "International" ||
         article.category === "Global" ||
@@ -52,7 +52,7 @@ async function main() {
         taxonomy.category = "Markets & Industry";
       }
     } else {
-      taxonomy.mainCategory = "India";
+      taxonomy.mainCategory = "india";
       if (article.category === "National" || article.category === "India") {
         taxonomy.category = "Markets & Industry";
       }

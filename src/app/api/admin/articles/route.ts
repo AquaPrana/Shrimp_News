@@ -71,15 +71,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "An article with this slug already exists." }, { status: 409 });
     }
 
+    const requestedPublish = validated.value.isPublished;
     const article = await prisma.article.create({
       data: {
         ...validated.value,
+        isPublished: false,
         translationGroupId: crypto.randomUUID(),
       },
     });
 
-    if (validated.value.isPublished) {
-      await syncArticleTranslations(article.id, validated.value);
+    const translation = await syncArticleTranslations(article.id, {
+      ...validated.value,
+      isPublished: requestedPublish,
+    });
+    if (!translation.ok) {
+      const savedDraft = await prisma.article.findUnique({
+        where: { id: article.id },
+      });
+      return NextResponse.json(
+        { error: translation.error, article: savedDraft ?? article },
+        { status: 502 },
+      );
     }
 
     const saved = await prisma.article.findUnique({ where: { id: article.id } });

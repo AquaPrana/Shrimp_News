@@ -1,10 +1,35 @@
 "use client";
 
 import { ArticleCard } from "@/components/homepage/article-card";
-import { useLanguage } from "@/context/language-context";
+import {
+  useLanguage,
+  type TranslationKey,
+} from "@/context/language-context";
 import { useArticles } from "@/hooks/use-articles";
 import type { PublicArticle } from "@/lib/article-types";
-import { TOPIC_LABELS, isArticleTopic } from "@/lib/public-articles-shared";
+import { TOPIC_TRANSLATION_KEYS } from "@/lib/public-articles-shared";
+
+const REGION_TOPICS = new Set([
+  "india",
+  "global",
+  "national",
+  "international",
+]);
+
+function safeDisplayLabel(value: unknown, translationKey?: string) {
+  if (typeof value !== "string") return "";
+
+  const label = value.trim();
+  if (
+    !label ||
+    label === translationKey ||
+    /^(undefined|null|\[object Object\])$/i.test(label)
+  ) {
+    return "";
+  }
+
+  return label;
+}
 
 export function ArticleGrid({
   topic,
@@ -51,17 +76,24 @@ export function ArticleGrid({
     );
   }
 
-  const showTopicLabel =
-    topic &&
-    isArticleTopic(topic) &&
-    topic !== "national" &&
-    topic !== "international";
+  const topicTranslationKey = topic
+    ? TOPIC_TRANSLATION_KEYS[topic]
+    : undefined;
+  const topicLabel = topicTranslationKey
+    ? safeDisplayLabel(
+        t(topicTranslationKey as TranslationKey),
+        topicTranslationKey,
+      )
+    : "";
+  const showTopicLabel = Boolean(
+    topic && !REGION_TOPICS.has(topic) && topicLabel,
+  );
 
   return (
     <div className="space-y-6">
       {showTopicLabel ? (
         <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#ff6a3d]">
-          {TOPIC_LABELS[topic]}
+          {topicLabel}
         </p>
       ) : null}
 
@@ -74,4 +106,4 @@ export function ArticleGrid({
   );
 }
 
-export { isArticleTopic };
+export { isArticleTopic } from "@/lib/public-articles-shared";
