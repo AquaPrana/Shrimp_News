@@ -6,7 +6,6 @@ export const revalidate = 0;
 
 export default async function DomesticConsumptionPage() {
   const articles = await getPublishedArticles({
-    language: "en",
     topic: "domestic-consumption",
     limit: 60,
   });

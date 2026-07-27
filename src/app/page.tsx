@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function Home() {
-  const articles = await getPublishedArticles({ language: "en", limit: 60 });
+  // All language fields are returned; client selects via LanguageProvider.
+  const articles = await getPublishedArticles({ limit: 60 });
   return <HomePage initialArticles={articles} />;
 }

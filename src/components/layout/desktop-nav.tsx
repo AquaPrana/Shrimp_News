@@ -192,7 +192,7 @@ export function DesktopNav() {
   return (
     <nav
       ref={navRef}
-      aria-label="Primary navigation"
+      aria-label={t("primaryNavigation")}
       className="flex w-max max-w-none items-center justify-center gap-3 overflow-visible text-[#1E3A5F] xl:gap-5 2xl:gap-6"
     >
       {navItems.map((item) => {

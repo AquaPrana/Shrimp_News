@@ -25,28 +25,19 @@ const ALLOWED_TAGS = [
   "td",
 ];
 
-const ALLOWED_ATTR = [
-  "href",
-  "target",
-  "rel",
-  "src",
-  "alt",
-  "title",
-  "width",
-  "height",
-  "class",
-];
-
 const HEADING_MAX_LENGTH = 120;
 const BULLET_PATTERN = /^[\s]*(?:[•\-\*·▪◦‣–—]|\d+[.)])\s+(.+)$/;
 const HTML_TAG_PATTERN = /<\/?[a-z][\s\S]*?>/i;
-const BLOCK_TAG_PATTERN = /<(p|h2|h3|ul|ol)\b[^>]*>[\s\S]*?<\/\1>/gi;
+const BLOCK_TAG_PATTERN =
+  /<(p|h2|h3|ul|ol|blockquote|table)\b[^>]*>[\s\S]*?<\/\1>/gi;
 
 export function stripHtmlTags(value: string) {
   return value
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
     .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
     .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\u00a0/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -62,6 +53,8 @@ function normalizePlainTextNewlines(value: string) {
     .replace(/\u2028/g, "\n")
     .replace(/\u2029/g, "\n\n")
     .replace(/\u00a0/g, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
@@ -70,23 +63,19 @@ function looksLikeHeading(line: string) {
   if (!text || text.length > HEADING_MAX_LENGTH) return false;
   if (/[.!?]["']?$/.test(text)) return false;
   if (BULLET_PATTERN.test(text)) return false;
+  // Single short words / sentence fragments are not headings.
+  if (text.length < 12) return false;
 
   const words = text.split(/\s+/).filter(Boolean);
-  if (words.length === 0) return false;
+  if (words.length < 2 || words.length > 12) return false;
 
-  const titleCaseWords = words.filter((word) =>
-    /^[A-Z][a-zA-Z0-9'’\-]*$/.test(word) || /^[A-Z]{2,}$/.test(word),
+  const titleCaseWords = words.filter(
+    (word) =>
+      /^[A-Z][a-zA-Z0-9'’\-]*$/.test(word) || /^[A-Z]{2,}$/.test(word),
   ).length;
 
-  if (titleCaseWords >= Math.max(2, Math.ceil(words.length * 0.75))) {
-    return true;
-  }
-
-  if (text.length <= 72 && /^[A-Z]/.test(text)) {
-    return true;
-  }
-
-  return false;
+  // Require most words to look title-case / ALL-CAPS — not merely starting with a capital.
+  return titleCaseWords >= Math.max(2, Math.ceil(words.length * 0.75));
 }
 
 function escapeHtml(value: string) {
@@ -102,10 +91,6 @@ function wrapParagraph(text: string) {
   if (!trimmed) return "";
   if (isHtmlArticleContent(trimmed)) return trimmed;
   return `<p>${escapeHtml(trimmed)}</p>`;
-}
-
-function wrapEmptyParagraph() {
-  return "<p><br></p>";
 }
 
 function wrapHeading(text: string, level: "h2" | "h3" = "h2") {
@@ -180,58 +165,63 @@ function plainBlockToHtml(block: string) {
 }
 
 /** Convert legacy plain-text article bodies into safe HTML. */
-export function plainTextToArticleHtml(value: string) {
+export function plainTextToArticleHtml(value: string): string {
   const normalized = normalizePlainTextNewlines(value);
   if (!normalized) return "";
 
-  const chunks = normalized.split(/(\n{2,})/);
-  const html = chunks
-    .map((chunk) => {
-      if (!chunk) return "";
-      if (/^\n{2,}$/.test(chunk)) {
-        const blankCount = Math.max(1, chunk.length - 1);
-        return Array.from({ length: blankCount }, () => wrapEmptyParagraph()).join("");
-      }
-      return plainBlockToHtml(chunk);
-    })
-    .join("");
+  // Split on blank lines into paragraphs — never emit empty spacer paragraphs.
+  const blocks = normalized
+    .split(/\n{2,}/)
+    .map((block) => plainBlockToHtml(block))
+    .filter(Boolean);
 
-  return sanitizeArticleHtml(normalizeBlockHtml(html));
+  return sanitizeArticleHtml(blocks.join(""));
 }
 
-/** Remove Word-specific markup before sanitizing pasted HTML. */
+/** Remove Word / Docs / office-specific markup before sanitizing pasted HTML. */
 export function cleanWordHtml(html: string) {
   return html
     .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<\/?(?:html|head|body|meta|link|title|xml)[^>]*>/gi, "")
+    .replace(/<\/?(?:html|head|body|meta|link|title|xml|o:p)[^>]*>/gi, "")
     .replace(/<(\/?)(?:o|w|v|m):[^>]*>/gi, "")
+    .replace(/<\/?o:p[^>]*>/gi, "")
     .replace(/\sclass="[^"]*"/gi, "")
     .replace(/\sstyle="[^"]*"/gi, "")
-    .replace(/<font[^>]*>([\s\S]*?)<\/font>/gi, "$1")
-    .replace(/<span[^>]*>([\s\S]*?)<\/span>/gi, "$1")
-    .replace(/<li[^>]*>\s*<p[^>]*>([\s\S]*?)<\/p>\s*<\/li>/gi, "<li>$1</li>")
-    .replace(/<h1([^>]*)>/gi, "<h2$1>")
+    .replace(/\sdir="[^"]*"/gi, "")
+    .replace(/\slang="[^"]*"/gi, "")
+    .replace(/\sid="[^"]*"/gi, "")
+    .replace(/<\/?font\b[^>]*>/gi, "")
+    .replace(/<span\b[^>]*>/gi, "")
+    .replace(/<\/span>/gi, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\u00a0/g, " ")
+    .replace(/<li\b[^>]*>\s*<p\b[^>]*>([\s\S]*?)<\/p>\s*<\/li>/gi, "<li>$1</li>")
+    .replace(/<h1\b([^>]*)>/gi, "<h2$1>")
     .replace(/<\/h1>/gi, "</h2>")
-    .replace(/<h[4-6]([^>]*)>/gi, "<h3$1>")
+    .replace(/<h[4-6]\b([^>]*)>/gi, "<h3$1>")
     .replace(/<\/h[4-6]>/gi, "</h3>");
 }
 
 function convertDivsToParagraphs(html: string) {
   return html
-    .replace(/<div\b[^>]*>\s*<br\s*\/?>\s*<\/div>/gi, "")
+    .replace(/<div\b[^>]*>\s*(?:&nbsp;|\u00a0|<br\s*\/?>|\s)*<\/div>/gi, "")
     .replace(/<div\b[^>]*>/gi, "<p>")
     .replace(/<\/div>/gi, "</p>");
 }
 
 function splitParagraphsOnBreaks(html: string) {
-  return html.replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, (match, inner: string) => {
-    const segments = inner.split(/<br\s*\/?>/gi).map((segment) => segment.trim());
+  return html.replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, (_match, inner: string) => {
+    const segments = inner
+      .split(/<br\s*\/?>/gi)
+      .map((segment: string) => segment.trim())
+      .filter((segment: string) => stripHtmlTags(segment).length > 0);
 
-    if (segments.length <= 1) return match;
+    if (segments.length === 0) return "";
+    if (segments.length === 1 && !/<br\s*\/?>/i.test(inner)) {
+      return `<p>${inner.trim()}</p>`;
+    }
 
-    return segments
-      .map((segment) => (segment ? `<p>${segment}</p>` : wrapEmptyParagraph()))
-      .join("");
+    return segments.map((segment: string) => `<p>${segment}</p>`).join("");
   });
 }
 
@@ -300,6 +290,44 @@ function mergeBulletParagraphsIntoLists(html: string) {
   return output.join("");
 }
 
+/**
+ * Remove empty blocks, collapse excessive breaks, and strip spacer paragraphs
+ * that create large blank gaps after Word/Docs paste.
+ */
+export function collapseEmptyAndSpacerBlocks(html: string) {
+  let result = html
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\u00a0/g, " ")
+    // Empty or whitespace-only paragraphs / headings / spans
+    .replace(
+      /<(p|h[1-6]|div|span)\b[^>]*>\s*(?:&nbsp;|\u00a0|<br\s*\/?>|\s)*<\/\1>/gi,
+      "",
+    )
+    // Paragraphs that only contain invisible characters after stripping tags
+    .replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, (match, inner: string) => {
+      return stripHtmlTags(inner) ? match : "";
+    })
+    // Collapse 2+ consecutive <br> into a single paragraph break (removed — spacing via CSS)
+    .replace(/(?:<br\s*\/?>\s*){2,}/gi, "</p><p>")
+    // Fix accidental empty paragraphs created by br collapse
+    .replace(
+      /<(p|h[1-6]|div)\b[^>]*>\s*(?:&nbsp;|\u00a0|<br\s*\/?>|\s)*<\/\1>/gi,
+      "",
+    )
+    // Collapse runs of whitespace between tags
+    .replace(/>\s{2,}</g, "> <")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  // Drop consecutive duplicate empty leftovers once more
+  result = result.replace(
+    /(?:<(?:p|div)\b[^>]*>\s*(?:&nbsp;|\u00a0|<br\s*\/?>|\s)*<\/(?:p|div)>\s*)+/gi,
+    "",
+  );
+
+  return result;
+}
+
 /** Normalize pasted or edited HTML into semantic article blocks. */
 export function normalizeBlockHtml(html: string) {
   if (!html.trim()) return "";
@@ -310,6 +338,7 @@ export function normalizeBlockHtml(html: string) {
   result = promoteBoldParagraphsToHeadings(result);
   result = promoteStandaloneParagraphHeadings(result);
   result = mergeBulletParagraphsIntoLists(result);
+  result = collapseEmptyAndSpacerBlocks(result);
 
   return result.trim();
 }
@@ -318,7 +347,14 @@ export function sanitizeArticleHtml(html: string) {
   const cleaned = sanitizeHtml(html, {
     allowedTags: ALLOWED_TAGS,
     allowedAttributes: {
-      "*": ALLOWED_ATTR,
+      a: ["href", "target", "rel", "title"],
+      img: ["src", "alt", "title", "width", "height"],
+      table: [],
+      thead: [],
+      tbody: [],
+      tr: [],
+      th: [],
+      td: [],
     },
     allowedSchemes: ["http", "https", "mailto", "tel"],
     allowedSchemesByTag: {
@@ -352,17 +388,29 @@ export function sanitizeArticleHtml(html: string) {
         return { tagName: "a", attribs };
       },
     },
-  })
-    .replace(/<p>\s*<\/p>/g, "<p><br></p>")
-    .replace(/(<br\s*\/?>\s*){3,}/gi, "<br><br>")
-    .trim();
+  });
 
-  return cleaned;
+  return collapseEmptyAndSpacerBlocks(cleaned).trim();
+}
+
+/**
+ * Primary sanitizer used before save and on display.
+ * Cleans Word/Docs paste artifacts while preserving structure.
+ */
+export function sanitizeArticleContent(content: string): string {
+  const trimmed = content.trim();
+  if (!trimmed) return "";
+
+  if (!isHtmlArticleContent(trimmed)) {
+    return plainTextToArticleHtml(trimmed);
+  }
+
+  const structured = normalizeBlockHtml(trimmed);
+  return sanitizeArticleHtml(structured);
 }
 
 function formatArticleHtml(rawHtml: string) {
-  const structured = normalizeBlockHtml(rawHtml);
-  return sanitizeArticleHtml(structured);
+  return sanitizeArticleContent(rawHtml);
 }
 
 function countHtmlBlocks(html: string) {
@@ -380,7 +428,9 @@ export function pasteClipboardToArticleHtml(html: string, plain: string) {
   const plainBlocks = countHtmlBlocks(fromPlain);
   const htmlBlocks = countHtmlBlocks(fromHtml);
 
-  if (plainBlocks > htmlBlocks) return fromPlain;
+  // Prefer HTML paste when it has real structure; otherwise plain text path.
+  if (htmlBlocks === 0) return fromPlain;
+  if (plainBlocks > htmlBlocks * 1.5) return fromPlain;
   return fromHtml;
 }
 
@@ -394,13 +444,14 @@ export function prepareArticleContentForSave(raw: unknown) {
     return { ok: false as const, error: "Content is required." };
   }
 
-  const html = isHtmlArticleContent(trimmed)
-    ? formatArticleHtml(trimmed)
-    : plainTextToArticleHtml(trimmed);
+  const html = sanitizeArticleContent(trimmed);
 
   const textLength = stripHtmlTags(html).length;
   if (textLength < 50) {
-    return { ok: false as const, error: "Article content must be at least 50 characters." };
+    return {
+      ok: false as const,
+      error: "Article content must be at least 50 characters.",
+    };
   }
 
   if (html.length > 500_000) {
@@ -413,29 +464,21 @@ export function prepareArticleContentForSave(raw: unknown) {
 export function prepareArticleContentForDisplay(content: string) {
   const trimmed = content.trim();
   if (!trimmed) return "";
-
-  const html = isHtmlArticleContent(trimmed)
-    ? formatArticleHtml(trimmed)
-    : plainTextToArticleHtml(trimmed);
-
-  return html;
+  // Always re-clean on render so older articles with spacer HTML display correctly.
+  return sanitizeArticleContent(trimmed);
 }
 
 /**
- * Display-only cleanup for older seed/launch articles that were stored with
- * excess blank lines. Does not alter saved content or the admin editor path.
+ * @deprecated Prefer sanitizeArticleContent — kept for older imports.
  */
 export function collapseLegacyArticleWhitespace(html: string) {
-  return html
-    .replace(/<p>(?:\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, "")
-    .replace(/(<br\s*\/?>\s*){2,}/gi, "<br>")
-    .trim();
+  return collapseEmptyAndSpacerBlocks(html);
 }
 
 /** Normalize editor HTML on paste or toolbar actions. */
 export function normalizeEditorHtml(html: string) {
   if (!html.trim()) return "";
-  return formatArticleHtml(html);
+  return sanitizeArticleContent(html);
 }
 
 export function editorHtmlToPlainText(html: string) {

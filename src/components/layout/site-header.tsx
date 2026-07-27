@@ -45,12 +45,12 @@ export function SiteHeader() {
       <div className="mx-auto flex min-h-[64px] w-full max-w-[1600px] items-center gap-3 overflow-visible px-3 sm:min-h-[72px] sm:gap-5 sm:px-6 lg:min-h-[82px] lg:gap-7 lg:px-8">
         <Link
           href="/"
-          aria-label="Shrimp News home"
+          aria-label={`${t("shrimpNews")} home`}
           className="flex shrink-0 items-center"
         >
           <Image
             src="/images/shrimp-news-logo.png"
-            alt="Shrimp News"
+            alt={t("shrimpNews")}
             width={210}
             height={95}
             priority
@@ -67,7 +67,7 @@ export function SiteHeader() {
           <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] p-1">
             <Image
               src="/images/aquagpt-logo.png"
-              alt="Ask Prana"
+              alt={t("askPranaButton")}
               width={30}
               height={30}
               className="h-7 w-7 object-contain"
@@ -130,7 +130,7 @@ export function SiteHeader() {
           <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] p-1">
             <Image
               src="/images/aquagpt-logo.png"
-              alt="Ask Prana"
+              alt={t("askPranaButton")}
               width={30}
               height={30}
               className="h-7 w-7 object-contain"

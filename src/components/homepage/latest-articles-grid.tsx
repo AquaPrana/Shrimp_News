@@ -59,11 +59,17 @@ export function LatestArticlesGrid({
                   <span className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/85">
                     {categoryLabel}
                   </span>
-                  <span className="line-clamp-3 text-lg font-extrabold leading-snug drop-shadow-md sm:text-xl">
+                  <span
+                    className={`article-title text-lg font-extrabold drop-shadow-md sm:text-xl ${
+                      language === "te"
+                        ? "h-auto min-h-0 overflow-visible leading-[1.4]"
+                        : "line-clamp-3 leading-snug"
+                    }`}
+                  >
                     {article.title}
                   </span>
                   <span className="mt-3 text-xs font-medium text-white/90">
-                    {t("brandName")}
+                    {t("shrimpNews")}
                     &nbsp;&nbsp; | &nbsp;&nbsp;
                     {formatArticleDate(
                       article.publishedAt || article.createdAt,

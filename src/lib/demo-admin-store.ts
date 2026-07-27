@@ -39,7 +39,7 @@ function createStore(): DemoStore {
         mainCategory: taxonomy.mainCategory,
         category: taxonomy.category,
         language: "en" as const,
-        author: "Shrimp.News Editorial",
+        author: "Shrimp News Editorial",
         status: "published" as const,
         seoTitle: article.title.en,
         seoDescription: article.excerpt.en,
@@ -48,6 +48,20 @@ function createStore(): DemoStore {
         createdAt: timestamp,
         updatedAt: timestamp,
         publishedAt: timestamp,
+        titleEn: article.title.en,
+        summaryEn: article.excerpt.en,
+        contentEn: article.body.en,
+        titleTe: article.title.te || "",
+        summaryTe: article.excerpt.te || "",
+        contentTe: article.body.te || "",
+        titleHi: article.title.hi || "",
+        summaryHi: article.excerpt.hi || "",
+        contentHi: article.body.hi || "",
+        translationAvailable: {
+          en: true,
+          te: Boolean(article.title.te && article.body.te),
+          hi: Boolean(article.title.hi && article.body.hi),
+        },
       };
     }),
     subscribers: [
@@ -82,9 +96,20 @@ export function createDemoArticle(input: ArticleInput) {
   });
   const article: PublicArticle = {
     id: `demo-${demoStore.nextArticleId++}`,
-    ...input,
+    title: input.title,
+    slug: input.slug,
+    excerpt: input.excerpt || "",
+    content: input.content,
+    featuredImageUrl: input.featuredImageUrl ?? null,
+    featuredImageAlt: input.title,
     mainCategory: taxonomy.mainCategory,
     category: taxonomy.category,
+    language: "en",
+    author: "Shrimp News Editorial",
+    status: input.status,
+    seoTitle: input.title,
+    seoDescription: input.excerpt || "",
+    sourceUrl: null,
     topics: [],
     createdAt: now,
     updatedAt: now,
@@ -92,6 +117,16 @@ export function createDemoArticle(input: ArticleInput) {
       input.status === "published"
         ? input.publishedAt ?? now
         : input.publishedAt,
+    titleEn: input.title,
+    summaryEn: input.excerpt || "",
+    contentEn: input.content,
+    titleTe: "",
+    summaryTe: "",
+    contentTe: "",
+    titleHi: "",
+    summaryHi: "",
+    contentHi: "",
+    translationAvailable: { en: true, te: false, hi: false },
   };
   demoStore.articles.unshift(article);
   return article;

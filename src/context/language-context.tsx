@@ -9,16 +9,17 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import {
+  LANGUAGE_COOKIE_KEY,
+  LANGUAGE_STORAGE_KEY,
+  isLanguage,
+  parseLanguage,
+  type Language,
+} from "@/lib/language-preference";
 
-export type Language = "en" | "te" | "hi";
+export type { Language };
 
-const LANGUAGE_STORAGE_KEY = "shrimp-news-language";
-const LANGUAGE_COOKIE_KEY = "shrimp-news-language";
 const LANGUAGE_CHANGE_EVENT = "shrimp-news-language-change";
-
-function isLanguage(value: string | null): value is Language {
-  return value === "en" || value === "te" || value === "hi";
-}
 
 function readLanguageCookie(): Language | null {
   if (typeof document === "undefined") return null;
@@ -26,8 +27,7 @@ function readLanguageCookie(): Language | null {
     .split("; ")
     .find((row) => row.startsWith(`${LANGUAGE_COOKIE_KEY}=`));
   if (!match) return null;
-  const value = decodeURIComponent(match.split("=").slice(1).join("="));
-  return isLanguage(value) ? value : null;
+  return parseLanguage(match.split("=").slice(1).join("="));
 }
 
 function persistLanguage(language: Language) {
@@ -36,12 +36,13 @@ function persistLanguage(language: Language) {
   document.cookie = `${LANGUAGE_COOKIE_KEY}=${encodeURIComponent(language)}; path=/; max-age=${maxAge}; SameSite=Lax`;
 }
 
-function getStoredLanguage(): Language {
-  const fromStorage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-  if (isLanguage(fromStorage)) return fromStorage;
+/** Cookie is the source of truth; localStorage stays in sync as a fallback. */
+function getStoredLanguage(fallback: Language = "en"): Language {
   const fromCookie = readLanguageCookie();
   if (fromCookie) return fromCookie;
-  return "en";
+  const fromStorage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  if (isLanguage(fromStorage)) return fromStorage;
+  return fallback;
 }
 
 function subscribeToLanguage(onStoreChange: () => void) {
@@ -92,6 +93,21 @@ const translations = {
     askPranaShort: "Ask Prana...",
     askPranaButton: "Ask Prana",
     ask: "Ask",
+    artificialIntelligence: "AI",
+    aiAssistant: "AI Assistant",
+    shrimpNews: "Shrimp News",
+    shrimpNewsPlain: "Shrimp News",
+    lastUpdated: "LAST UPDATED",
+    online: "Online",
+    askPranaAiAssistant: "Ask Prana - AI Assistant",
+    askPranaNoResponse: "No response received.",
+    askPranaUnableAnswer: "Ask Prana could not answer right now.",
+    askPranaPreparingAnswer: "Ask Prana is preparing your answer...",
+    askPranaPlaceholder: "Ask about your pond, disease, feed, prices...",
+    askPranaIntro:
+      "Namaste! I'm Ask Prana - ask me anything about shrimp farming, water quality, disease, feed or markets. Ask in English, Telugu, or Hindi.",
+    closeAskPrana: "Close Ask Prana",
+    primaryNavigation: "Primary navigation",
     toggleNavigation: "Toggle navigation",
     noArticlesFound: "No articles found for this topic yet.",
     relatedArticles: "Related Articles",
@@ -113,13 +129,14 @@ const translations = {
     recent: "Recent",
     popular: "Popular",
     featured: "Featured",
-    welcomeTitle: "Welcome to Shrimp.News",
+    welcomeTitle: "Welcome to {shrimpNews}",
+    welcomeToShrimpNews: "Welcome to Shrimp News",
     welcomeDescription:
       "Your trusted source for shrimp industry news, markets, farming, health and innovation.",
     loadingArticles: "Loading articles…",
     mainCategoryLabel: "Main news category",
     subcategoryLabel: "Subcategory",
-    brandName: "Shrimp.News",
+    brandName: "{shrimpNews}",
 
     domesticTitle: "India's shrimp future starts at home.",
     domesticDescription:
@@ -161,7 +178,7 @@ const translations = {
     imagePlaceholder: "Image placeholder",
 
     aquaGptEyebrow: "Ask Prana",
-    aquaGptTitle: "Aquaculture-only AI assistant",
+    aquaGptTitle: "Ask Prana - AI Assistant",
     aquaGptDescription:
       "Ask about shrimp farming, water quality, prices, markets, health, and technology. This assistant helps you explore trusted insights while keeping the scope focused on aquaculture.",
     aquaGptOnline: "Online",
@@ -173,7 +190,7 @@ const translations = {
     aquaPrompt2: "How to prevent shrimp disease in ponds?",
     aquaPrompt3: "Best shrimp feed practices for India",
 
-    newsletterEyebrow: "Shrimp News Brief",
+    newsletterEyebrow: "{shrimpNews} Brief",
     newsletterTitle: "The Shrimp Brief",
     newsletterDescription:
       "Prices, disease alerts, policy updates and market intelligence — delivered every Monday. Free forever.",
@@ -194,15 +211,15 @@ const translations = {
     askPranaThinking: "Ask Prana is thinking...",
 
     footerTagline:
-      "Shrimp News delivers market prices, farming intelligence, disease updates, technology insights and industry news for the global shrimp ecosystem.",
+      "{shrimpNews} delivers market prices, farming intelligence, disease updates, technology insights and industry news for the global shrimp ecosystem.",
     footerSubTagline: "From India's farms to global markets.",
     categories: "Categories",
     latestNews: "Latest News",
     aquaticHealth: "Aquatic Health",
     researchInnovation: "Research & Innovation",
     prices: "Prices",
-    followShrimpNews: "Follow Shrimp.News",
-    allRightsReserved: "© 2026 Shrimp News. All rights reserved.",
+    followShrimpNews: "Follow {shrimpNews}",
+    allRightsReserved: "© 2026 {shrimpNews}. All rights reserved.",
     privacyPolicy: "Privacy Policy",
     terms: "Terms",
     disclaimer: "Disclaimer",
@@ -213,7 +230,7 @@ const translations = {
     pageComingSoon: "Content for this section will be added soon.",
 
     aboutEyebrow: "About Us",
-    aboutTitle: "About Shrimp.News",
+    aboutTitle: "About {shrimpNews}",
     aboutDescription:
       "India's first dedicated digital media platform built exclusively for the global shrimp industry.",
     aboutBody:
@@ -377,10 +394,25 @@ const translations = {
     aboutUs: "మా గురించి",
     foundersMessage: "వ్యవస్థాపకుల సందేశం",
     contactUs: "సంప్రదించండి",
-    askPrana: "రొయ్యల సాగు గురించి Ask Pranaని అడగండి",
-    askPranaShort: "Ask Pranaని అడగండి...",
+    askPrana: "Ask Prana about shrimp farming",
+    askPranaShort: "Ask Prana...",
     askPranaButton: "Ask Prana",
-    ask: "అడగండి",
+    ask: "Ask",
+    artificialIntelligence: "కృత్రిమ మేధస్సు",
+    aiAssistant: "కృత్రిమ మేధస్సు సహాయకుడు",
+    shrimpNews: "శ్రింప్ న్యూస్",
+    shrimpNewsPlain: "శ్రింప్ న్యూస్",
+    lastUpdated: "చివరిగా నవీకరించబడింది",
+    online: "ఆన్‌లైన్",
+    askPranaAiAssistant: "Ask Prana - AI Assistant",
+    askPranaNoResponse: "స్పందన అందలేదు.",
+    askPranaUnableAnswer: "Ask Prana could not answer right now.",
+    askPranaPreparingAnswer: "Ask Prana is preparing your answer...",
+    askPranaPlaceholder: "మీ చెరువు, వ్యాధి, మేత, ధరల గురించి అడగండి...",
+    askPranaIntro:
+      "నమస్తే! నేను Ask Prana — రొయ్యల సాగు, నీటి నాణ్యత, వ్యాధులు, మేత లేదా మార్కెట్ల గురించి ఏదైనా అడగండి. ఇంగ్లీష్, తెలుగు లేదా హిందీలో అడగండి.",
+    closeAskPrana: "Close Ask Prana",
+    primaryNavigation: "ప్రధాన నావిగేషన్",
     toggleNavigation: "నావిగేషన్ టోగుల్",
     noArticlesFound: "ఈ అంశానికి ఇంకా వ్యాసాలు లేవు.",
     relatedArticles: "సంబంధిత వ్యాసాలు",
@@ -402,13 +434,14 @@ const translations = {
     recent: "ఇటీవలి",
     popular: "ప్రజాదరణ పొందినవి",
     featured: "ప్రత్యేకం",
-    welcomeTitle: "Shrimp.Newsకు స్వాగతం",
+    welcomeTitle: "శ్రింప్ న్యూస్ కు స్వాగతం",
+    welcomeToShrimpNews: "శ్రింప్ న్యూస్ కు స్వాగతం",
     welcomeDescription:
       "రొయ్యల పరిశ్రమ వార్తలు, మార్కెట్లు, సాగు, ఆరోగ్యం మరియు ఆవిష్కరణకు మీ నమ్మకమైన మూలం.",
     loadingArticles: "వ్యాసాలు లోడ్ అవుతున్నాయి…",
     mainCategoryLabel: "ప్రధాన వార్తా వర్గం",
     subcategoryLabel: "ఉపవర్గం",
-    brandName: "Shrimp.News",
+    brandName: "{shrimpNews}",
 
     domesticTitle: "భారతదేశ రొయ్యల భవిష్యత్తు దేశీయ మార్కెట్ నుంచే ప్రారంభమవుతుంది.",
     domesticDescription:
@@ -450,7 +483,7 @@ const translations = {
     imagePlaceholder: "చిత్రం స్థానం",
 
     aquaGptEyebrow: "Ask Prana",
-    aquaGptTitle: "ఆక్వాకల్చర్-మాత్రమే AI సహాయకుడు",
+    aquaGptTitle: "Ask Prana - AI Assistant",
     aquaGptDescription:
       "రొయ్యల సాగు, నీటి నాణ్యత, ధరలు, మార్కెట్లు, ఆరోగ్యం మరియు సాంకేతికత గురించి అడగండి. ఈ మాక్ సహాయకుడు ఆక్వాకల్చర్ పరిధిలో నమ్మకమైన అంతర్దృష్టులను అందిస్తుంది.",
     aquaGptOnline: "ఆన్‌లైన్",
@@ -462,7 +495,7 @@ const translations = {
     aquaPrompt2: "చెరువుల్లో రొయ్యల వ్యాధిని ఎలా నివారించాలి?",
     aquaPrompt3: "భారత్‌కు ఉత్తమ రొయ్యల మేత పద్ధతులు",
 
-    newsletterEyebrow: "ష్రింప్ న్యూస్ బ్రీఫ్",
+    newsletterEyebrow: "{shrimpNews} బ్రీఫ్",
     newsletterTitle: "ది ష్రింప్ బ్రీఫ్",
     newsletterDescription:
       "ధరలు, వ్యాధి హెచ్చరికలు, విధాన అప్‌డేట్లు మరియు మార్కెట్ సమాచారం — ప్రతి సోమవారం. ఎప్పటికీ ఉచితం.",
@@ -480,18 +513,18 @@ const translations = {
     newsletterSuccessPrefix: "సబ్‌స్క్రైబ్ అయినందుకు ధన్యవాదాలు!",
     newsletterSuccessSuffix: "",
     articlesLoadError: "వ్యాసాలు తాత్కాలికంగా అందుబాటులో లేవు. దయచేసి మళ్లీ ప్రయత్నించండి.",
-    askPranaThinking: "Ask Prana ఆలోచిస్తోంది...",
+    askPranaThinking: "Ask Prana is thinking...",
 
     footerTagline:
-      "Shrimp News ప్రపంచ రొయ్యల పరిశ్రమకు మార్కెట్ ధరలు, సాగు సమాచారం, వ్యాధి నవీకరణలు, సాంకేతిక అంతర్దృష్టులు మరియు పరిశ్రమ వార్తలను అందిస్తుంది.",
+      "{shrimpNews} ప్రపంచ రొయ్యల పరిశ్రమకు మార్కెట్ ధరలు, సాగు సమాచారం, వ్యాధి నవీకరణలు, సాంకేతిక అంతర్దృష్టులు మరియు పరిశ్రమ వార్తలను అందిస్తుంది.",
     footerSubTagline: "భారత్ ఫారమ్‌ల నుంచి ప్రపంచ మార్కెట్ల వరకు.",
     categories: "వర్గాలు",
     latestNews: "తాజా వార్తలు",
     aquaticHealth: "జల ఆరోగ్యం",
     researchInnovation: "పరిశోధన & ఆవిష్కరణ",
     prices: "ధరలు",
-    followShrimpNews: "ష్రింప్.న్యూస్‌ను అనుసరించండి",
-    allRightsReserved: "© 2026 Shrimp News. అన్ని హక్కులు రక్షించబడ్డాయి.",
+    followShrimpNews: "{shrimpNews}‌ను అనుసరించండి",
+    allRightsReserved: "© 2026 {shrimpNews}. అన్ని హక్కులు రక్షించబడ్డాయి.",
     privacyPolicy: "గోప్యతా విధానం",
     terms: "నిబంధనలు",
     disclaimer: "డిస్‌క్లైమర్",
@@ -502,7 +535,7 @@ const translations = {
     pageComingSoon: "ఈ విభాగం కంటెంట్ త్వరలో జోడించబడుతుంది.",
 
     aboutEyebrow: "మా గురించి",
-    aboutTitle: "Shrimp.News గురించి",
+    aboutTitle: "{shrimpNews} గురించి",
     aboutDescription: "ప్రపంచ రొయ్యల పరిశ్రమ కోసం ప్రత్యేకంగా నిర్మించిన భారత్ యొక్క మొదటి అంకిత డిజిటల్ మీడియా వేదిక.",
     aboutBody: "Shrimp.News ప్రపంచ రొయ్యల పరిశ్రమ కోసం ప్రత్యేకంగా నిర్మించిన భారత్ యొక్క మొదటి అంకిత డిజిటల్ మీడియా వేదిక.\n\nమా లక్ష్యం—ప్రతి వాటాదారుకు నమ్మదగిన సమాచారం, ఆచరణాత్మక జ్ఞానం, మార్కెట్ ఇంటెలిజెన్స్ ఒకే వేదికపై అందించడం.\n\nభారత్‌లో దేశీయ రొయ్యల వినియోగాన్ని పెంచడం మా ముఖ్య ప్రాధాన్యం.",
 
@@ -655,10 +688,25 @@ const translations = {
     aboutUs: "हमारे बारे में",
     foundersMessage: "संस्थापक का संदेश",
     contactUs: "संपर्क करें",
-    askPrana: "झींगा पालन के बारे में Ask Prana से पूछें",
-    askPranaShort: "Ask Prana से पूछें...",
+    askPrana: "Ask Prana about shrimp farming",
+    askPranaShort: "Ask Prana...",
     askPranaButton: "Ask Prana",
-    ask: "पूछें",
+    ask: "Ask",
+    artificialIntelligence: "कृत्रिम बुद्धिमत्ता",
+    aiAssistant: "कृत्रिम बुद्धिमत्ता सहायक",
+    shrimpNews: "श्रिम्प न्यूज़",
+    shrimpNewsPlain: "श्रिम्प न्यूज़",
+    lastUpdated: "अंतिम बार अपडेट किया गया",
+    online: "ऑनलाइन",
+    askPranaAiAssistant: "Ask Prana - AI Assistant",
+    askPranaNoResponse: "कोई उत्तर प्राप्त नहीं हुआ।",
+    askPranaUnableAnswer: "Ask Prana could not answer right now.",
+    askPranaPreparingAnswer: "Ask Prana is preparing your answer...",
+    askPranaPlaceholder: "अपने तालाब, रोग, फ़ीड, कीमतों के बारे में पूछें...",
+    askPranaIntro:
+      "नमस्ते! मैं Ask Prana हूं — झींगा पालन, पानी की गुणवत्ता, रोग, फ़ीड या बाज़ारों के बारे में कुछ भी पूछें। अंग्रेज़ी, तेलुगु या हिंदी में पूछें।",
+    closeAskPrana: "Close Ask Prana",
+    primaryNavigation: "मुख्य नेविगेशन",
     toggleNavigation: "नेविगेशन टॉगल करें",
     noArticlesFound: "इस विषय के लिए अभी कोई लेख नहीं मिला.",
     relatedArticles: "संबंधित लेख",
@@ -680,13 +728,14 @@ const translations = {
     recent: "हाल के",
     popular: "लोकप्रिय",
     featured: "विशेष",
-    welcomeTitle: "Shrimp.News में आपका स्वागत है",
+    welcomeTitle: "श्रिम्प न्यूज़ में आपका स्वागत है",
+    welcomeToShrimpNews: "श्रिम्प न्यूज़ में आपका स्वागत है",
     welcomeDescription:
       "झींगा उद्योग समाचार, बाज़ार, पालन, स्वास्थ्य और नवाचार के लिए आपका विश्वसनीय स्रोत.",
     loadingArticles: "लेख लोड हो रहे हैं…",
     mainCategoryLabel: "मुख्य समाचार श्रेणी",
     subcategoryLabel: "उपश्रेणी",
-    brandName: "Shrimp.News",
+    brandName: "{shrimpNews}",
 
     domesticTitle: "भारत में झींगा का भविष्य घरेलू बाज़ार से शुरू होता है.",
     domesticDescription:
@@ -728,7 +777,7 @@ const translations = {
     imagePlaceholder: "छवि प्लेसहोल्डर",
 
     aquaGptEyebrow: "Ask Prana",
-    aquaGptTitle: "केवल एक्वाकल्चर AI सहायक",
+    aquaGptTitle: "Ask Prana - AI Assistant",
     aquaGptDescription:
       "झींगा पालन, जल गुणवत्ता, कीमतों, बाज़ार, स्वास्थ्य और तकनीक के बारे में पूछें. यह मॉक सहायक एक्वाकल्चर तक सीमित विश्वसनीय जानकारी खोजने में मदद करता है.",
     aquaGptOnline: "ऑनलाइन",
@@ -740,7 +789,7 @@ const translations = {
     aquaPrompt2: "तालाबों में झींगा रोग कैसे रोकें?",
     aquaPrompt3: "भारत के लिए सर्वश्रेष्ठ झींगा फ़ीड पद्धतियाँ",
 
-    newsletterEyebrow: "श्रिम्प न्यूज़ ब्रीफ़",
+    newsletterEyebrow: "{shrimpNews} ब्रीफ़",
     newsletterTitle: "द श्रिंप ब्रीफ़",
     newsletterDescription:
       "कीमतें, रोग अलर्ट, नीति अपडेट और बाज़ार जानकारी — हर सोमवार. हमेशा मुफ़्त.",
@@ -758,18 +807,18 @@ const translations = {
     newsletterSuccessPrefix: "सदस्यता लेने के लिए धन्यवाद!",
     newsletterSuccessSuffix: "",
     articlesLoadError: "लेख अस्थायी रूप से उपलब्ध नहीं हैं. कृपया पुनः प्रयास करें.",
-    askPranaThinking: "Ask Prana सोच रहा है...",
+    askPranaThinking: "Ask Prana is thinking...",
 
     footerTagline:
-      "Shrimp News वैश्विक झींगा पारिस्थितिकी तंत्र के लिए बाज़ार कीमतें, पालन जानकारी, रोग अपडेट, तकनीक अंतर्दृष्टि और उद्योग समाचार प्रदान करता है.",
+      "{shrimpNews} वैश्विक झींगा पारिस्थितिकी तंत्र के लिए बाज़ार कीमतें, पालन जानकारी, रोग अपडेट, तकनीक अंतर्दृष्टि और उद्योग समाचार प्रदान करता है.",
     footerSubTagline: "भारत के फार्म से वैश्विक बाज़ार तक.",
     categories: "श्रेणियाँ",
     latestNews: "नवीनतम समाचार",
     aquaticHealth: "जलीय स्वास्थ्य",
     researchInnovation: "शोध और नवाचार",
     prices: "कीमतें",
-    followShrimpNews: "श्रिम्प.न्यूज़ को फ़ॉलो करें",
-    allRightsReserved: "© 2026 Shrimp News. सर्वाधिकार सुरक्षित.",
+    followShrimpNews: "{shrimpNews} को फ़ॉलो करें",
+    allRightsReserved: "© 2026 {shrimpNews}. सर्वाधिकार सुरक्षित.",
     privacyPolicy: "गोपनीयता नीति",
     terms: "नियम",
     disclaimer: "अस्वीकरण",
@@ -780,7 +829,7 @@ const translations = {
     pageComingSoon: "इस अनुभाग की सामग्री जल्द जोड़ी जाएगी.",
 
     aboutEyebrow: "हमारे बारे में",
-    aboutTitle: "Shrimp.News के बारे में",
+    aboutTitle: "{shrimpNews} के बारे में",
     aboutDescription: "वैश्विक झींगा उद्योग के लिए बनाया गया भारत का पहला समर्पित डिजिटल मीडिया प्लेटफ़ॉर्म.",
     aboutBody: "Shrimp.News वैश्विक झींगा उद्योग के लिए बनाया गया भारत का पहला समर्पित डिजिटल मीडिया प्लेटफ़ॉर्म है.\n\nहमारा उद्देश्य: हर हिस्सेदार को विश्वसनीय जानकारी, व्यावहारिक ज्ञान और बाजार इंटेलिजेंस एक ही स्थान पर मिलें.\n\nभारत में घरेलू झींगा खपत बढाना हमारी मुख्य प्राथमिकता है.",
 
@@ -922,22 +971,35 @@ const LanguageContext = createContext<LanguageContextValue | undefined>(
 
 export function LanguageProvider({
   children,
+  initialLanguage = "en",
 }: {
   children: ReactNode;
+  initialLanguage?: Language;
 }) {
   const language = useSyncExternalStore<Language>(
     subscribeToLanguage,
-    getStoredLanguage,
-    () => "en" as Language,
+    () => getStoredLanguage(initialLanguage),
+    () => initialLanguage,
   );
 
   useEffect(() => {
-    document.documentElement.lang = language;
+    // Promote legacy localStorage-only preferences into the cookie.
+    const cookieLanguage = readLanguageCookie();
+    const storageLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    if (!cookieLanguage && isLanguage(storageLanguage)) {
+      persistLanguage(storageLanguage);
+      window.dispatchEvent(new Event(LANGUAGE_CHANGE_EVENT));
+      return;
+    }
+    persistLanguage(language);
+    document.documentElement.lang =
+      language === "te" ? "te" : language === "hi" ? "hi" : "en";
   }, [language]);
 
   const setLanguage = useCallback((newLanguage: Language) => {
     persistLanguage(newLanguage);
-    document.documentElement.lang = newLanguage;
+    document.documentElement.lang =
+      newLanguage === "te" ? "te" : newLanguage === "hi" ? "hi" : "en";
     window.dispatchEvent(new Event(LANGUAGE_CHANGE_EVENT));
   }, []);
 
@@ -955,6 +1017,13 @@ export function LanguageProvider({
           console.warn(`[i18n] Invalid translation value for key: ${String(key)}`);
         }
         return "";
+      }
+      // Resolve brand placeholder from the shrimpNews key (transliterated per language).
+      if (key !== "shrimpNews" && value.includes("{shrimpNews}")) {
+        return value.replaceAll(
+          "{shrimpNews}",
+          translations[language].shrimpNews ?? translations.en.shrimpNews,
+        );
       }
       return value;
     },

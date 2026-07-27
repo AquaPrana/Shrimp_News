@@ -25,6 +25,15 @@ export type ArticleRow = RowDataPacket & {
   created_at: Date | string;
   updated_at: Date | string;
   published_at: Date | string | null;
+  title_en?: string | null;
+  summary_en?: string | null;
+  content_en?: string | null;
+  title_te?: string | null;
+  summary_te?: string | null;
+  content_te?: string | null;
+  title_hi?: string | null;
+  summary_hi?: string | null;
+  content_hi?: string | null;
 };
 
 export function mapArticle(row: ArticleRow): PublicArticle {
@@ -32,21 +41,30 @@ export function mapArticle(row: ArticleRow): PublicArticle {
     mainCategory: row.main_category,
     category: row.category,
   });
+  const titleEn = row.title_en?.trim() || row.title;
+  const summaryEn = row.summary_en?.trim() || row.excerpt || "";
+  const contentEn = row.content_en?.trim() || row.content;
+  const titleTe = row.title_te?.trim() || "";
+  const summaryTe = row.summary_te?.trim() || "";
+  const contentTe = row.content_te?.trim() || "";
+  const titleHi = row.title_hi?.trim() || "";
+  const summaryHi = row.summary_hi?.trim() || "";
+  const contentHi = row.content_hi?.trim() || "";
   return {
     id: String(row.id),
-    title: row.title,
+    title: titleEn,
     slug: row.slug,
-    excerpt: row.excerpt || "",
-    content: row.content,
+    excerpt: summaryEn,
+    content: contentEn,
     featuredImageUrl: row.featured_image_url,
-    featuredImageAlt: row.featured_image_alt || row.title,
+    featuredImageAlt: row.featured_image_alt || titleEn,
     mainCategory: taxonomy.mainCategory,
     category: taxonomy.category,
     language: row.language,
-    author: row.author || "Shrimp.News Editorial",
+    author: row.author || "Shrimp News Editorial",
     status: row.status,
-    seoTitle: row.seo_title || row.title,
-    seoDescription: row.seo_description || row.excerpt || "",
+    seoTitle: row.seo_title || titleEn,
+    seoDescription: row.seo_description || summaryEn,
     sourceUrl: row.source_url,
     topics: [],
     createdAt: new Date(row.created_at).toISOString(),
@@ -54,6 +72,20 @@ export function mapArticle(row: ArticleRow): PublicArticle {
     publishedAt: row.published_at
       ? new Date(row.published_at).toISOString()
       : null,
+    titleEn,
+    summaryEn,
+    contentEn,
+    titleTe,
+    summaryTe,
+    contentTe,
+    titleHi,
+    summaryHi,
+    contentHi,
+    translationAvailable: {
+      en: Boolean(titleEn && contentEn),
+      te: Boolean(titleTe && contentTe),
+      hi: Boolean(titleHi && contentHi),
+    },
   };
 }
 

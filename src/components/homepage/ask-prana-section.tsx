@@ -55,15 +55,15 @@ export function AskPranaSection() {
       const data = (await request.json()) as ChatResponse;
 
       if (!request.ok) {
-        throw new Error(data.error || "Unable to get an answer.");
+        throw new Error(data.error || t("askPranaUnableAnswer"));
       }
 
-      setResponse(data.answer || "No response received.");
+      setResponse(data.answer || t("askPranaNoResponse"));
     } catch (error) {
       setResponse(
         error instanceof Error
           ? error.message
-          : "Ask Prana could not answer right now.",
+          : t("askPranaUnableAnswer"),
       );
     } finally {
       setIsLoading(false);
@@ -145,7 +145,7 @@ export function AskPranaSection() {
               onClick={() => void ask()}
               disabled={isLoading}
             >
-              {isLoading ? "Thinking..." : t("ask")}
+              {isLoading ? t("askPranaThinking") : t("ask")}
             </Button>
           </div>
 
@@ -158,7 +158,7 @@ export function AskPranaSection() {
                 <div className="whitespace-pre-wrap">{response}</div>
               ) : (
                 <p className="text-cyan-100/55">
-                  Ask Prana is preparing your answer...
+                  {t("askPranaPreparingAnswer")}
                 </p>
               )}
             </div>

@@ -122,6 +122,21 @@ export type PublicArticle = {
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
+  /** Stored multilingual fields for instant client-side language selection. */
+  titleEn: string;
+  summaryEn: string;
+  contentEn: string;
+  titleTe: string;
+  summaryTe: string;
+  contentTe: string;
+  titleHi: string;
+  summaryHi: string;
+  contentHi: string;
+  translationAvailable: {
+    en: boolean;
+    te: boolean;
+    hi: boolean;
+  };
 };
 
 export type Subscriber = {

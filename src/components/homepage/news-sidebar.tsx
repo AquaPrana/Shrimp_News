@@ -62,7 +62,13 @@ export function NewsSidebar({ articles }: { articles: PublicArticle[] }) {
                 />
               </span>
               <span className="min-w-0">
-                <span className="line-clamp-3 block text-[16px] font-extrabold leading-[1.3] text-slate-900 transition group-hover:text-[#0B4F7A]">
+                <span
+                  className={`article-title block text-[16px] font-extrabold text-slate-900 transition group-hover:text-[#0B4F7A] ${
+                    language === "te"
+                      ? "h-auto min-h-0 overflow-visible leading-[1.4]"
+                      : "line-clamp-3 leading-[1.3]"
+                  }`}
+                >
                   {article.title}
                 </span>
                 <span className="mt-2 block text-xs text-slate-400">

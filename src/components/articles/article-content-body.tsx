@@ -15,6 +15,7 @@ export function ArticleContentBody({
   className = "",
   compactLegacySpacing = false,
 }: ArticleContentBodyProps) {
+  // prepareArticleContentForDisplay always re-sanitizes spacer HTML from older articles.
   let html = prepareArticleContentForDisplay(content);
   if (compactLegacySpacing) {
     html = collapseLegacyArticleWhitespace(html);
@@ -24,7 +25,7 @@ export function ArticleContentBody({
   return (
     <div
       className={`article-prose ${
-        compactLegacySpacing ? "article-prose-legacy" : "space-y-5"
+        compactLegacySpacing ? "article-prose-legacy" : ""
       } ${className}`.trim()}
       dangerouslySetInnerHTML={{ __html: html }}
     />

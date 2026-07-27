@@ -125,7 +125,7 @@ ${prompt}`
 
       if (!request.ok) {
         throw new Error(
-          data.error || "Ask Prana could not answer right now.",
+          data.error || t("askPranaUnableAnswer"),
         );
       }
 
@@ -134,7 +134,7 @@ ${prompt}`
         role: "assistant",
         content:
           data.answer ||
-          "I could not generate an answer. Please try again.",
+          t("askPranaNoResponse"),
       };
 
       setMessages((current) => [...current, assistantMessage]);
@@ -145,7 +145,7 @@ ${prompt}`
         content:
           error instanceof Error
             ? error.message
-            : "Ask Prana could not answer right now.",
+            : t("askPranaUnableAnswer"),
       };
 
       setMessages((current) => [...current, errorMessage]);
@@ -171,24 +171,24 @@ ${prompt}`
             <div className="flex items-center gap-2">
               <span className="text-xl text-cyan-500">✦</span>
               <h1 className="text-lg font-extrabold text-[#0B3A6E] sm:text-xl">
-                Ask Prana
+                {t("askPranaButton")}
               </h1>
             </div>
 
             <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-600 sm:text-xs">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              AI Online
+              {`${t("artificialIntelligence")} ${t("online")}`}
             </span>
 
             <span className="hidden text-sm text-slate-500 sm:inline">
-              Aquaculture only · English / తెలుగు / हिंदी
+              {t("askPranaAiAssistant")}
             </span>
           </div>
 
           <button
             type="button"
             onClick={() => router.back()}
-            aria-label="Close Ask Prana"
+            aria-label={t("closeAskPrana")}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-2xl text-slate-500 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-[#0B3A6E]"
           >
             ×
@@ -198,9 +198,7 @@ ${prompt}`
 
       <div className="shrink-0 px-4 pt-4 sm:px-5">
         <div className="mx-auto max-w-5xl rounded-xl border border-slate-200 bg-[#F7FBFF] px-4 py-3 text-sm leading-6 text-slate-700 sm:px-5">
-          Namaste! I’m Ask Prana — ask me anything about shrimp
-          farming, water quality, disease, feed or markets. English,
-          తెలుగు లేదా हिंदीలో అడగండి.
+          {t("askPranaIntro")}
         </div>
       </div>
 
@@ -249,7 +247,7 @@ ${prompt}`
                   <span className="h-2 w-2 animate-bounce rounded-full bg-cyan-400 [animation-delay:-0.15s]" />
                   <span className="h-2 w-2 animate-bounce rounded-full bg-cyan-400" />
                 </div>
-                Ask Prana is thinking...
+                {t("askPranaThinking")}
               </div>
             </div>
           ) : null}
@@ -267,7 +265,7 @@ ${prompt}`
               type="text"
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
-              placeholder="Ask about your pond, disease, feed, prices..."
+              placeholder={t("askPranaPlaceholder")}
               disabled={isLoading}
               autoFocus
               className="min-h-12 min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 disabled:opacity-60 sm:min-h-14 sm:px-5 sm:text-base"
@@ -278,7 +276,7 @@ ${prompt}`
               disabled={isLoading || !question.trim()}
               className="min-h-12 shrink-0 rounded-2xl bg-cyan-500 px-6 text-sm font-bold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-14 sm:px-8 sm:text-base"
             >
-              {isLoading ? "..." : "Ask"}
+              {isLoading ? "..." : t("ask")}
             </button>
           </form>
 

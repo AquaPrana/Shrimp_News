@@ -26,9 +26,9 @@ export function HeroSection({ featuredArticle }: { featuredArticle?: PublicArtic
 
           <div className="space-y-8">
             <h1
-              className={`hero-fade-in max-w-[780px] font-black tracking-[-0.045em] text-[#0B3A6E] sm:tracking-[-0.055em] ${
+              className={`hero-title hero-fade-in max-w-[780px] font-black tracking-[-0.045em] text-[#0B3A6E] sm:tracking-[-0.055em] ${
                 isTeluguHero
-                  ? "text-[26px] leading-[1.18] sm:text-[38px] sm:leading-[1.15] lg:text-[48px] xl:text-[52px]"
+                  ? "h-auto min-h-0 overflow-visible text-[26px] leading-[1.4] sm:text-[38px] lg:text-[48px] xl:text-[52px]"
                   : "text-[34px] leading-[0.95] sm:text-[52px] sm:leading-[0.92] lg:text-[72px] xl:text-[80px]"
               }`}
               style={{ animationDelay: "0.15s" }}

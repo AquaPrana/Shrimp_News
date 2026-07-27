@@ -17,10 +17,10 @@ export function HomePage({
 }: {
   initialArticles?: PublicArticle[];
 }) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { articles: fetchedArticles, loading, error } = useArticles(
     { limit: 60 },
-    language === "en" ? initialArticles : [],
+    initialArticles,
   );
   const articles = useLocalizedArticles(fetchedArticles);
   const featuredArticle = articles[0];

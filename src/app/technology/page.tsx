@@ -11,7 +11,6 @@ type PageProps = {
 
 async function TechnologyArticles({ topic }: { topic: string }) {
   const articles = await getPublishedArticles({
-    language: "en",
     topic,
     limit: 60,
   });

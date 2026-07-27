@@ -12,7 +12,9 @@
     "db:seed-articles": "tsx scripts/seed-existing-articles.ts",
     "db:seed-ticker": "tsx --env-file=.env.local scripts/seed-ticker.ts",
     "db:migrate-categories": "tsx --env-file=.env.local scripts/migrate-article-categories.ts",
+    "db:migrate-multilingual-columns": "tsx --env-file=.env.local scripts/migrate-multilingual-columns.ts",
     "db:backfill-translations": "tsx --env-file=.env.local scripts/backfill-article-translations.ts",
+    "db:backfill-multilingual-fields": "tsx --env-file=.env.local scripts/backfill-multilingual-fields.ts",
     "import:articles": "tsx --env-file=.env.local scripts/import-articles.ts"
   },
   "dependencies": {

@@ -58,7 +58,7 @@ export function EditorialHero({ articles }: { articles: PublicArticle[] }) {
           <div className="flex min-w-0 flex-col gap-4">
             <div className="max-w-3xl">
               <h1 className="text-2xl font-black tracking-[-0.025em] text-[#0B3A6E] sm:text-3xl lg:text-[34px]">
-                {t("welcomeTitle")}
+                {t("welcomeToShrimpNews")}
               </h1>
               <p className="mt-1 text-sm leading-6 text-slate-600 sm:text-base">
                 {t("welcomeDescription")}
@@ -108,11 +108,17 @@ export function EditorialHero({ articles }: { articles: PublicArticle[] }) {
                       sizes="(max-width: 1280px) 100vw, 68vw"
                     />
                     <span className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent" />
-                    <span className="absolute inset-x-0 bottom-0 p-6 pb-12 text-white sm:p-8 sm:pb-14 lg:p-9 lg:pb-14">
+                    <span className="absolute inset-x-0 bottom-0 overflow-visible p-6 pb-12 text-white sm:p-8 sm:pb-14 lg:p-9 lg:pb-14">
                       <span className="mb-2.5 inline-flex bg-[#0B4F7A] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] sm:text-[11px]">
                         {getCategoryLabel(article.category, language)}
                       </span>
-                      <span className="line-clamp-3 block max-w-[90%] text-[24px] font-extrabold leading-[1.12] tracking-[-0.02em] sm:text-[30px] lg:text-[34px]">
+                      <span
+                        className={`hero-title article-title block max-w-[90%] text-[24px] font-extrabold tracking-[-0.02em] sm:text-[30px] lg:text-[34px] ${
+                          language === "te"
+                            ? "h-auto min-h-0 overflow-visible leading-[1.4]"
+                            : "line-clamp-3 leading-[1.12]"
+                        }`}
+                      >
                         {article.title}
                       </span>
                       <span className="mt-3 block text-[11px] font-medium uppercase tracking-[0.12em] text-white/75 sm:text-xs">
@@ -188,7 +194,13 @@ export function EditorialHero({ articles }: { articles: PublicArticle[] }) {
                             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 220px"
                           />
                         </div>
-                        <h3 className="mt-2 line-clamp-3 text-[13px] font-bold leading-snug text-slate-900 transition-colors group-hover:text-[#0B4F7A]">
+                        <h3
+                          className={`article-title mt-2 text-[13px] font-bold text-slate-900 transition-colors group-hover:text-[#0B4F7A] ${
+                            language === "te"
+                              ? "h-auto min-h-0 overflow-visible leading-[1.4]"
+                              : "line-clamp-3 leading-snug"
+                          }`}
+                        >
                           {article.title}
                         </h3>
                         <time className="mt-1.5 block text-[11px] text-slate-500">

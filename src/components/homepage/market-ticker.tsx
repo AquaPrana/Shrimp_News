@@ -68,24 +68,26 @@ function formatChange(
   return `${rounded}%`;
 }
 
-function formatLastUpdated(iso: string | null | undefined) {
+const LAST_UPDATED_LOCALES: Record<Language, string> = {
+  en: "en-IN",
+  te: "te-IN",
+  hi: "hi-IN",
+};
+
+function formatLastUpdated(iso: string | null | undefined, language: Language) {
   const raw = iso && !Number.isNaN(Date.parse(iso)) ? iso : FALLBACK_UPDATED_AT;
   const date = new Date(raw);
 
   // Format the admin-saved timestamp in IST without using the current clock.
-  const ist = new Date(date.getTime() + 5.5 * 60 * 60 * 1000);
-  const day = ist.getUTCDate();
-  const month = ist.toLocaleString("en-GB", {
+  return new Intl.DateTimeFormat(LAST_UPDATED_LOCALES[language], {
+    day: "numeric",
     month: "short",
-    timeZone: "UTC",
-  });
-  const year = ist.getUTCFullYear();
-  let hours = ist.getUTCHours();
-  const minutes = String(ist.getUTCMinutes()).padStart(2, "0");
-  const meridiem = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12 || 12;
-
-  return `${day} ${month.toUpperCase()} ${year}, ${String(hours).padStart(2, "0")}:${minutes} ${meridiem}`;
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata",
+  }).format(date);
 }
 
 function TickerItemRow({
@@ -123,7 +125,7 @@ function TickerItemRow({
 }
 
 export function MarketTicker() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const copy = marketTickerCopy[language];
   const { data, isLoading, error, lastUpdated, refetch } =
     useMarketPrices();
@@ -140,7 +142,7 @@ export function MarketTicker() {
 
   const loadingItems = useMemo(() => Array.from({ length: 8 }), []);
 
-  const updatedLabel = formatLastUpdated(lastUpdated);
+  const formattedDate = formatLastUpdated(lastUpdated, language);
 
   return (
     <section
@@ -150,7 +152,7 @@ export function MarketTicker() {
       <div className="flex items-stretch">
         <div className="flex shrink-0 items-center border-r border-white/30 bg-[#e85a28] px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-white sm:px-4 sm:text-[10px]">
           <span className="max-w-[9.5rem] leading-tight sm:max-w-none">
-            Last updated: {updatedLabel}
+            {`${t("lastUpdated")}: ${formattedDate}`}
           </span>
         </div>
 

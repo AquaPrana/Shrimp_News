@@ -15,24 +15,39 @@ model Admin {
 
 model Article {
   id                 String   @id @default(cuid())
+  /// Canonical English title (admin edit source). Mirrored to titleEn.
   title              String
   slug               String   @unique
+  /// Canonical English body. Mirrored to contentEn.
   content            String   @db.LongText
+  /// Canonical English summary. Mirrored to summaryEn.
   excerpt            String?
   imageUrl           String?
   /// Stable key: india | global. Labels are translated only in the UI.
   mainCategory       String   @default("india")
   /// Topic subcategory (Shrimp Farming, Markets & Industry, etc.).
   category           String
-  language           String
+  language           String   @default("en")
   translationGroupId String?
   isPublished        Boolean  @default(false)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
+  /// Stored multilingual fields — selected at render time, never translated in the browser.
+  titleEn            String?  @db.Text
+  summaryEn          String?  @db.Text
+  contentEn          String?  @db.LongText
+  titleTe            String?  @db.Text
+  summaryTe          String?  @db.Text
+  contentTe          String?  @db.LongText
+  titleHi            String?  @db.Text
+  summaryHi          String?  @db.Text
+  contentHi          String?  @db.LongText
+
   @@index([translationGroupId])
   @@index([mainCategory])
   @@index([category])
+  @@index([language, isPublished])
 }
 
 model Subscriber {

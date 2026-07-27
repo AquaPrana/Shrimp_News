@@ -58,7 +58,13 @@ export function DomesticFeaturedSection({
                   <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#0B4F7A]">
                     {getCategoryLabel(article.category, language)}
                   </span>
-                  <h3 className="mt-2 line-clamp-3 text-lg font-extrabold leading-snug text-slate-900 transition-colors group-hover:text-[#0B4F7A]">
+                  <h3
+                    className={`article-title mt-2 text-lg font-extrabold text-slate-900 transition-colors group-hover:text-[#0B4F7A] ${
+                      language === "te"
+                        ? "h-auto min-h-0 overflow-visible leading-[1.4]"
+                        : "line-clamp-3 leading-snug"
+                    }`}
+                  >
                     {article.title}
                   </h3>
                   <time className="mt-3 block text-xs text-slate-500">

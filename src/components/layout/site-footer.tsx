@@ -156,12 +156,12 @@ export function SiteFooter() {
           <div>
             <Link
               href="/"
-              aria-label="Shrimp News home"
+              aria-label={`${t("shrimpNews")} home`}
               className="inline-flex"
             >
               <Image
                 src="/images/shrimp-news-logo.png"
-                alt="Shrimp News"
+                alt={t("shrimpNews")}
                 width={190}
                 height={80}
                 className="h-auto w-[160px] object-contain"
@@ -214,7 +214,7 @@ export function SiteFooter() {
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={label}
+                    aria-label={label.replace("Shrimp News", t("shrimpNews"))}
                     className="group flex w-16 flex-col items-center gap-2 text-center"
                   >
                     <span className="flex h-11 w-11 items-center justify-center rounded-full border border-cyan-300/25 bg-[#0B345B] text-white transition duration-200 group-hover:-translate-y-1 group-hover:border-cyan-300 group-hover:bg-cyan-400 group-hover:text-[#071A33]">

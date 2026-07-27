@@ -6,7 +6,6 @@ export const revalidate = 0;
 
 export default async function MarketsIndustryPage() {
   const articles = await getPublishedArticles({
-    language: "en",
     topic: "markets-industry",
     limit: 60,
   });

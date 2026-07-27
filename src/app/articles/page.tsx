@@ -13,7 +13,6 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
   const { topic: topicParam } = await searchParams;
   const topic = normalizeArticleTopic(topicParam);
   const articles = await getPublishedArticles({
-    language: "en",
     topic,
     limit: 60,
   });

@@ -6,7 +6,6 @@ export const revalidate = 0;
 
 export default async function HealthPage() {
   const articles = await getPublishedArticles({
-    language: "en",
     topic: "shrimp-health",
     limit: 60,
   });

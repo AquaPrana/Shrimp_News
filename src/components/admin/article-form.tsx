@@ -713,7 +713,9 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                 {isUploading
                   ? "Uploading..."
                   : busy
-                    ? "Saving…"
+                    ? form.isPublished
+                      ? "Translating & publishing…"
+                      : "Saving…"
                     : form.isPublished
                       ? "Publish"
                       : "Save draft"}

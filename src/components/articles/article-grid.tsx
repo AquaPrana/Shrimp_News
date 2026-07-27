@@ -41,14 +41,14 @@ export function ArticleGrid({
   articles?: PublicArticle[];
   initialArticles?: PublicArticle[];
 }) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const shouldFetch = !articles;
   const { articles: fetched, loading, error } = useArticles(
     {
       topic: shouldFetch ? topic : undefined,
       limit: 60,
     },
-    language === "en" ? initialArticles : [],
+    initialArticles,
   );
   const sourceList = articles ?? fetched;
   const list = useLocalizedArticles(sourceList);

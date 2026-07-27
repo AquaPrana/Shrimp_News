@@ -1,6 +1,7 @@
 import type {
   ArticleLanguage,
   ArticleSubcategory,
+  PublicArticle,
 } from "@/lib/article-types";
 
 type LanguageRecord = {
@@ -10,7 +11,7 @@ type LanguageRecord = {
   content: string;
 };
 
-/** Flat or versioned article fields used by UI localization. */
+/** Flat multilingual fields used by UI localization. */
 export type LocalizableArticleFields = {
   title?: string | null;
   excerpt?: string | null;
@@ -31,7 +32,8 @@ export type LocalizedArticleText = {
   summary: string;
   content: string;
   language: ArticleLanguage;
-  usedFallback: boolean;
+  /** True when the requested language fields were missing. */
+  translationMissing: boolean;
 };
 
 const CATEGORY_LABELS: Record<
@@ -87,30 +89,41 @@ const READ_ARTICLE: Record<ArticleLanguage, string> = {
   hi: "लेख पढ़ें",
 };
 
+const TRANSLATION_UNAVAILABLE: Record<ArticleLanguage, string> = {
+  en: "Translation unavailable",
+  te: "అనువాదం అందుబాటులో లేదు",
+  hi: "अनुवाद उपलब्ध नहीं है",
+};
+
+const AUTHOR_LABEL: Record<ArticleLanguage, string> = {
+  en: "Shrimp News Editorial",
+  te: "శ్రింప్ న్యూస్ సంపాదకీయం",
+  hi: "श्रिम्प न्यूज़ संपादकीय",
+};
+
 function nonEmpty(value: string | null | undefined) {
   return Boolean(value?.trim());
 }
 
-function pickText(
-  primary: string | null | undefined,
-  fallback: string | null | undefined,
-) {
-  if (nonEmpty(primary)) return primary!.trim();
-  if (nonEmpty(fallback)) return fallback!.trim();
-  return "";
+function pickText(value: string | null | undefined) {
+  return nonEmpty(value) ? value!.trim() : "";
 }
 
 /**
- * Central field selector for article text.
- * English never falls back to te/hi. te/hi only fall back to English.
+ * Central field selector for stored multilingual article content.
+ * English uses English fields only.
+ * Telugu/Hindi use their own fields only — never cross-mix languages.
+ * Missing translations return a controlled unavailable message (no silent English body).
  */
 export function getLocalizedArticle(
   article: LocalizableArticleFields,
   language: ArticleLanguage,
 ): LocalizedArticleText {
-  const englishTitle = pickText(article.titleEn, article.title);
-  const englishSummary = pickText(article.summaryEn, article.excerpt);
-  const englishContent = pickText(article.contentEn, article.content);
+  const englishTitle = pickText(article.titleEn) || pickText(article.title);
+  const englishSummary =
+    pickText(article.summaryEn) || pickText(article.excerpt);
+  const englishContent =
+    pickText(article.contentEn) || pickText(article.content);
 
   if (language === "en") {
     return {
@@ -118,32 +131,74 @@ export function getLocalizedArticle(
       summary: englishSummary,
       content: englishContent,
       language: "en",
-      usedFallback: false,
+      translationMissing: !englishTitle || !englishContent,
     };
   }
 
   if (language === "te") {
-    const title = pickText(article.titleTe, englishTitle);
-    const summary = pickText(article.summaryTe, englishSummary);
-    const content = pickText(article.contentTe, englishContent);
+    const title = pickText(article.titleTe);
+    const summary = pickText(article.summaryTe);
+    const content = pickText(article.contentTe);
+    if (!title || !content) {
+      return {
+        title: title || TRANSLATION_UNAVAILABLE.te,
+        summary: summary || TRANSLATION_UNAVAILABLE.te,
+        content: content || `<p>${TRANSLATION_UNAVAILABLE.te}</p>`,
+        language: "te",
+        translationMissing: true,
+      };
+    }
     return {
       title,
-      summary,
+      summary: summary || title,
       content,
-      language: nonEmpty(article.titleTe) ? "te" : "en",
-      usedFallback: !nonEmpty(article.titleTe),
+      language: "te",
+      translationMissing: false,
     };
   }
 
-  const title = pickText(article.titleHi, englishTitle);
-  const summary = pickText(article.summaryHi, englishSummary);
-  const content = pickText(article.contentHi, englishContent);
+  const title = pickText(article.titleHi);
+  const summary = pickText(article.summaryHi);
+  const content = pickText(article.contentHi);
+  if (!title || !content) {
+    return {
+      title: title || TRANSLATION_UNAVAILABLE.hi,
+      summary: summary || TRANSLATION_UNAVAILABLE.hi,
+      content: content || `<p>${TRANSLATION_UNAVAILABLE.hi}</p>`,
+      language: "hi",
+      translationMissing: true,
+    };
+  }
   return {
     title,
-    summary,
+    summary: summary || title,
     content,
-    language: nonEmpty(article.titleHi) ? "hi" : "en",
-    usedFallback: !nonEmpty(article.titleHi),
+    language: "hi",
+    translationMissing: false,
+  };
+}
+
+/** Apply getLocalizedArticle onto a PublicArticle for display. */
+export function localizePublicArticle(
+  article: PublicArticle,
+  language: ArticleLanguage,
+): PublicArticle {
+  const localized = getLocalizedArticle(article, language);
+  if (localized.translationMissing && language !== "en") {
+    console.warn(
+      `[i18n] Translation unavailable for article ${article.id} language=${language}`,
+    );
+  }
+  return {
+    ...article,
+    title: localized.title,
+    excerpt: localized.summary,
+    content: localized.content,
+    language,
+    featuredImageAlt: localized.title,
+    seoTitle: localized.title,
+    seoDescription: localized.summary,
+    author: AUTHOR_LABEL[language],
   };
 }
 
@@ -155,6 +210,22 @@ export function hasCompleteArticleTranslation(article: LanguageRecord) {
   );
 }
 
+export function hasStoredLanguageFields(
+  article: LocalizableArticleFields,
+  language: ArticleLanguage,
+) {
+  if (language === "en") {
+    return Boolean(
+      (pickText(article.titleEn) || pickText(article.title)) &&
+        (pickText(article.contentEn) || pickText(article.content)),
+    );
+  }
+  if (language === "te") {
+    return Boolean(pickText(article.titleTe) && pickText(article.contentTe));
+  }
+  return Boolean(pickText(article.titleHi) && pickText(article.contentHi));
+}
+
 function byLanguage<T extends LanguageRecord>(
   versions: T[],
   language: ArticleLanguage,
@@ -163,9 +234,7 @@ function byLanguage<T extends LanguageRecord>(
 }
 
 /**
- * Pick a language row from translation-group versions.
- * Never returns te for English, never returns hi for Telugu, etc.
- * Temporary fallback: missing te/hi → English only.
+ * Legacy helper for separate language rows. Prefer flat titleTe/titleHi columns.
  */
 export function getLocalizedArticleVersion<T extends LanguageRecord>(
   versions: T[],
@@ -200,7 +269,7 @@ export function getLocalizedArticleVersion<T extends LanguageRecord>(
   );
 }
 
-/** @deprecated Prefer getLocalizedArticleVersion — kept for older imports. */
+/** @deprecated Prefer getLocalizedArticleVersion */
 export function selectArticleByLanguage<T extends LanguageRecord>(
   versions: T[],
   language: ArticleLanguage,
@@ -241,6 +310,14 @@ export function getArticleLabel(language: ArticleLanguage) {
 
 export function getReadArticleLabel(language: ArticleLanguage) {
   return READ_ARTICLE[language];
+}
+
+export function getTranslationUnavailableMessage(language: ArticleLanguage) {
+  return TRANSLATION_UNAVAILABLE[language];
+}
+
+export function getAuthorLabel(language: ArticleLanguage) {
+  return AUTHOR_LABEL[language];
 }
 
 const DATE_LOCALE: Record<ArticleLanguage, string> = {

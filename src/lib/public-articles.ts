@@ -8,7 +8,10 @@ import type {
   PublicArticle,
 } from "@/lib/article-types";
 import { resolveArticleTaxonomy } from "@/lib/article-types";
-import { getLocalizedArticleVersion } from "@/lib/article-localization";
+import {
+  getAuthorLabel,
+  hasStoredLanguageFields,
+} from "@/lib/article-localization";
 import { logDatabaseError, prisma } from "@/lib/prisma";
 import {
   TOPIC_CATEGORIES as SHARED_TOPIC_CATEGORIES,
@@ -42,7 +45,8 @@ const SUBCATEGORY_TOPICS = Object.entries(TOPIC_CATEGORIES).reduce<
     topic === "global" ||
     topic === "national" ||
     topic === "international"
-  ) return result;
+  )
+    return result;
   for (const value of values) (result[value] ??= []).push(topic);
   return result;
 }, {});
@@ -54,6 +58,14 @@ function resolvePublicImageUrl(slug: string, imageUrl: string | null) {
   return ARTICLE_IMAGE_OVERRIDES[slug] ?? imageUrl;
 }
 
+function textOrEmpty(value: string | null | undefined) {
+  return value?.trim() || "";
+}
+
+/**
+ * Map a canonical English article row that stores all language fields.
+ * Display title/excerpt/content default to English; clients select via getLocalizedArticle.
+ */
 export function mapPublicArticle(article: PrismaArticle): PublicArticle {
   const createdAt = article.createdAt.toISOString();
   const featuredImageUrl = resolvePublicImageUrl(article.slug, article.imageUrl);
@@ -65,26 +77,53 @@ export function mapPublicArticle(article: PrismaArticle): PublicArticle {
     taxonomy.mainCategory === "global" ? "international" : "national";
   const topicTopics = SUBCATEGORY_TOPICS[taxonomy.category] || [];
 
+  const titleEn = textOrEmpty(article.titleEn) || article.title;
+  const summaryEn = textOrEmpty(article.summaryEn) || article.excerpt || "";
+  const contentEn = textOrEmpty(article.contentEn) || article.content;
+  const titleTe = textOrEmpty(article.titleTe);
+  const summaryTe = textOrEmpty(article.summaryTe);
+  const contentTe = textOrEmpty(article.contentTe);
+  const titleHi = textOrEmpty(article.titleHi);
+  const summaryHi = textOrEmpty(article.summaryHi);
+  const contentHi = textOrEmpty(article.contentHi);
+
   return {
     id: article.id,
-    title: article.title,
-    slug: article.slug,
-    excerpt: article.excerpt || "",
-    content: article.content,
+    title: titleEn,
+    slug: baseSlug(article.slug),
+    excerpt: summaryEn,
+    content: contentEn,
     featuredImageUrl,
-    featuredImageAlt: article.title,
+    featuredImageAlt: titleEn,
     mainCategory: taxonomy.mainCategory,
     category: taxonomy.category,
-    language: article.language as ArticleLanguage,
-    author: "Shrimp.News Editorial",
+    language: "en",
+    author: getAuthorLabel("en"),
     status: "published",
-    seoTitle: article.title,
-    seoDescription: article.excerpt || "",
+    seoTitle: titleEn,
+    seoDescription: summaryEn,
     sourceUrl: null,
     topics: [regionTopic, ...topicTopics],
     createdAt,
     updatedAt: article.updatedAt.toISOString(),
     publishedAt: createdAt,
+    titleEn,
+    summaryEn,
+    contentEn,
+    titleTe,
+    summaryTe,
+    contentTe,
+    titleHi,
+    summaryHi,
+    contentHi,
+    translationAvailable: {
+      en: hasStoredLanguageFields(
+        { titleEn, contentEn, title: titleEn, content: contentEn },
+        "en",
+      ),
+      te: Boolean(titleTe && contentTe),
+      hi: Boolean(titleHi && contentHi),
+    },
   };
 }
 
@@ -115,20 +154,13 @@ function regionFilter(region: "india" | "global"): Prisma.StringFilter {
     : { in: ["Global", "global", "International", "international"] };
 }
 
-function translationGroupKey(article: PrismaArticle) {
-  return article.translationGroupId
-    ? `group:${article.translationGroupId}`
-    : `slug:${baseSlug(article.slug)}`;
-}
-
 /**
- * Query matching published article groups independently of display language,
- * then choose the requested translation with English/original fallbacks.
+ * Fetch published canonical English articles (with all language columns).
+ * Language option is ignored for filtering — clients select fields locally.
  */
 export async function queryPublishedArticles(
   options: ListOptions = {},
 ): Promise<PublicArticle[]> {
-  const language = options.language || "en";
   const limit = Math.min(Math.max(options.limit || 60, 1), 100);
   const page = Math.max(options.page || 1, 1);
   const topicRegion = normalizeRegion(options.topic);
@@ -148,54 +180,14 @@ export async function queryPublishedArticles(
     where.category = options.category;
   }
 
-  const canonicalRows = await prisma.article.findMany({
+  const rows = await prisma.article.findMany({
     where,
     orderBy: { createdAt: "desc" },
+    skip: (page - 1) * limit,
+    take: limit,
   });
-  const pageRows = canonicalRows.slice(
-    (page - 1) * limit,
-    page * limit,
-  );
-  if (pageRows.length === 0) return [];
 
-  const groupIds = pageRows
-    .map((article) => article.translationGroupId)
-    .filter((value): value is string => Boolean(value));
-  const localizedSlugs = pageRows.flatMap((article) => [
-    `${baseSlug(article.slug)}-te`,
-    `${baseSlug(article.slug)}-hi`,
-  ]);
-  const translations = await prisma.article.findMany({
-    where: {
-      isPublished: true,
-      OR: [
-        ...(groupIds.length > 0
-          ? [{ translationGroupId: { in: groupIds } }]
-          : []),
-        { slug: { in: localizedSlugs } },
-      ],
-    },
-  });
-  const groups = new Map<string, PrismaArticle[]>();
-  const canonicalKeyBySlug = new Map(
-    pageRows.map((article) => [
-      baseSlug(article.slug),
-      translationGroupKey(article),
-    ]),
-  );
-  for (const article of [...pageRows, ...translations]) {
-    const key =
-      canonicalKeyBySlug.get(baseSlug(article.slug)) ||
-      translationGroupKey(article);
-    const group = groups.get(key);
-    if (group) group.push(article);
-    else groups.set(key, [article]);
-  }
-
-  return [...groups.values()]
-    .map((group) => getLocalizedArticleVersion(group, language))
-    .filter((article): article is PrismaArticle => Boolean(article))
-    .map(mapPublicArticle);
+  return rows.map(mapPublicArticle);
 }
 
 export async function getPublishedArticles(
@@ -211,33 +203,42 @@ export async function getPublishedArticles(
 
 export async function getPublishedArticleBySlug(
   slug: string,
-  language?: ArticleLanguage | null,
 ): Promise<PublicArticle | null> {
   try {
     const base = baseSlug(slug);
-    const requestedLanguage = language || "en";
     const source = await prisma.article.findFirst({
       where: {
         isPublished: true,
+        language: "en",
         slug: {
           in: [base, `${base}-te`, `${base}-hi`, slug],
         },
       },
     });
-    if (!source) return null;
-    const versions = await prisma.article.findMany({
-      where: source.translationGroupId
-        ? {
-            translationGroupId: source.translationGroupId,
-            isPublished: true,
-          }
-        : {
-            slug: { in: [base, `${base}-te`, `${base}-hi`] },
-            isPublished: true,
-          },
-    });
-    const selected = getLocalizedArticleVersion(versions, requestedLanguage);
-    return selected ? mapPublicArticle(selected) : null;
+    if (!source) {
+      // Legacy: article may only exist as a te/hi row — resolve English sibling.
+      const any = await prisma.article.findFirst({
+        where: {
+          isPublished: true,
+          slug: { in: [base, `${base}-te`, `${base}-hi`, slug] },
+        },
+      });
+      if (!any) return null;
+      if (any.language === "en") return mapPublicArticle(any);
+      const english = any.translationGroupId
+        ? await prisma.article.findFirst({
+            where: {
+              translationGroupId: any.translationGroupId,
+              language: "en",
+              isPublished: true,
+            },
+          })
+        : await prisma.article.findFirst({
+            where: { slug: base, language: "en", isPublished: true },
+          });
+      return english ? mapPublicArticle(english) : null;
+    }
+    return mapPublicArticle(source);
   } catch (error) {
     logDatabaseError("public-articles.get", error);
     return null;
@@ -250,7 +251,6 @@ export async function getRelatedPublishedArticles(
 ): Promise<PublicArticle[]> {
   try {
     const related = await queryPublishedArticles({
-      language: article.language,
       category: article.category,
       limit: limit + 1,
     });

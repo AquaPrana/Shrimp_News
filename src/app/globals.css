@@ -90,6 +90,19 @@ html:is([lang="te"], [lang="hi"]) :is(p, li, blockquote) {
   word-spacing: 0.04em;
 }
 
+/* Telugu titles: prevent glyph clipping from tight leading / overflow */
+html[lang="te"] .hero-title,
+html[lang="te"] .article-title {
+  font-family: var(--font-noto-telugu), "Noto Sans Telugu", "Noto Serif Telugu",
+    sans-serif;
+  line-height: 1.4;
+  padding-top: 4px;
+  padding-bottom: 6px;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+
 @layer base {
   a {
     color: inherit;
@@ -342,8 +355,9 @@ html:is([lang="te"], [lang="hi"]) :is(p, li, blockquote) {
 
 .article-prose h2,
 .article-editor h2 {
-  margin-top: 2rem;
-  padding-top: 0.5rem;
+  margin-top: 1.75rem;
+  margin-bottom: 0;
+  padding-top: 0;
   font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.4;
@@ -353,7 +367,6 @@ html:is([lang="te"], [lang="hi"]) :is(p, li, blockquote) {
 .article-prose h2:first-child,
 .article-editor h2:first-child {
   margin-top: 0;
-  padding-top: 0;
 }
 
 @media (min-width: 640px) {
@@ -365,7 +378,8 @@ html:is([lang="te"], [lang="hi"]) :is(p, li, blockquote) {
 
 .article-prose h3,
 .article-editor h3 {
-  margin-top: 1.5rem;
+  margin-top: 1.35rem;
+  margin-bottom: 0;
   font-size: 1.125rem;
   font-weight: 600;
   line-height: 1.45;
@@ -379,7 +393,8 @@ html:is([lang="te"], [lang="hi"]) :is(p, li, blockquote) {
 
 .article-prose p,
 .article-editor p {
-  margin-top: 1rem;
+  margin-top: 0.95rem;
+  margin-bottom: 0;
   line-height: 1.75;
   color: inherit;
 }
@@ -389,22 +404,25 @@ html:is([lang="te"], [lang="hi"]) :is(p, li, blockquote) {
   margin-top: 0;
 }
 
+/* Do not reserve tall empty space for spacer paragraphs (cleaned on save/display). */
+.article-prose p:empty,
+.article-editor p:empty,
 .article-prose p:has(br:only-child),
 .article-editor p:has(br:only-child) {
-  min-height: 1rem;
+  display: none;
 }
 
 .article-prose ul,
 .article-prose ol,
 .article-editor ul,
 .article-editor ol {
-  margin: 1rem 0;
+  margin: 0.95rem 0 0;
   padding-left: 1.5rem;
 }
 
 .article-prose li,
 .article-editor li {
-  margin: 0.35rem 0;
+  margin: 0.3rem 0;
   line-height: 1.7;
 }
 
@@ -415,32 +433,77 @@ html:is([lang="te"], [lang="hi"]) :is(p, li, blockquote) {
   font-weight: 700;
 }
 
+.article-prose img,
+.article-editor img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.25rem 0 0;
+}
+
+.article-prose table,
+.article-editor table {
+  width: 100%;
+  margin-top: 1.25rem;
+  border-collapse: collapse;
+}
+
+.article-prose blockquote,
+.article-editor blockquote {
+  margin: 1.1rem 0 0;
+  padding-left: 1rem;
+  border-left: 3px solid #cbd5e1;
+  color: #475569;
+}
+
+/* Single spacing system — avoid stacking with Tailwind space-y utilities. */
 .article-prose > * + *,
 .article-editor > * + * {
-  margin-top: 1.25rem;
+  /* Margins are owned by element rules above; keep sibling gap neutral. */
+  margin-top: 0;
+}
+
+.article-prose > p + p,
+.article-editor > p + p {
+  margin-top: 0.95rem;
+}
+
+.article-prose > * + h2,
+.article-editor > * + h2 {
+  margin-top: 1.75rem;
+}
+
+.article-prose > * + h3,
+.article-editor > * + h3 {
+  margin-top: 1.35rem;
+}
+
+.article-prose > * + ul,
+.article-prose > * + ol,
+.article-editor > * + ul,
+.article-editor > * + ol {
+  margin-top: 0.95rem;
 }
 
 /* Tighter, news-style spacing for older seed articles only. */
-.article-prose-legacy > * + * {
-  margin-top: 0.9rem;
+.article-prose-legacy p {
+  margin-top: 0.85rem;
 }
 
-.article-prose-legacy p {
+.article-prose-legacy p:first-child {
   margin-top: 0;
 }
 
 .article-prose-legacy h2 {
-  margin-top: 1.5rem;
-  padding-top: 0.25rem;
+  margin-top: 1.4rem;
 }
 
 .article-prose-legacy h2:first-child {
   margin-top: 0;
-  padding-top: 0;
 }
 
 .article-prose-legacy h3 {
-  margin-top: 1.15rem;
+  margin-top: 1.1rem;
 }
 
 .article-prose-legacy h3:first-child {
@@ -449,7 +512,7 @@ html:is([lang="te"], [lang="hi"]) :is(p, li, blockquote) {
 
 .article-prose-legacy ul,
 .article-prose-legacy ol {
-  margin: 0.75rem 0;
+  margin: 0.75rem 0 0;
 }
 
 .article-editor:focus {

@@ -48,7 +48,7 @@ export function ShrimpFarmingGrid({ articles }: { articles: PublicArticle[] }) {
                 sizes="(max-width: 768px) 100vw, 38vw"
               />
             </div>
-            <h3 className="mt-4 text-2xl font-extrabold leading-tight text-slate-900 transition-colors group-hover:text-[#0B4F7A]">
+            <h3 className="article-title mt-4 text-2xl font-extrabold leading-tight text-slate-900 transition-colors group-hover:text-[#0B4F7A]">
               {lead.title}
             </h3>
             <time className="mt-2 block text-xs text-slate-500">
@@ -82,7 +82,13 @@ export function ShrimpFarmingGrid({ articles }: { articles: PublicArticle[] }) {
                   />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="line-clamp-3 text-sm font-extrabold leading-snug text-slate-900 transition-colors group-hover:text-[#0B4F7A] sm:text-base">
+                  <h3
+                    className={`article-title text-sm font-extrabold text-slate-900 transition-colors group-hover:text-[#0B4F7A] sm:text-base ${
+                      language === "te"
+                        ? "h-auto min-h-0 overflow-visible leading-[1.4]"
+                        : "line-clamp-3 leading-snug"
+                    }`}
+                  >
                     {article.title}
                   </h3>
                   <time className="mt-2 block text-xs text-slate-500">

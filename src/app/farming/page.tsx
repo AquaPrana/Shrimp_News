@@ -6,7 +6,6 @@ export const revalidate = 0;
 
 export default async function FarmingPage() {
   const articles = await getPublishedArticles({
-    language: "en",
     topic: "shrimp-farming",
     limit: 60,
   });
