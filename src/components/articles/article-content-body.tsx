@@ -24,7 +24,7 @@ export function ArticleContentBody({
 
   return (
     <div
-      className={`article-prose ${
+      className={`article-prose article-content ${
         compactLegacySpacing ? "article-prose-legacy" : ""
       } ${className}`.trim()}
       dangerouslySetInnerHTML={{ __html: html }}

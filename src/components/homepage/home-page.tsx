@@ -1,7 +1,7 @@
 "use client";
 
-import { AskPranaSection } from "@/components/homepage/ask-prana-section";
 import { EditorialHero } from "@/components/homepage/editorial-hero";
+import { FeaturedArticlesCarousel } from "@/components/homepage/featured-articles-carousel";
 import { LatestArticlesGrid } from "@/components/homepage/latest-articles-grid";
 import { MarketTicker } from "@/components/homepage/market-ticker";
 import { NewsSidebar } from "@/components/homepage/news-sidebar";
@@ -23,10 +23,13 @@ export function HomePage({
     initialArticles,
   );
   const articles = useLocalizedArticles(fetchedArticles);
+  const heroArticles = articles.slice(0, 4);
+  const featuredSlugs = heroArticles.map((article) => article.slug);
+  const featuredSlugSet = new Set(featuredSlugs);
   const featuredArticle = articles[0];
 
   const homeArticles = articles
-    .filter((article) => article.slug !== featuredArticle?.slug)
+    .filter((article) => !featuredSlugSet.has(article.slug))
     .slice(0, 12);
 
   if (!featuredArticle) {
@@ -56,7 +59,14 @@ export function HomePage({
           <div className="homepage-news-main">
             <EditorialHero articles={articles} />
 
-            <div className="space-y-14 bg-[#f8fafc] pb-2 pt-8">
+            <div className="mt-8">
+              <FeaturedArticlesCarousel
+                articles={articles}
+                excludeSlugs={featuredSlugs}
+              />
+            </div>
+
+            <div className="space-y-14 bg-[#f8fafc] pb-2 pt-10">
               <LatestArticlesGrid
                 articles={homeArticles}
                 heading={t("latestArticles")}
@@ -68,18 +78,6 @@ export function HomePage({
           <aside className="homepage-news-sidebar">
             <NewsSidebar articles={homeArticles} />
           </aside>
-        </div>
-      </section>
-
-      <section
-        id="ask-prana"
-        className="relative scroll-mt-28 bg-white px-4 pb-16 sm:px-6 lg:px-8"
-      >
-        <div
-          className="home-reveal mx-auto max-w-[1340px]"
-          style={{ animationDelay: "0.22s" }}
-        >
-          <AskPranaSection />
         </div>
       </section>
 

@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { LanguageSelector } from "@/components/layout/language-selector";
 import { useLanguage, type TranslationKey } from "@/context/language-context";
 
 type NavItem =
@@ -91,10 +89,6 @@ export function MobileNav({
   return (
     <div className={`lg:hidden ${open ? "block" : "hidden"}`}>
       <div className="max-h-[min(78dvh,720px)] overflow-y-auto border-t border-slate-800/80 bg-slate-950/95 px-4 py-5 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-        <div className="mb-4 flex justify-end">
-          <LanguageSelector />
-        </div>
-
         <div className="space-y-3">
           {navItems.map((item) => {
             if ("submenu" in item) {
@@ -169,14 +163,6 @@ export function MobileNav({
               </Link>
             );
           })}
-        </div>
-
-        <div className="mt-5">
-          <Link href="/ask-aquaprana" className="block" onClick={onClose}>
-            <Button variant="primary" size="lg" fullWidth>
-              {t("askPranaButton")}
-            </Button>
-          </Link>
         </div>
       </div>
     </div>

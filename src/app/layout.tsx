@@ -8,7 +8,6 @@ import {
 import { LanguageProvider } from "@/context/language-context";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { getRequestLanguage } from "@/lib/request-language";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -53,18 +52,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const language = await getRequestLanguage();
-
   return (
     <html
-      lang={language}
+      lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${notoSansTelugu.variable} ${notoSansDevanagari.variable} h-full antialiased`}
     >
       <body
         id="top"
         className="flex min-h-full flex-col overflow-x-clip bg-white text-slate-800"
       >
-        <LanguageProvider initialLanguage={language}>
+        <LanguageProvider initialLanguage="en">
           <SiteHeader />
           <main className="min-w-0 flex-1 overflow-x-clip">{children}</main>
           <SiteFooter />

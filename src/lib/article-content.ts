@@ -298,32 +298,43 @@ export function collapseEmptyAndSpacerBlocks(html: string) {
   let result = html
     .replace(/&nbsp;/gi, " ")
     .replace(/\u00a0/g, " ")
-    // Empty or whitespace-only paragraphs / headings / spans
+    // Empty or whitespace-only paragraphs / headings / spans / divs / list items
     .replace(
-      /<(p|h[1-6]|div|span)\b[^>]*>\s*(?:&nbsp;|\u00a0|<br\s*\/?>|\s)*<\/\1>/gi,
+      /<(p|h[1-6]|div|span|li)\b[^>]*>\s*(?:&nbsp;|\u00a0|<br\s*\/?>|\s)*<\/\1>/gi,
       "",
     )
     // Paragraphs that only contain invisible characters after stripping tags
     .replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, (match, inner: string) => {
       return stripHtmlTags(inner) ? match : "";
     })
-    // Collapse 2+ consecutive <br> into a single paragraph break (removed — spacing via CSS)
+    // Collapse 2+ consecutive <br> into a paragraph boundary (spacing via CSS)
     .replace(/(?:<br\s*\/?>\s*){2,}/gi, "</p><p>")
+    // Lone trailing/leading breaks inside paragraphs
+    .replace(/<p\b([^>]*)>(?:\s*<br\s*\/?>)+/gi, "<p$1>")
+    .replace(/(?:<br\s*\/?>\s*)+<\/p>/gi, "</p>")
     // Fix accidental empty paragraphs created by br collapse
     .replace(
-      /<(p|h[1-6]|div)\b[^>]*>\s*(?:&nbsp;|\u00a0|<br\s*\/?>|\s)*<\/\1>/gi,
+      /<(p|h[1-6]|div|li)\b[^>]*>\s*(?:&nbsp;|\u00a0|<br\s*\/?>|\s)*<\/\1>/gi,
       "",
     )
-    // Collapse runs of whitespace between tags
+    // Empty lists
+    .replace(/<(ul|ol)\b[^>]*>\s*<\/\1>/gi, "")
+    // Collapse runs of whitespace between tags (keep a single space where needed)
     .replace(/>\s{2,}</g, "> <")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 
-  // Drop consecutive duplicate empty leftovers once more
+  // Drop consecutive empty leftovers once more
   result = result.replace(
     /(?:<(?:p|div)\b[^>]*>\s*(?:&nbsp;|\u00a0|<br\s*\/?>|\s)*<\/(?:p|div)>\s*)+/gi,
     "",
   );
+
+  // Remove leading/trailing empty paragraphs after cleanup
+  result = result
+    .replace(/^(?:\s*<p\b[^>]*>\s*<\/p>)+/i, "")
+    .replace(/(?:<p\b[^>]*>\s*<\/p>\s*)+$/i, "")
+    .trim();
 
   return result;
 }
@@ -424,14 +435,18 @@ export function pasteClipboardToArticleHtml(html: string, plain: string) {
 
   if (!trimmedHtml) return fromPlain;
 
-  const fromHtml = formatArticleHtml(trimmedHtml);
-  const plainBlocks = countHtmlBlocks(fromPlain);
-  const htmlBlocks = countHtmlBlocks(fromHtml);
+  try {
+    const fromHtml = formatArticleHtml(trimmedHtml);
+    const plainBlocks = countHtmlBlocks(fromPlain);
+    const htmlBlocks = countHtmlBlocks(fromHtml);
 
-  // Prefer HTML paste when it has real structure; otherwise plain text path.
-  if (htmlBlocks === 0) return fromPlain;
-  if (plainBlocks > htmlBlocks * 1.5) return fromPlain;
-  return fromHtml;
+    // Prefer HTML paste when it has real structure; otherwise plain text path.
+    if (htmlBlocks === 0) return fromPlain;
+    if (fromPlain && plainBlocks > htmlBlocks * 1.5) return fromPlain;
+    return fromHtml || fromPlain;
+  } catch {
+    return fromPlain;
+  }
 }
 
 export function prepareArticleContentForSave(raw: unknown) {

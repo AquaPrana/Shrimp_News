@@ -11,6 +11,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const category = url.searchParams.get("category");
     const topic = url.searchParams.get("topic");
+    const q = url.searchParams.get("q");
     const limit = Math.min(
       Math.max(Number(url.searchParams.get("limit") || 60), 1),
       100,
@@ -25,6 +26,7 @@ export async function GET(request: Request) {
     const articles = await queryPublishedArticles({
       topic,
       category,
+      q,
       limit,
       page,
     });
@@ -32,6 +34,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ articles, page, limit });
   } catch (error) {
     logDatabaseError("public-articles.list", error);
-    return NextResponse.json({ error: "Unable to load articles." }, { status: 500 });
+    // Never expose database details to clients.
+    return NextResponse.json(
+      { error: "Unable to load articles." },
+      { status: 500 },
+    );
   }
 }

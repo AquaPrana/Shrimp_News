@@ -2,15 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { DesktopNav } from "@/components/layout/desktop-nav";
+import { HeaderSearch } from "@/components/layout/header-search";
 import { MobileNav } from "@/components/layout/mobile-nav";
-import { LanguageSelector } from "@/components/layout/language-selector";
 import { useLanguage } from "@/context/language-context";
 
 export function SiteHeader() {
-  const router = useRouter();
   const { t } = useLanguage();
 
   const [open, setOpen] = useState(false);
@@ -28,11 +26,6 @@ export function SiteHeader() {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
-
-  function openAskPrana() {
-    setOpen(false);
-    router.push("/ask-aquaprana");
-  }
 
   return (
     <header
@@ -58,39 +51,14 @@ export function SiteHeader() {
           />
         </Link>
 
-        <button
-          type="button"
-          onClick={openAskPrana}
-          aria-label={t("askPranaButton")}
-          className="group ml-3 hidden h-12 w-[320px] shrink-0 items-center gap-2.5 rounded-full border border-[#CBD5E1] bg-white px-2.5 text-left shadow-[0_4px_14px_rgba(15,23,42,0.05)] transition duration-300 hover:border-[#3F475A] hover:shadow-[0_7px_20px_rgba(63,71,90,0.15)] xl:ml-6 xl:flex 2xl:w-[360px]"
-        >
-          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] p-1">
-            <Image
-              src="/images/aquagpt-logo.png"
-              alt={t("askPranaButton")}
-              width={30}
-              height={30}
-              className="h-7 w-7 object-contain"
-            />
-          </span>
-
-          <span className="min-w-0 flex-1 truncate text-sm text-[#64748B] transition group-hover:text-[#1E3A5F]">
-            {t("askPranaShort")}
-          </span>
-
-          <span className="shrink-0 rounded-full bg-[#3F475A] px-4 py-2 text-sm font-semibold text-white transition duration-300 group-hover:bg-[#2E3444]">
-            {t("ask")}
-          </span>
-        </button>
+        <Suspense fallback={null}>
+          <HeaderSearch className="group ml-3 hidden h-12 w-[min(480px,36vw)] max-w-[520px] shrink-0 items-center gap-2.5 rounded-full border border-[#CBD5E1] bg-white px-2.5 text-left shadow-[0_4px_14px_rgba(15,23,42,0.05)] transition duration-300 hover:border-[#3F475A] hover:shadow-[0_7px_20px_rgba(63,71,90,0.15)] xl:ml-6 xl:flex 2xl:w-[520px]" />
+        </Suspense>
 
         <div className="relative z-[70] hidden min-w-0 flex-1 items-center justify-center overflow-visible lg:flex">
           <Suspense fallback={null}>
             <DesktopNav />
           </Suspense>
-        </div>
-
-        <div className="relative z-[80] hidden shrink-0 lg:block">
-          <LanguageSelector />
         </div>
 
         <button
@@ -121,30 +89,9 @@ export function SiteHeader() {
       </div>
 
       <div className="border-t border-[#E5E7EB] bg-white px-3 py-2 sm:px-6 xl:hidden">
-        <button
-          type="button"
-          onClick={openAskPrana}
-          aria-label={t("askPranaButton")}
-          className="group mx-auto flex w-full max-w-3xl min-w-0 items-center gap-2.5 rounded-full border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-left shadow-[0_3px_12px_rgba(15,23,42,0.05)] transition duration-300 hover:border-[#3F475A] hover:shadow-[0_5px_16px_rgba(63,71,90,0.12)]"
-        >
-          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] p-1">
-            <Image
-              src="/images/aquagpt-logo.png"
-              alt={t("askPranaButton")}
-              width={30}
-              height={30}
-              className="h-7 w-7 object-contain"
-            />
-          </span>
-
-          <span className="min-w-0 flex-1 truncate text-sm text-[#64748B] transition group-hover:text-[#1E3A5F]">
-            {t("askPranaShort")}
-          </span>
-
-          <span className="shrink-0 rounded-full bg-[#3F475A] px-4 py-2 text-sm font-semibold text-white transition duration-300 group-hover:bg-[#2E3444]">
-            {t("ask")}
-          </span>
-        </button>
+        <Suspense fallback={null}>
+          <HeaderSearch className="group mx-auto flex w-full max-w-3xl min-w-0 items-center gap-2.5 rounded-full border border-[#CBD5E1] bg-white px-2.5 py-1.5 text-left shadow-[0_3px_12px_rgba(15,23,42,0.05)] transition duration-300 hover:border-[#3F475A] hover:shadow-[0_5px_16px_rgba(63,71,90,0.12)]" />
+        </Suspense>
       </div>
 
       <Suspense fallback={null}>

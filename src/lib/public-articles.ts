@@ -137,6 +137,7 @@ type ListOptions = {
   topic?: string | null;
   category?: string | null;
   mainCategory?: string | null;
+  q?: string | null;
   limit?: number;
   page?: number;
 };
@@ -155,14 +156,35 @@ function regionFilter(region: "india" | "global"): Prisma.StringFilter {
 }
 
 /**
- * Fetch published canonical English articles (with all language columns).
- * Language option is ignored for filtering — clients select fields locally.
+ * Compact alphanumeric key for case/space/punctuation-insensitive matching.
+ * "&" and "and" both become "and" before non-alphanumerics are stripped.
  */
-export async function queryPublishedArticles(
-  options: ListOptions = {},
-): Promise<PublicArticle[]> {
-  const limit = Math.min(Math.max(options.limit || 60, 1), 100);
-  const page = Math.max(options.page || 1, 1);
+function normalizeSearchValue(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+/** Alias compact keys → canonical subcategory compact keys. */
+const CATEGORY_ALIASES: Record<string, string> = {
+  marketindustry: "marketsindustry",
+  marketsandindustry: "marketsindustry",
+  marketandindustry: "marketsindustry",
+  technologyandequipment: "technologyequipment",
+  researchandinnovation: "researchinnovations",
+  researchandinnovations: "researchinnovations",
+  researchinnovation: "researchinnovations",
+  aquatichealth: "shrimphealth",
+};
+
+function applyCategoryAlias(normalized: string): string {
+  return CATEGORY_ALIASES[normalized] || normalized;
+}
+
+function buildBasePublishedWhere(
+  options: ListOptions,
+): Prisma.ArticleWhereInput {
   const topicRegion = normalizeRegion(options.topic);
   const requestedRegion = normalizeRegion(options.mainCategory);
   const where: Prisma.ArticleWhereInput = {
@@ -180,14 +202,105 @@ export async function queryPublishedArticles(
     where.category = options.category;
   }
 
+  return where;
+}
+
+/**
+ * Title / category / subcategory only — never content or summary.
+ * Matching is done in TypeScript after a published-article fetch.
+ */
+function articleMatchesPublicSearch(
+  article: {
+    title: string;
+    titleEn?: string | null;
+    category: string;
+    mainCategory?: string | null;
+  },
+  rawQuery: string,
+): boolean {
+  const trimmed = rawQuery.trim();
+  if (!trimmed) return true;
+
+  const queryWords = trimmed
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .split(/\s+/)
+    .filter(Boolean);
+
+  const normalizedQuery = applyCategoryAlias(normalizeSearchValue(trimmed));
+  if (!normalizedQuery) return true;
+
+  const titleSource = `${article.title ?? ""} ${article.titleEn ?? ""}`.trim();
+  const normalizedTitle = normalizeSearchValue(titleSource);
+  // Schema: `category` = topic subcategory; `mainCategory` = india | global.
+  const normalizedCategory = applyCategoryAlias(
+    normalizeSearchValue(article.mainCategory ?? ""),
+  );
+  const normalizedSubcategory = applyCategoryAlias(
+    normalizeSearchValue(article.category ?? ""),
+  );
+
+  const titleWordsMatch = queryWords.every((word) =>
+    normalizedTitle.includes(normalizeSearchValue(word)),
+  );
+
+  const titleCompactMatch = normalizedTitle.includes(normalizedQuery);
+
+  const categoryMatch =
+    normalizedCategory.includes(normalizedQuery) ||
+    normalizedSubcategory.includes(normalizedQuery) ||
+    normalizedQuery === normalizedSubcategory ||
+    normalizedQuery === normalizedCategory;
+
+  return titleWordsMatch || titleCompactMatch || categoryMatch;
+}
+
+/**
+ * Fetch published canonical English articles (with all language columns).
+ * Language option is ignored for filtering — clients select fields locally.
+ */
+export async function queryPublishedArticles(
+  options: ListOptions = {},
+): Promise<PublicArticle[]> {
+  const limit = Math.min(Math.max(options.limit || 60, 1), 100);
+  const page = Math.max(options.page || 1, 1);
+  const skip = (page - 1) * limit;
+  const where = buildBasePublishedWhere(options);
+  const rawQuery = options.q?.trim() ?? "";
+
+  // No search: keep Prisma pagination for performance.
+  if (!rawQuery) {
+    const rows = await prisma.article.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    });
+    return rows.map(mapPublicArticle);
+  }
+
+  // Search: fetch published candidates first, filter in TS, then paginate.
+  // Avoid Prisma `contains` / collation issues and content-field matches.
+  const SEARCH_FETCH_LIMIT = 500;
   const rows = await prisma.article.findMany({
     where,
     orderBy: { createdAt: "desc" },
-    skip: (page - 1) * limit,
-    take: limit,
+    take: SEARCH_FETCH_LIMIT,
   });
 
-  return rows.map(mapPublicArticle);
+  const matched = rows.filter((row) =>
+    articleMatchesPublicSearch(
+      {
+        title: row.title,
+        titleEn: row.titleEn,
+        category: row.category,
+        mainCategory: row.mainCategory,
+      },
+      rawQuery,
+    ),
+  );
+
+  return matched.slice(skip, skip + limit).map(mapPublicArticle);
 }
 
 export async function getPublishedArticles(

@@ -13,7 +13,6 @@ export const mainNav: NavItem[] = [
   { label: "Technology", href: "/technology" },
   { label: "Articles", href: "/articles" },
   { label: "About", href: "/about" },
-  { label: "Ask Prana", href: "/ask-aquaprana" },
 ];
 
 export const footerLinks = [

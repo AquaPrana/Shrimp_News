@@ -353,10 +353,18 @@ html[lang="te"] .article-title {
   }
 }
 
+.article-prose,
+.article-content,
+.article-editor {
+  line-height: 1.75;
+  color: inherit;
+}
+
 .article-prose h2,
+.article-content h2,
 .article-editor h2 {
   margin-top: 1.75rem;
-  margin-bottom: 0;
+  margin-bottom: 0.75rem;
   padding-top: 0;
   font-size: 1.25rem;
   font-weight: 600;
@@ -365,21 +373,24 @@ html[lang="te"] .article-title {
 }
 
 .article-prose h2:first-child,
+.article-content h2:first-child,
 .article-editor h2:first-child {
   margin-top: 0;
 }
 
 @media (min-width: 640px) {
   .article-prose h2,
+  .article-content h2,
   .article-editor h2 {
     font-size: 1.5rem;
   }
 }
 
 .article-prose h3,
+.article-content h3,
 .article-editor h3 {
-  margin-top: 1.35rem;
-  margin-bottom: 0;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
   font-size: 1.125rem;
   font-weight: 600;
   line-height: 1.45;
@@ -387,40 +398,57 @@ html[lang="te"] .article-title {
 }
 
 .article-prose h3:first-child,
+.article-content h3:first-child,
 .article-editor h3:first-child {
   margin-top: 0;
 }
 
 .article-prose p,
+.article-content p,
 .article-editor p {
-  margin-top: 0.95rem;
-  margin-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 1rem;
   line-height: 1.75;
   color: inherit;
 }
 
-.article-prose p:first-child,
-.article-editor p:first-child {
-  margin-top: 0;
+.article-prose p:last-child,
+.article-content p:last-child,
+.article-editor p:last-child {
+  margin-bottom: 0;
 }
 
 /* Do not reserve tall empty space for spacer paragraphs (cleaned on save/display). */
 .article-prose p:empty,
+.article-content p:empty,
 .article-editor p:empty,
 .article-prose p:has(br:only-child),
+.article-content p:has(br:only-child),
 .article-editor p:has(br:only-child) {
   display: none;
 }
 
 .article-prose ul,
 .article-prose ol,
+.article-content ul,
+.article-content ol,
 .article-editor ul,
 .article-editor ol {
-  margin: 0.95rem 0 0;
+  margin: 0 0 1rem;
   padding-left: 1.5rem;
 }
 
+.article-prose ul:last-child,
+.article-prose ol:last-child,
+.article-content ul:last-child,
+.article-content ol:last-child,
+.article-editor ul:last-child,
+.article-editor ol:last-child {
+  margin-bottom: 0;
+}
+
 .article-prose li,
+.article-content li,
 .article-editor li {
   margin: 0.3rem 0;
   line-height: 1.7;
@@ -428,12 +456,15 @@ html[lang="te"] .article-title {
 
 .article-prose strong,
 .article-prose b,
+.article-content strong,
+.article-content b,
 .article-editor strong,
 .article-editor b {
   font-weight: 700;
 }
 
 .article-prose img,
+.article-content img,
 .article-editor img {
   display: block;
   max-width: 100%;
@@ -442,6 +473,7 @@ html[lang="te"] .article-title {
 }
 
 .article-prose table,
+.article-content table,
 .article-editor table {
   width: 100%;
   margin-top: 1.25rem;
@@ -449,74 +481,47 @@ html[lang="te"] .article-title {
 }
 
 .article-prose blockquote,
+.article-content blockquote,
 .article-editor blockquote {
-  margin: 1.1rem 0 0;
+  margin: 1.1rem 0 1rem;
   padding-left: 1rem;
   border-left: 3px solid #cbd5e1;
   color: #475569;
 }
 
-/* Single spacing system — avoid stacking with Tailwind space-y utilities. */
-.article-prose > * + *,
-.article-editor > * + * {
-  /* Margins are owned by element rules above; keep sibling gap neutral. */
-  margin-top: 0;
-}
-
-.article-prose > p + p,
-.article-editor > p + p {
-  margin-top: 0.95rem;
-}
-
-.article-prose > * + h2,
-.article-editor > * + h2 {
-  margin-top: 1.75rem;
-}
-
-.article-prose > * + h3,
-.article-editor > * + h3 {
-  margin-top: 1.35rem;
-}
-
-.article-prose > * + ul,
-.article-prose > * + ol,
-.article-editor > * + ul,
-.article-editor > * + ol {
-  margin-top: 0.95rem;
-}
-
-/* Tighter, news-style spacing for older seed articles only. */
-.article-prose-legacy p {
-  margin-top: 0.85rem;
-}
-
-.article-prose-legacy p:first-child {
-  margin-top: 0;
-}
-
-.article-prose-legacy h2 {
-  margin-top: 1.4rem;
-}
-
-.article-prose-legacy h2:first-child {
-  margin-top: 0;
-}
-
-.article-prose-legacy h3 {
-  margin-top: 1.1rem;
-}
-
-.article-prose-legacy h3:first-child {
-  margin-top: 0;
-}
-
-.article-prose-legacy ul,
-.article-prose-legacy ol {
-  margin: 0.75rem 0 0;
+.article-prose br + br,
+.article-content br + br,
+.article-editor br + br {
+  display: none;
 }
 
 .article-editor:focus {
   outline: none;
+}
+
+/* Tighter spacing for older seed articles only (display-time class). */
+.article-prose-legacy p,
+.article-content.article-prose-legacy p {
+  margin-bottom: 0.85rem;
+}
+
+.article-prose-legacy h2,
+.article-content.article-prose-legacy h2 {
+  margin-top: 1.4rem;
+  margin-bottom: 0.65rem;
+}
+
+.article-prose-legacy h3,
+.article-content.article-prose-legacy h3 {
+  margin-top: 1.1rem;
+  margin-bottom: 0.55rem;
+}
+
+.article-prose-legacy ul,
+.article-prose-legacy ol,
+.article-content.article-prose-legacy ul,
+.article-content.article-prose-legacy ol {
+  margin-bottom: 0.75rem;
 }
 
 /* Homepage news grid: sticky Recent/Popular beside all article sections */

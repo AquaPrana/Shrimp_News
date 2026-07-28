@@ -9,13 +9,16 @@ import { normalizeArticleTopic } from "@/lib/public-articles-shared";
 
 function ArticlesContent({
   topic,
+  query,
   initialArticles,
 }: {
   topic: string | null;
+  query: string | null;
   initialArticles: PublicArticle[];
 }) {
-  const eyebrowKey: TranslationKey | undefined =
-    topic === "india"
+  const eyebrowKey: TranslationKey | undefined = query
+    ? undefined
+    : topic === "india"
       ? "india"
       : topic === "global"
         ? "global"
@@ -40,25 +43,39 @@ function ArticlesContent({
       eyebrowKey={eyebrowKey}
       titleKey={titleKey}
       descriptionKey={descriptionKey}
-      hideTitleAndDescription={!topic}
+      hideTitleAndDescription={!topic && !query}
+      customTitle={query ? `Search results for “${query}”` : undefined}
+      customDescription={
+        query ? "Matching articles from across Shrimp News." : undefined
+      }
     >
-      <ArticleGrid topic={topic} initialArticles={initialArticles} />
+      <ArticleGrid
+        topic={topic}
+        query={query}
+        initialArticles={initialArticles}
+      />
     </PageShell>
   );
 }
 
 export function ArticlesPageClient({
   topicParam,
+  query = null,
   initialArticles,
 }: {
   topicParam: string | null;
+  query?: string | null;
   initialArticles: PublicArticle[];
 }) {
   const topic = normalizeArticleTopic(topicParam);
 
   return (
     <Suspense fallback={null}>
-      <ArticlesContent topic={topic} initialArticles={initialArticles} />
+      <ArticlesContent
+        topic={topic}
+        query={query}
+        initialArticles={initialArticles}
+      />
     </Suspense>
   );
 }

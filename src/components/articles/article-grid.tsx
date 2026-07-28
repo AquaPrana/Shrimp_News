@@ -34,10 +34,12 @@ function safeDisplayLabel(value: unknown, translationKey?: string) {
 
 export function ArticleGrid({
   topic,
+  query,
   articles,
   initialArticles = [],
 }: {
   topic?: string | null;
+  query?: string | null;
   articles?: PublicArticle[];
   initialArticles?: PublicArticle[];
 }) {
@@ -46,6 +48,7 @@ export function ArticleGrid({
   const { articles: fetched, loading, error } = useArticles(
     {
       topic: shouldFetch ? topic : undefined,
+      q: shouldFetch ? query : undefined,
       limit: 60,
     },
     initialArticles,
@@ -72,7 +75,9 @@ export function ArticleGrid({
   if (list.length === 0) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-[#F7FBFF] p-6 text-slate-600 sm:rounded-[28px] sm:p-8">
-        {t("noArticlesFound")}
+        {query?.trim()
+          ? `No articles found for “${query.trim()}”.`
+          : t("noArticlesFound")}
       </div>
     );
   }

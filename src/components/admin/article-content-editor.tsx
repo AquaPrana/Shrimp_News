@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ClipboardEvent } from "react";
 import {
   isHtmlArticleContent,
   normalizeEditorHtml,
@@ -25,6 +25,40 @@ function toEditorHtml(value: string) {
     : plainTextToArticleHtml(trimmed);
 }
 
+function insertHtmlAtCursor(editor: HTMLDivElement, html: string) {
+  editor.focus();
+
+  const selection = window.getSelection();
+  if (!selection) {
+    editor.insertAdjacentHTML("beforeend", html);
+    return;
+  }
+
+  if (selection.rangeCount === 0 || !editor.contains(selection.anchorNode)) {
+    const range = document.createRange();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  const range = selection.getRangeAt(0);
+  range.deleteContents();
+
+  const template = document.createElement("template");
+  template.innerHTML = html;
+  const fragment = template.content;
+  const lastNode = fragment.lastChild;
+  range.insertNode(fragment);
+
+  if (lastNode) {
+    range.setStartAfter(lastNode);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+}
+
 export function ArticleContentEditor({
   value,
   onChange,
@@ -32,10 +66,17 @@ export function ArticleContentEditor({
 }: ArticleContentEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const lastSyncedValue = useRef<string | null>(null);
+  const isInternalUpdate = useRef(false);
 
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor) return;
+
+    // Never clobber the live editor while the user is typing/pasting.
+    if (document.activeElement === editor || isInternalUpdate.current) {
+      lastSyncedValue.current = value;
+      return;
+    }
 
     if (value === lastSyncedValue.current) return;
 
@@ -44,12 +85,23 @@ export function ArticleContentEditor({
     lastSyncedValue.current = value;
   }, [value]);
 
-  function syncEditorContent() {
+  function syncEditorContent(options?: { sanitize?: boolean }) {
     const editor = editorRef.current;
     if (!editor) return;
-    const html = normalizeEditorHtml(editor.innerHTML);
-    lastSyncedValue.current = html;
-    onChange(html);
+
+    const shouldSanitize = options?.sanitize !== false;
+    // Typing: keep live DOM as source of truth. Paste/blur: full sanitize.
+    const displayHtml = shouldSanitize
+      ? toEditorHtml(normalizeEditorHtml(editor.innerHTML)) ||
+        normalizeEditorHtml(editor.innerHTML)
+      : editor.innerHTML;
+
+    isInternalUpdate.current = true;
+    lastSyncedValue.current = displayHtml;
+    onChange(displayHtml);
+    queueMicrotask(() => {
+      isInternalUpdate.current = false;
+    });
   }
 
   function runFormat(command: FormatCommand) {
@@ -70,20 +122,46 @@ export function ArticleContentEditor({
       document.execCommand("formatBlock", false, command);
     }
 
-    syncEditorContent();
+    syncEditorContent({ sanitize: true });
   }
 
-  function handlePaste(event: React.ClipboardEvent<HTMLDivElement>) {
-    event.preventDefault();
+  function handlePaste(event: ClipboardEvent<HTMLDivElement>) {
+    const editor = editorRef.current;
+    if (!editor) return;
+
     const html = event.clipboardData.getData("text/html");
     const text = event.clipboardData.getData("text/plain");
 
-    const inserted = pasteClipboardToArticleHtml(html, text);
+    // Always handle paste ourselves so Word/Docs markup is sanitized,
+    // but never leave the editor empty when clipboard text exists.
+    event.preventDefault();
 
-    if (inserted) {
-      document.execCommand("insertHTML", false, inserted);
-      syncEditorContent();
+    let inserted = pasteClipboardToArticleHtml(html, text);
+    if (!inserted && text.trim()) {
+      inserted = plainTextToArticleHtml(text);
     }
+    if (!inserted && text.trim()) {
+      // Last resort: escape plain text into paragraphs so paste still works.
+      inserted = text
+        .replace(/\r\n/g, "\n")
+        .split(/\n{2,}/)
+        .map((block) => block.trim())
+        .filter(Boolean)
+        .map(
+          (block) =>
+            `<p>${block
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/\n/g, "<br>")}</p>`,
+        )
+        .join("");
+    }
+
+    if (!inserted) return;
+
+    insertHtmlAtCursor(editor, inserted);
+    syncEditorContent({ sanitize: true });
   }
 
   const toolbarButton =
@@ -114,20 +192,21 @@ export function ArticleContentEditor({
 
       <div
         ref={editorRef}
-        contentEditable
+        contentEditable={true}
         suppressContentEditableWarning
         role="textbox"
         aria-multiline="true"
         aria-label="Complete article content"
-        onInput={syncEditorContent}
-        onBlur={syncEditorContent}
+        tabIndex={0}
+        onInput={() => syncEditorContent({ sanitize: false })}
+        onBlur={() => syncEditorContent({ sanitize: true })}
         onPaste={handlePaste}
-        className="article-editor min-h-[420px] w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm leading-7 text-slate-800 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
+        className="article-editor article-content min-h-[420px] w-full select-text rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm leading-7 text-slate-800 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
       />
 
       <p className="mt-2 text-xs text-slate-500">
-        Paste from Word to keep headings, paragraphs, and bullet lists. Use the
-        toolbar to adjust formatting.
+        Paste from Word or Google Docs to keep headings, paragraphs, and lists.
+        Extra blank lines and Word styles are cleaned automatically.
       </p>
     </div>
   );

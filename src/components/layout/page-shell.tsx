@@ -16,6 +16,9 @@ type PageShellProps = {
   /** Ordered translation keys — one paragraph/block per key for multilingual pages. */
   bodyKeys?: readonly TranslationKey[];
   hideTitleAndDescription?: boolean;
+  /** Optional overrides for search results and similar dynamic headings. */
+  customTitle?: string;
+  customDescription?: string;
   children?: ReactNode;
 };
 
@@ -26,6 +29,8 @@ export function PageShell({
   bodyKey,
   bodyKeys,
   hideTitleAndDescription = false,
+  customTitle,
+  customDescription,
   children,
 }: PageShellProps) {
   const { t } = useLanguage();
@@ -39,6 +44,9 @@ export function PageShell({
           .filter(Boolean)
       : []);
 
+  const showHeading =
+    !hideTitleAndDescription || Boolean(customTitle || customDescription);
+
   return (
     <section className="relative overflow-x-hidden bg-white px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-16">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(6,182,212,0.08),transparent_38%)]" />
@@ -51,13 +59,13 @@ export function PageShell({
               {t(eyebrowKey)}
             </p>
           ) : null}
-          {!hideTitleAndDescription ? (
+          {showHeading ? (
             <>
               <h1 className="text-2xl font-extrabold tracking-tight text-[#0B3A6E] sm:text-4xl lg:text-5xl">
-                {t(titleKey)}
+                {customTitle || t(titleKey)}
               </h1>
               <p className="max-w-2xl text-sm leading-7 text-slate-600 sm:text-lg sm:leading-8">
-                {t(descriptionKey)}
+                {customDescription || t(descriptionKey)}
               </p>
             </>
           ) : null}

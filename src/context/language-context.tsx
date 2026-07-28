@@ -6,60 +6,20 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import {
   LANGUAGE_COOKIE_KEY,
   LANGUAGE_STORAGE_KEY,
-  isLanguage,
-  parseLanguage,
   type Language,
 } from "@/lib/language-preference";
 
 export type { Language };
 
-const LANGUAGE_CHANGE_EVENT = "shrimp-news-language-change";
-
-function readLanguageCookie(): Language | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith(`${LANGUAGE_COOKIE_KEY}=`));
-  if (!match) return null;
-  return parseLanguage(match.split("=").slice(1).join("="));
-}
-
 function persistLanguage(language: Language) {
   localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
   const maxAge = 60 * 60 * 24 * 365;
   document.cookie = `${LANGUAGE_COOKIE_KEY}=${encodeURIComponent(language)}; path=/; max-age=${maxAge}; SameSite=Lax`;
-}
-
-/** Cookie is the source of truth; localStorage stays in sync as a fallback. */
-function getStoredLanguage(fallback: Language = "en"): Language {
-  const fromCookie = readLanguageCookie();
-  if (fromCookie) return fromCookie;
-  const fromStorage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-  if (isLanguage(fromStorage)) return fromStorage;
-  return fallback;
-}
-
-function subscribeToLanguage(onStoreChange: () => void) {
-  const handleStorage = (event: StorageEvent) => {
-    if (event.key === LANGUAGE_STORAGE_KEY) {
-      onStoreChange();
-    }
-  };
-  const handleLocalChange = () => onStoreChange();
-
-  window.addEventListener("storage", handleStorage);
-  window.addEventListener(LANGUAGE_CHANGE_EVENT, handleLocalChange);
-
-  return () => {
-    window.removeEventListener("storage", handleStorage);
-    window.removeEventListener(LANGUAGE_CHANGE_EVENT, handleLocalChange);
-  };
 }
 
 type LanguageContextValue = {
@@ -976,59 +936,39 @@ export function LanguageProvider({
   children: ReactNode;
   initialLanguage?: Language;
 }) {
-  const language = useSyncExternalStore<Language>(
-    subscribeToLanguage,
-    () => getStoredLanguage(initialLanguage),
-    () => initialLanguage,
-  );
+  // English is the global standard language — ignore stored TE/HI preferences.
+  void initialLanguage;
+  const language: Language = "en";
 
   useEffect(() => {
-    // Promote legacy localStorage-only preferences into the cookie.
-    const cookieLanguage = readLanguageCookie();
-    const storageLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    if (!cookieLanguage && isLanguage(storageLanguage)) {
-      persistLanguage(storageLanguage);
-      window.dispatchEvent(new Event(LANGUAGE_CHANGE_EVENT));
-      return;
-    }
-    persistLanguage(language);
-    document.documentElement.lang =
-      language === "te" ? "te" : language === "hi" ? "hi" : "en";
-  }, [language]);
-
-  const setLanguage = useCallback((newLanguage: Language) => {
-    persistLanguage(newLanguage);
-    document.documentElement.lang =
-      newLanguage === "te" ? "te" : newLanguage === "hi" ? "hi" : "en";
-    window.dispatchEvent(new Event(LANGUAGE_CHANGE_EVENT));
+    persistLanguage("en");
+    document.documentElement.lang = "en";
   }, []);
 
-  const t = useCallback(
-    (key: TranslationKey) => {
-      const value = translations[language][key] ?? translations.en[key];
-      if (value == null || value === "") {
-        if (process.env.NODE_ENV !== "production") {
-          console.warn(`[i18n] Missing translation key: ${String(key)} (${language})`);
-        }
-        return "";
+  const setLanguage = useCallback((_newLanguage: Language) => {
+    persistLanguage("en");
+    document.documentElement.lang = "en";
+  }, []);
+
+  const t = useCallback((key: TranslationKey) => {
+    const value = translations.en[key];
+    if (value == null || value === "") {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(`[i18n] Missing translation key: ${String(key)} (en)`);
       }
-      if (typeof value !== "string") {
-        if (process.env.NODE_ENV !== "production") {
-          console.warn(`[i18n] Invalid translation value for key: ${String(key)}`);
-        }
-        return "";
+      return "";
+    }
+    if (typeof value !== "string") {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(`[i18n] Invalid translation value for key: ${String(key)}`);
       }
-      // Resolve brand placeholder from the shrimpNews key (transliterated per language).
-      if (key !== "shrimpNews" && value.includes("{shrimpNews}")) {
-        return value.replaceAll(
-          "{shrimpNews}",
-          translations[language].shrimpNews ?? translations.en.shrimpNews,
-        );
-      }
-      return value;
-    },
-    [language],
-  );
+      return "";
+    }
+    if (key !== "shrimpNews" && value.includes("{shrimpNews}")) {
+      return value.replaceAll("{shrimpNews}", translations.en.shrimpNews);
+    }
+    return value;
+  }, []);
 
   const value = useMemo(
     () => ({

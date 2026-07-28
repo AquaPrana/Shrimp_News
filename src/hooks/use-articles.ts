@@ -12,6 +12,7 @@ export function useArticles(
   options: {
     topic?: string | null;
     category?: string;
+    q?: string | null;
     limit?: number;
   } = {},
   initialArticles: PublicArticle[] = [],
@@ -22,6 +23,7 @@ export function useArticles(
   const [error, setError] = useState("");
   const topic = options.topic || "";
   const category = options.category || "";
+  const q = options.q || "";
   const limit = options.limit || 60;
   const skipInitialFetchRef = useRef(initialArticles.length > 0);
 
@@ -42,6 +44,7 @@ export function useArticles(
       });
       if (topic) params.set("topic", topic);
       if (category) params.set("category", category);
+      if (q) params.set("q", q);
 
       try {
         const response = await fetch(`/api/articles?${params}`, {
@@ -67,7 +70,7 @@ export function useArticles(
 
     void load();
     return () => controller.abort();
-  }, [topic, category, limit, t]);
+  }, [topic, category, q, limit, t]);
 
   return { articles, loading, error };
 }
