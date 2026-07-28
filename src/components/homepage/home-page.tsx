@@ -17,6 +17,7 @@ export function HomePage({
 }: {
   initialArticles?: PublicArticle[];
 }) {
+  const budgetToPondSlug = "from-budget-to-pond";
   const { t } = useLanguage();
   const { articles: fetchedArticles, loading, error } = useArticles(
     { limit: 60 },
@@ -28,9 +29,22 @@ export function HomePage({
   const featuredSlugSet = new Set(featuredSlugs);
   const featuredArticle = articles[0];
 
-  const homeArticles = articles
-    .filter((article) => !featuredSlugSet.has(article.slug))
-    .slice(0, 12);
+  const budgetToPondArticle = articles.find(
+    (article) => article.slug === budgetToPondSlug,
+  );
+  const nonHeroArticles = articles.filter(
+    (article) =>
+      article.status === "published" && !featuredSlugSet.has(article.slug),
+  );
+  const homeArticleCandidates = budgetToPondArticle
+    ? [
+        budgetToPondArticle,
+        ...nonHeroArticles.filter(
+          (article) => article.slug !== budgetToPondSlug,
+        ),
+      ]
+    : nonHeroArticles;
+  const homeArticles = homeArticleCandidates.slice(0, 12);
 
   if (!featuredArticle) {
     return (

@@ -35,7 +35,56 @@ export {
 const ARTICLE_IMAGE_OVERRIDES: Record<string, string> = {
   "andhra-pradesh-seeks-centres-support-to-protect-aquaculture-sector-amid-rising-shrimp-feed-costs":
     "/images/articles/andrapradesh-aqua-culture.jpeg",
+  "from-budget-to-pond": "/images/articles/budget-to-pond.jpeg",
 };
+
+const FIXED_FEATURE_ARTICLES: readonly PublicArticle[] = [
+  {
+    id: "fixed-from-budget-to-pond",
+    title:
+      "From Budget to Pond — Can India Track Its 2026 Aquaculture Promises to the Farmer?",
+    slug: "from-budget-to-pond",
+    excerpt:
+      "India’s major 2026 aquaculture commitments are tested against a five-stage public-delivery standard, from Budget announcement to measurable benefit at the pond.",
+    content: "",
+    featuredImageUrl: "/images/articles/budget-to-pond.jpeg",
+    featuredImageAlt: "From Budget to Pond – Aquaculture Analysis",
+    mainCategory: "india",
+    category: "Research & Innovations",
+    language: "en",
+    author: getAuthorLabel("en"),
+    status: "published",
+    seoTitle:
+      "From Budget to Pond — Can India Track Its 2026 Aquaculture Promises to the Farmer?",
+    seoDescription:
+      "India’s major 2026 aquaculture commitments are tested against a five-stage public-delivery standard, from Budget announcement to measurable benefit at the pond.",
+    sourceUrl: "/articles/from-budget-to-pond",
+    topics: ["national", "research"],
+    createdAt: "2026-07-23T00:00:00.000Z",
+    updatedAt: "2026-07-23T00:00:00.000Z",
+    publishedAt: "2026-07-23T00:00:00.000Z",
+    titleEn:
+      "From Budget to Pond — Can India Track Its 2026 Aquaculture Promises to the Farmer?",
+    summaryEn:
+      "India’s major 2026 aquaculture commitments are tested against a five-stage public-delivery standard, from Budget announcement to measurable benefit at the pond.",
+    contentEn: "",
+    titleTe: "",
+    summaryTe: "",
+    contentTe: "",
+    titleHi: "",
+    summaryHi: "",
+    contentHi: "",
+    translationAvailable: {
+      en: true,
+      te: false,
+      hi: false,
+    },
+  },
+];
+
+const FIXED_FEATURE_ARTICLE_SLUGS = new Set(
+  FIXED_FEATURE_ARTICLES.map((article) => baseSlug(article.slug)),
+);
 
 const SUBCATEGORY_TOPICS = Object.entries(TOPIC_CATEGORIES).reduce<
   Record<string, string[]>
@@ -182,6 +231,49 @@ function applyCategoryAlias(normalized: string): string {
   return CATEGORY_ALIASES[normalized] || normalized;
 }
 
+function sortPublishedArticlesDesc(a: PublicArticle, b: PublicArticle) {
+  const aTime = Date.parse(a.publishedAt || a.createdAt);
+  const bTime = Date.parse(b.publishedAt || b.createdAt);
+  return bTime - aTime;
+}
+
+function fixedArticleMatchesOptions(
+  article: PublicArticle,
+  options: ListOptions,
+  rawQuery: string,
+) {
+  const topicRegion = normalizeRegion(options.topic);
+  const requestedRegion = normalizeRegion(options.mainCategory);
+
+  if (topicRegion && article.mainCategory !== topicRegion) return false;
+
+  if (options.topic && TOPIC_CATEGORIES[options.topic]) {
+    if (!TOPIC_CATEGORIES[options.topic].includes(article.category)) return false;
+  } else if (requestedRegion && article.mainCategory !== requestedRegion) {
+    return false;
+  } else if (options.category && article.category !== options.category) {
+    return false;
+  }
+
+  if (rawQuery && !articleMatchesPublicSearch(article, rawQuery)) return false;
+
+  return true;
+}
+
+function mergeFixedFeatureArticles(
+  articles: PublicArticle[],
+  options: ListOptions,
+  rawQuery: string,
+) {
+  const fixed = FIXED_FEATURE_ARTICLES.filter((article) =>
+    fixedArticleMatchesOptions(article, options, rawQuery),
+  );
+
+  return [...articles.filter((article) => !FIXED_FEATURE_ARTICLE_SLUGS.has(baseSlug(article.slug))), ...fixed].sort(
+    sortPublishedArticlesDesc,
+  );
+}
+
 function buildBasePublishedWhere(
   options: ListOptions,
 ): Prisma.ArticleWhereInput {
@@ -268,15 +360,18 @@ export async function queryPublishedArticles(
   const where = buildBasePublishedWhere(options);
   const rawQuery = options.q?.trim() ?? "";
 
-  // No search: keep Prisma pagination for performance.
+  // No search: fetch enough rows for the requested window, then merge one fixed entry.
   if (!rawQuery) {
     const rows = await prisma.article.findMany({
       where,
       orderBy: { createdAt: "desc" },
-      skip,
-      take: limit,
+      take: skip + limit,
     });
-    return rows.map(mapPublicArticle);
+    return mergeFixedFeatureArticles(
+      rows.map(mapPublicArticle),
+      options,
+      rawQuery,
+    ).slice(skip, skip + limit);
   }
 
   // Search: fetch published candidates first, filter in TS, then paginate.
@@ -288,19 +383,32 @@ export async function queryPublishedArticles(
     take: SEARCH_FETCH_LIMIT,
   });
 
-  const matched = rows.filter((row) =>
-    articleMatchesPublicSearch(
-      {
-        title: row.title,
-        titleEn: row.titleEn,
-        category: row.category,
-        mainCategory: row.mainCategory,
-      },
-      rawQuery,
-    ),
-  );
+  const matched = rows
+    .map(mapPublicArticle)
+    .filter((article) =>
+      articleMatchesPublicSearch(
+        {
+          title: article.title,
+          titleEn: article.titleEn,
+          category: article.category,
+          mainCategory: article.mainCategory,
+        },
+        rawQuery,
+      ),
+    );
 
-  return matched.slice(skip, skip + limit).map(mapPublicArticle);
+  return mergeFixedFeatureArticles(
+    matched,
+    options,
+    rawQuery,
+  ).slice(skip, skip + limit);
+}
+
+function fixedFeatureArticleBySlug(slug: string) {
+  const base = baseSlug(slug);
+  return (
+    FIXED_FEATURE_ARTICLES.find((article) => baseSlug(article.slug) === base) ?? null
+  );
 }
 
 export async function getPublishedArticles(
@@ -317,6 +425,9 @@ export async function getPublishedArticles(
 export async function getPublishedArticleBySlug(
   slug: string,
 ): Promise<PublicArticle | null> {
+  const fixed = fixedFeatureArticleBySlug(slug);
+  if (fixed) return fixed;
+
   try {
     const base = baseSlug(slug);
     const source = await prisma.article.findFirst({

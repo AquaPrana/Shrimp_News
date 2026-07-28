@@ -358,6 +358,13 @@ html[lang="te"] .article-title {
 .article-editor {
   line-height: 1.75;
   color: inherit;
+  min-height: 300px;
+  cursor: text;
+  pointer-events: auto;
+  user-select: text;
+  -webkit-user-select: text;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
 }
 
 .article-prose h2,
@@ -421,10 +428,8 @@ html[lang="te"] .article-title {
 /* Do not reserve tall empty space for spacer paragraphs (cleaned on save/display). */
 .article-prose p:empty,
 .article-content p:empty,
-.article-editor p:empty,
 .article-prose p:has(br:only-child),
-.article-content p:has(br:only-child),
-.article-editor p:has(br:only-child) {
+.article-content p:has(br:only-child) {
   display: none;
 }
 
@@ -490,8 +495,7 @@ html[lang="te"] .article-title {
 }
 
 .article-prose br + br,
-.article-content br + br,
-.article-editor br + br {
+.article-content br + br {
   display: none;
 }
 

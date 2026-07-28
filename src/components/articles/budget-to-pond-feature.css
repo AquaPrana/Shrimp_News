@@ -1,0 +1,123 @@
+
+.budget-to-pond{
+  --ink:#0B1F2A;            /* deep pond at dawn */
+  --ink-2:#122B38;
+  --paper:#F7F9F8;          /* reading surface */
+  --card:#FFFFFF;
+  --aqua:#0FA396;           /* documented */
+  --aqua-soft:#DDF3F0;
+  --amber:#D99A2B;          /* partial */
+  --amber-soft:#F8EDD8;
+  --slate:#8A9AA4;          /* not located */
+  --slate-soft:#E8EDEF;
+  --line:#D7E0E3;
+  --text:#1B2B33;
+  --muted:#5B6E77;
+  --mono:var(--btp-mono),'IBM Plex Mono',ui-monospace,monospace;
+  --disp:var(--btp-disp),'Space Grotesk',system-ui,sans-serif;
+  --body:var(--btp-body),'Newsreader',Georgia,serif;
+  background:var(--paper);
+  color:var(--text);
+  font-family:var(--body);
+  font-size:19px;
+  line-height:1.72;
+  padding-bottom:72px;
+}
+.budget-to-pond a{color:var(--aqua)}
+.budget-to-pond .wrap{max-width:860px;margin:0 auto;padding:0 24px}
+.budget-to-pond .wrap-wide{max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* ---------- hero ---------- */
+.budget-to-pond .hero{background:linear-gradient(180deg,var(--ink) 0%,var(--ink-2) 100%);color:#EAF4F2;padding:64px 0 0;position:relative;overflow:hidden}
+.budget-to-pond .hero::before{content:"";position:absolute;inset:0;background:
+ radial-gradient(600px 220px at 85% 10%,rgba(88,208,195,.10),transparent 60%),
+ radial-gradient(500px 200px at 10% 90%,rgba(88,208,195,.07),transparent 60%);pointer-events:none}
+.budget-to-pond .kicker{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:26px}
+.budget-to-pond .kicker .badge{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;padding:7px 14px;border:1px solid rgba(88,208,195,.5);color:#7ADCD1;border-radius:2px}
+.budget-to-pond .kicker .badge.solid{background:#58D0C3;color:var(--ink);border-color:#58D0C3;font-weight:600}
+.budget-to-pond h1{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5.4vw,60px);line-height:1.06;letter-spacing:-.015em;max-width:20ch}
+.budget-to-pond .subhead{font-family:var(--disp);font-weight:500;font-size:clamp(18px,2.4vw,24px);color:#9FD8D0;margin-top:14px;max-width:34ch;line-height:1.35}
+.budget-to-pond .standfirst{font-size:clamp(18px,2vw,21px);color:#C9DEDB;max-width:62ch;margin-top:26px;line-height:1.6}
+.budget-to-pond .dateline{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:#8FB4AE;margin-top:26px;text-transform:uppercase}
+.budget-to-pond .hero-svg{display:block;width:100%;margin-top:44px}
+
+/* ---------- doctrine ribbon ---------- */
+.budget-to-pond .ribbon{background:#0E2733;border-top:1px solid rgba(88,208,195,.25);border-bottom:1px solid rgba(88,208,195,.25);padding:14px 0}
+.budget-to-pond .ribbon p{font-family:var(--mono);font-size:12.5px;letter-spacing:.04em;color:#9FD8D0;text-align:center}
+
+/* ---------- article ---------- */
+.budget-to-pond article{padding:64px 0 30px}
+.budget-to-pond article h2{font-family:var(--disp);font-weight:700;font-size:clamp(24px,3vw,32px);letter-spacing:-.01em;color:var(--ink);margin:64px 0 8px;line-height:1.2}
+.budget-to-pond article h2:first-of-type{margin-top:0}
+.budget-to-pond .h2-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--aqua);display:block;margin:64px 0 6px}
+.budget-to-pond .h2-eyebrow + h2{margin-top:0}
+.budget-to-pond article h3{font-family:var(--disp);font-weight:600;font-size:20px;color:var(--ink);margin:34px 0 8px}
+.budget-to-pond article p{margin:0 0 20px;max-width:70ch}
+.budget-to-pond article p.lede{font-size:22px;line-height:1.65;color:var(--ink)}
+.budget-to-pond .evi{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;padding:2px 8px;border-radius:2px;white-space:nowrap;vertical-align:1px}
+.budget-to-pond .evi.v{background:var(--aqua-soft);color:#0A6B62}
+.budget-to-pond .evi.g{background:#E7ECEF;color:#43606D}
+.budget-to-pond .evi.a{background:var(--amber-soft);color:#8A5F14}
+.budget-to-pond .evi.f{background:#E4E9F5;color:#3B4E86}
+.budget-to-pond figure{margin:36px 0 42px}
+.budget-to-pond figcaption{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.05em;margin-top:12px;line-height:1.6;max-width:78ch}
+.budget-to-pond .panel{background:var(--ink);border-radius:8px;padding:26px;overflow-x:auto}
+.budget-to-pond .panel svg{display:block;min-width:640px;width:100%}
+.budget-to-pond .panel-light{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:26px;overflow-x:auto}
+.budget-to-pond .panel-light svg{display:block;min-width:640px;width:100%}
+
+/* ---------- pull / finding ---------- */
+.budget-to-pond .finding{background:var(--ink);color:#EAF4F2;border-radius:10px;padding:44px 40px;margin:56px 0}
+.budget-to-pond .finding .label{font-family:var(--mono);font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:#7ADCD1;margin-bottom:18px}
+.budget-to-pond .finding p.gold{font-family:var(--disp);font-weight:500;font-size:clamp(20px,2.6vw,26px);line-height:1.45;color:#F2FBF9;margin-bottom:0}
+.budget-to-pond .notmean{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--aqua);border-radius:6px;padding:30px 32px;margin:0 0 40px}
+.budget-to-pond .notmean h3{margin-top:0}
+.budget-to-pond .notmean ul{list-style:none;margin-top:14px}
+.budget-to-pond .notmean li{padding-left:30px;position:relative;margin-bottom:12px;line-height:1.6}
+.budget-to-pond .notmean li::before{content:"✕";position:absolute;left:0;top:1px;font-family:var(--mono);font-size:13px;color:var(--slate);font-weight:600}
+.budget-to-pond .notmean li strong{color:var(--ink)}
+
+/* ---------- scoreboard table ---------- */
+.budget-to-pond .score{width:100%;border-collapse:collapse;font-size:15px;min-width:760px}
+.budget-to-pond .score th{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:2px solid var(--ink)}
+.budget-to-pond .score td{padding:14px 12px;border-bottom:1px solid var(--line);vertical-align:top;font-family:var(--disp);font-size:14.5px;line-height:1.45}
+.budget-to-pond .score td.init{font-weight:600;color:var(--ink);min-width:170px}
+.budget-to-pond .score td .sub{display:block;font-family:var(--mono);font-weight:400;font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:.03em}
+.budget-to-pond .pill{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;padding:4px 9px;border-radius:3px;font-weight:600}
+.budget-to-pond .pill.y{background:var(--aqua-soft);color:#0A6B62}
+.budget-to-pond .pill.p{background:var(--amber-soft);color:#8A5F14}
+.budget-to-pond .pill.n{background:var(--slate-soft);color:#5E7079}
+.budget-to-pond .score td.trail{white-space:nowrap}
+.budget-to-pond .dotrow{display:inline-flex;gap:5px;align-items:center}
+.budget-to-pond .dot{width:13px;height:13px;border-radius:50%;display:inline-block}
+.budget-to-pond .dot.y{background:var(--aqua)}
+.budget-to-pond .dot.p{background:var(--amber)}
+.budget-to-pond .dot.n{background:transparent;border:2px solid var(--slate)}
+.budget-to-pond .legend{display:flex;gap:22px;flex-wrap:wrap;margin-top:16px;font-family:var(--mono);font-size:12px;color:var(--muted);align-items:center}
+.budget-to-pond .legend .dot{width:11px;height:11px}
+
+/* ---------- open-record list ---------- */
+.budget-to-pond .openrec{counter-reset:oq;margin:26px 0 10px}
+.budget-to-pond .openrec li{list-style:none;position:relative;padding:18px 0 18px 64px;border-bottom:1px solid var(--line);line-height:1.6;max-width:75ch}
+.budget-to-pond .openrec li::before{counter-increment:oq;content:counter(oq,decimal-leading-zero);position:absolute;left:0;top:16px;font-family:var(--mono);font-size:15px;color:var(--aqua);font-weight:600;letter-spacing:.04em}
+
+/* ---------- meta blocks ---------- */
+.budget-to-pond .metablock{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:30px 32px;margin:26px 0}
+.budget-to-pond .metablock h3{margin-top:0;font-size:17px}
+.budget-to-pond .metablock p, .budget-to-pond .metablock li{font-size:16px;line-height:1.65;color:var(--muted)}
+.budget-to-pond .metablock p{margin-bottom:12px}
+.budget-to-pond .srcreg{width:100%;border-collapse:collapse;font-size:14px;min-width:680px}
+.budget-to-pond .srcreg th{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:2px solid var(--ink)}
+.budget-to-pond .srcreg td{padding:11px 10px;border-bottom:1px solid var(--line);font-family:var(--disp);font-size:13.5px;line-height:1.5;vertical-align:top}
+.budget-to-pond .srcreg td.d{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+
+@media (max-width:640px){
+  .budget-to-pond{font-size:17.5px}
+.budget-to-pond .finding{padding:32px 24px}
+.budget-to-pond .openrec li{padding-left:52px}
+}
+@media (prefers-reduced-motion:reduce){
+.budget-to-pond .flow-anim{animation:none !important}
+}
+@keyframes flowdash{to{stroke-dashoffset:-40}}
+.budget-to-pond .flow-anim{animation:flowdash 2.4s linear infinite}

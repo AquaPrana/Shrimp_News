@@ -3,7 +3,6 @@
 import { useEffect, useRef, type ClipboardEvent } from "react";
 import {
   isHtmlArticleContent,
-  normalizeEditorHtml,
   pasteClipboardToArticleHtml,
   plainTextToArticleHtml,
   prepareArticleContentForDisplay,
@@ -66,49 +65,76 @@ export function ArticleContentEditor({
 }: ArticleContentEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const lastSyncedValue = useRef<string | null>(null);
-  const isInternalUpdate = useRef(false);
+  const hasInitialized = useRef(false);
+  const savedSelection = useRef<Range | null>(null);
 
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor) return;
 
-    // Never clobber the live editor while the user is typing/pasting.
-    if (document.activeElement === editor || isInternalUpdate.current) {
+    if (!hasInitialized.current) {
+      editor.innerHTML = toEditorHtml(value);
       lastSyncedValue.current = value;
+      hasInitialized.current = true;
       return;
     }
 
+    // The live editor DOM is the source of truth while the user is editing.
+    // Parent form renders must never replace it or disturb the caret.
+    if (document.activeElement === editor) return;
     if (value === lastSyncedValue.current) return;
 
-    const html = toEditorHtml(value);
-    editor.innerHTML = html;
+    editor.innerHTML = toEditorHtml(value);
     lastSyncedValue.current = value;
   }, [value]);
 
-  function syncEditorContent(options?: { sanitize?: boolean }) {
+  useEffect(() => {
+    function rememberSelection() {
+      const editor = editorRef.current;
+      const selection = window.getSelection();
+      if (!editor || !selection || selection.rangeCount === 0) return;
+
+      const range = selection.getRangeAt(0);
+      if (editor.contains(range.commonAncestorContainer)) {
+        savedSelection.current = range.cloneRange();
+      }
+    }
+
+    document.addEventListener("selectionchange", rememberSelection);
+    return () => {
+      document.removeEventListener("selectionchange", rememberSelection);
+    };
+  }, []);
+
+  function syncEditorContent() {
     const editor = editorRef.current;
     if (!editor) return;
 
-    const shouldSanitize = options?.sanitize !== false;
-    // Typing: keep live DOM as source of truth. Paste/blur: full sanitize.
-    const displayHtml = shouldSanitize
-      ? toEditorHtml(normalizeEditorHtml(editor.innerHTML)) ||
-        normalizeEditorHtml(editor.innerHTML)
-      : editor.innerHTML;
+    // Never sanitize or replace the DOM during typing. Recognized pasted HTML
+    // is cleaned before insertion, and the API performs final cleanup on save.
+    const html = editor.innerHTML;
+    lastSyncedValue.current = html;
+    onChange(html);
+  }
 
-    isInternalUpdate.current = true;
-    lastSyncedValue.current = displayHtml;
-    onChange(displayHtml);
-    queueMicrotask(() => {
-      isInternalUpdate.current = false;
-    });
+  function restoreEditorSelection(editor: HTMLDivElement) {
+    editor.focus({ preventScroll: true });
+
+    const selection = window.getSelection();
+    const range = savedSelection.current;
+    if (!selection || !range || !editor.contains(range.commonAncestorContainer)) {
+      return;
+    }
+
+    selection.removeAllRanges();
+    selection.addRange(range);
   }
 
   function runFormat(command: FormatCommand) {
     const editor = editorRef.current;
     if (!editor) return;
 
-    editor.focus();
+    restoreEditorSelection(editor);
 
     if (command === "bold") {
       document.execCommand("bold");
@@ -122,7 +148,7 @@ export function ArticleContentEditor({
       document.execCommand("formatBlock", false, command);
     }
 
-    syncEditorContent({ sanitize: true });
+    syncEditorContent();
   }
 
   function handlePaste(event: ClipboardEvent<HTMLDivElement>) {
@@ -130,11 +156,10 @@ export function ArticleContentEditor({
     if (!editor) return;
 
     const html = event.clipboardData.getData("text/html");
-    const text = event.clipboardData.getData("text/plain");
-
-    // Always handle paste ourselves so Word/Docs markup is sanitized,
-    // but never leave the editor empty when clipboard text exists.
-    event.preventDefault();
+    const text =
+      event.clipboardData.getData("text/plain") ||
+      event.clipboardData.getData("text") ||
+      event.clipboardData.getData("Text");
 
     let inserted = pasteClipboardToArticleHtml(html, text);
     if (!inserted && text.trim()) {
@@ -158,34 +183,47 @@ export function ArticleContentEditor({
         .join("");
     }
 
-    if (!inserted) return;
+    if (!inserted) {
+      // Some Word, Outlook, PDF, remote-desktop, and browser clipboard paths
+      // expose only RTF or another private format. Do not cancel those pastes:
+      // let the browser insert its native representation, then sync it. Final
+      // sanitization remains part of preview/save instead of moving the caret.
+      window.setTimeout(() => {
+        syncEditorContent();
+      }, 0);
+      return;
+    }
 
+    event.preventDefault();
     insertHtmlAtCursor(editor, inserted);
-    syncEditorContent({ sanitize: true });
+    syncEditorContent();
   }
 
   const toolbarButton =
     "rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-cyan-500 hover:text-cyan-700";
+  const preserveEditorFocus = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+  };
 
   return (
     <div className={className}>
       <div className="mb-2 flex flex-wrap gap-2">
-        <button type="button" className={toolbarButton} onClick={() => runFormat("p")}>
+        <button type="button" className={toolbarButton} onMouseDown={preserveEditorFocus} onClick={() => runFormat("p")}>
           Paragraph
         </button>
-        <button type="button" className={toolbarButton} onClick={() => runFormat("h2")}>
+        <button type="button" className={toolbarButton} onMouseDown={preserveEditorFocus} onClick={() => runFormat("h2")}>
           Heading
         </button>
-        <button type="button" className={toolbarButton} onClick={() => runFormat("h3")}>
+        <button type="button" className={toolbarButton} onMouseDown={preserveEditorFocus} onClick={() => runFormat("h3")}>
           Subheading
         </button>
-        <button type="button" className={toolbarButton} onClick={() => runFormat("bold")}>
+        <button type="button" className={toolbarButton} onMouseDown={preserveEditorFocus} onClick={() => runFormat("bold")}>
           Bold
         </button>
-        <button type="button" className={toolbarButton} onClick={() => runFormat("ul")}>
+        <button type="button" className={toolbarButton} onMouseDown={preserveEditorFocus} onClick={() => runFormat("ul")}>
           Bullet list
         </button>
-        <button type="button" className={toolbarButton} onClick={() => runFormat("ol")}>
+        <button type="button" className={toolbarButton} onMouseDown={preserveEditorFocus} onClick={() => runFormat("ol")}>
           Numbered list
         </button>
       </div>
@@ -198,10 +236,10 @@ export function ArticleContentEditor({
         aria-multiline="true"
         aria-label="Complete article content"
         tabIndex={0}
-        onInput={() => syncEditorContent({ sanitize: false })}
-        onBlur={() => syncEditorContent({ sanitize: true })}
+        onInput={syncEditorContent}
+        onBlur={syncEditorContent}
         onPaste={handlePaste}
-        className="article-editor article-content min-h-[420px] w-full select-text rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm leading-7 text-slate-800 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
+        className="article-editor pointer-events-auto min-h-[420px] w-full cursor-text select-text whitespace-pre-wrap break-words rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm leading-7 text-slate-800 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
       />
 
       <p className="mt-2 text-xs text-slate-500">
