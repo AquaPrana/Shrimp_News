@@ -184,9 +184,6 @@ export function validateArticleInput(raw: Record<string, unknown>) {
     return { ok: false as const, error: "Title must be at least 5 characters." };
   }
   if (!value.slug) return { ok: false as const, error: "A valid slug is required." };
-  if (value.excerpt.length < 20) {
-    return { ok: false as const, error: "Excerpt must be at least 20 characters." };
-  }
   if (value.content.length < 50) {
     return { ok: false as const, error: "Article content must be at least 50 characters." };
   }
@@ -234,13 +231,6 @@ export function validatePrismaArticleInput(raw: Record<string, unknown>) {
   if (raw.isPublished !== undefined && typeof raw.isPublished !== "boolean") {
     return { ok: false as const, error: "Published status must be true or false." };
   }
-  if (raw.isPublished === true && !excerpt) {
-    return {
-      ok: false as const,
-      error: "A short description is required before publishing.",
-    };
-  }
-
   const taxonomy = resolveArticleTaxonomy({
     mainCategory:
       typeof raw.mainCategory === "string" ? raw.mainCategory : undefined,

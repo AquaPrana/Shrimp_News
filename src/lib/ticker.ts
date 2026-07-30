@@ -1,48 +1,31 @@
 import "server-only";
 
 import type { TickerItem } from "@prisma/client";
-import { fallbackMarketPrices } from "@/data/fallback-market-prices";
-import type { MarketPriceItem, MarketPricesApiResponse } from "@/lib/market-data/client";
+import { normalizeArticleImageUrl, sanitizePlainText } from "@/lib/validation";
+import {
+  TICKER_ITEM_TYPES,
+  type MarketPriceItem,
+  type MarketPricesApiResponse,
+  type TickerItemType,
+} from "@/lib/market-data/client";
 import { logDatabaseError, prisma } from "@/lib/prisma";
 
-/** Default Last Updated: 15 Jul 2026, 06:00 PM IST (UTC+5:30). */
 export const DEFAULT_TICKER_LAST_UPDATED = new Date("2026-07-15T12:30:00.000Z");
 
-export const TICKER_DIRECTIONS = ["up", "down", "neutral"] as const;
-export type TickerDirection = (typeof TICKER_DIRECTIONS)[number];
-
-function symbolFromLabel(label: string, id: string) {
-  const normalized = label.trim().toLowerCase();
-  const known = fallbackMarketPrices.find(
-    (item) => item.label.toLowerCase() === normalized,
-  );
-  if (known) return known.symbol;
-
-  const base = label
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .slice(0, 40);
-  return base || `ITEM_${id.slice(0, 8).toUpperCase()}`;
-}
-
-export function mapTickerItemToMarketPrice(item: TickerItem): MarketPriceItem {
-  const updatedAt = item.updatedAt.toISOString();
+export function mapTickerItem(item: TickerItem): MarketPriceItem {
   return {
-    symbol: symbolFromLabel(item.label, item.id),
+    id: item.id,
     label: item.label,
-    price: item.price,
-    currency: item.currency,
-    unit: item.unit,
-    changePercent: item.changePercent,
-    direction: (TICKER_DIRECTIONS.includes(item.direction as TickerDirection)
-      ? item.direction
-      : "neutral") as TickerDirection,
-    sourceName: "Admin",
-    isLive: false,
-    observedAt: updatedAt,
-    updatedAt,
+    value: item.value,
+    description: item.description,
+    type: TICKER_ITEM_TYPES.includes(item.type as TickerItemType)
+      ? item.type as TickerItemType
+      : "market",
+    linkUrl: item.linkUrl,
+    linkLabel: item.linkLabel,
+    imageUrl: item.imageUrl,
+    displayOrder: item.displayOrder,
+    updatedAt: item.updatedAt.toISOString(),
   };
 }
 
@@ -56,18 +39,22 @@ export async function ensureTickerMeta() {
 
 export async function getTickerPayloadFromDatabase(): Promise<MarketPricesApiResponse | null> {
   try {
+    const now = new Date();
     const [meta, items] = await Promise.all([
       ensureTickerMeta(),
       prisma.tickerItem.findMany({
-        where: { isActive: true },
-        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        where: {
+          isActive: true,
+          AND: [
+            { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+            { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
+          ],
+        },
+        orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }, { id: "asc" }],
       }),
     ]);
-
-    if (items.length === 0) return null;
-
     return {
-      items: items.map(mapTickerItemToMarketPrice),
+      items: items.map(mapTickerItem),
       source: "admin-ticker",
       isFallback: false,
       fetchedAt: meta.lastUpdated.toISOString(),
@@ -78,89 +65,70 @@ export async function getTickerPayloadFromDatabase(): Promise<MarketPricesApiRes
   }
 }
 
-export type TickerItemInput = {
-  label: string;
-  price: number;
-  currency: string;
-  unit: string;
-  changePercent: number | null;
-  direction: TickerDirection;
-  sortOrder: number;
-  isActive: boolean;
-  updatedAt: Date;
-};
+function optionalHttpUrl(raw: unknown, label: string) {
+  if (typeof raw !== "string" || !raw.trim()) {
+    return { ok: true as const, value: null };
+  }
+  try {
+    const value = new URL(raw.trim());
+    if (!["http:", "https:"].includes(value.protocol)) throw new Error();
+    return { ok: true as const, value: value.toString() };
+  } catch {
+    return { ok: false as const, error: `${label} must be a valid HTTP or HTTPS URL.` };
+  }
+}
+
+function optionalDate(raw: unknown, label: string) {
+  if (typeof raw !== "string" || !raw.trim()) {
+    return { ok: true as const, value: null };
+  }
+  const value = new Date(raw);
+  if (Number.isNaN(value.getTime())) {
+    return { ok: false as const, error: `${label} is invalid.` };
+  }
+  return { ok: true as const, value };
+}
 
 export function validateTickerItemInput(raw: Record<string, unknown>) {
-  const label = typeof raw.label === "string" ? raw.label.trim() : "";
-  if (!label) return { ok: false as const, error: "Item name is required." };
-  if (label.length > 120) {
-    return { ok: false as const, error: "Item name must be 120 characters or fewer." };
+  const label = sanitizePlainText(raw.label, 120);
+  const value = sanitizePlainText(raw.value, 190);
+  const type = sanitizePlainText(raw.type, 30).toLowerCase() as TickerItemType;
+  const linkUrl = optionalHttpUrl(raw.linkUrl, "Link URL");
+  const imageUrl = normalizeArticleImageUrl(raw.imageUrl);
+  const startsAt = optionalDate(raw.startsAt, "Start date");
+  const endsAt = optionalDate(raw.endsAt, "End date");
+
+  if (!label) return { ok: false as const, error: "Label is required." };
+  if (!value) return { ok: false as const, error: "Value is required." };
+  if (!TICKER_ITEM_TYPES.includes(type)) {
+    return { ok: false as const, error: "Choose market, update, promotion, or announcement." };
+  }
+  if (!linkUrl.ok) return linkUrl;
+  if (!imageUrl.ok) return imageUrl;
+  if (!startsAt.ok) return startsAt;
+  if (!endsAt.ok) return endsAt;
+  if (startsAt.value && endsAt.value && endsAt.value < startsAt.value) {
+    return { ok: false as const, error: "End date cannot be earlier than start date." };
+  }
+  const displayOrder = Number(raw.displayOrder ?? 0);
+  if (!Number.isFinite(displayOrder)) {
+    return { ok: false as const, error: "Display order must be a number." };
   }
 
-  const price = typeof raw.price === "number" ? raw.price : Number(raw.price);
-  if (!Number.isFinite(price)) {
-    return { ok: false as const, error: "A valid price or value is required." };
-  }
-
-  const currency =
-    typeof raw.currency === "string" && raw.currency.trim()
-      ? raw.currency.trim().slice(0, 12)
-      : "INR";
-  const unit =
-    typeof raw.unit === "string" && raw.unit.trim()
-      ? raw.unit.trim().slice(0, 20)
-      : "kg";
-
-  let changePercent: number | null = null;
-  if (raw.changePercent !== undefined && raw.changePercent !== null && raw.changePercent !== "") {
-    const parsed =
-      typeof raw.changePercent === "number"
-        ? raw.changePercent
-        : Number(raw.changePercent);
-    if (!Number.isFinite(parsed)) {
-      return { ok: false as const, error: "Percentage change must be a number." };
-    }
-    changePercent = parsed;
-  }
-
-  const directionRaw =
-    typeof raw.direction === "string" ? raw.direction.trim().toLowerCase() : "neutral";
-  if (!TICKER_DIRECTIONS.includes(directionRaw as TickerDirection)) {
-    return { ok: false as const, error: "Choose increase, decrease, or neutral." };
-  }
-
-  const sortOrder =
-    raw.sortOrder === undefined || raw.sortOrder === null || raw.sortOrder === ""
-      ? 0
-      : typeof raw.sortOrder === "number"
-        ? raw.sortOrder
-        : Number(raw.sortOrder);
-  if (!Number.isFinite(sortOrder)) {
-    return { ok: false as const, error: "Sort order must be a number." };
-  }
-
-  const updatedRaw =
-    typeof raw.updatedAt === "string"
-      ? raw.updatedAt.trim()
-      : raw.updatedAt instanceof Date
-        ? raw.updatedAt.toISOString()
-        : "";
-  const updatedAt = updatedRaw ? new Date(updatedRaw) : null;
-  if (!updatedAt || Number.isNaN(updatedAt.getTime())) {
-    return { ok: false as const, error: "A valid updated date and time is required." };
-  }
-
-  const value: TickerItemInput = {
-    label,
-    price,
-    currency,
-    unit,
-    changePercent,
-    direction: directionRaw as TickerDirection,
-    sortOrder: Math.trunc(sortOrder),
-    isActive: raw.isActive !== false,
-    updatedAt,
+  return {
+    ok: true as const,
+    value: {
+      label,
+      value,
+      description: sanitizePlainText(raw.description, 10_000) || null,
+      type,
+      linkUrl: linkUrl.value,
+      linkLabel: sanitizePlainText(raw.linkLabel, 120) || null,
+      imageUrl: imageUrl.value,
+      isActive: raw.isActive !== false,
+      displayOrder: Math.trunc(displayOrder),
+      startsAt: startsAt.value,
+      endsAt: endsAt.value,
+    },
   };
-
-  return { ok: true as const, value };
 }

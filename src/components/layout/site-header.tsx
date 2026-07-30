@@ -52,7 +52,7 @@ export function SiteHeader() {
         </Link>
 
         <Suspense fallback={null}>
-          <HeaderSearch className="group ml-3 hidden h-12 w-[min(480px,36vw)] max-w-[520px] shrink-0 items-center gap-2.5 rounded-full border border-[#CBD5E1] bg-white px-2.5 text-left shadow-[0_4px_14px_rgba(15,23,42,0.05)] transition duration-300 hover:border-[#3F475A] hover:shadow-[0_7px_20px_rgba(63,71,90,0.15)] xl:ml-6 xl:flex 2xl:w-[520px]" />
+          <HeaderSearch className="group ml-3 hidden h-12 w-[min(600px,42vw)] max-w-[620px] shrink-0 items-center gap-2.5 rounded-full border border-[#CBD5E1] bg-white px-2.5 text-left shadow-[0_4px_14px_rgba(15,23,42,0.05)] transition duration-300 hover:border-[#3F475A] hover:shadow-[0_7px_20px_rgba(63,71,90,0.15)] xl:ml-6 xl:flex 2xl:w-[620px]" />
         </Suspense>
 
         <div className="relative z-[70] hidden min-w-0 flex-1 items-center justify-center overflow-visible lg:flex">

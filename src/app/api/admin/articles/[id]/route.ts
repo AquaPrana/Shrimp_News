@@ -21,7 +21,9 @@ export async function GET(request: Request, { params }: RouteContext) {
 
   try {
     const { id } = await params;
-    const article = await prisma.article.findUnique({ where: { id } });
+    const article = await prisma.article.findFirst({
+      where: { id, language: "en" },
+    });
     if (!article) return NextResponse.json({ error: "Article not found." }, { status: 404 });
     const translationStatus = await getArticleTranslationStatus(article);
     return NextResponse.json({
@@ -41,8 +43,8 @@ export async function PUT(request: Request, { params }: RouteContext) {
   try {
     const { id } = await params;
     const body = await request.json() as Record<string, unknown>;
-    const existing = await prisma.article.findUnique({
-      where: { id },
+    const existing = await prisma.article.findFirst({
+      where: { id, language: "en" },
     });
     if (!existing) return NextResponse.json({ error: "Article not found." }, { status: 404 });
 
@@ -100,7 +102,11 @@ export async function PUT(request: Request, { params }: RouteContext) {
       ? await getArticleTranslationStatus(saved)
       : undefined;
     return NextResponse.json({
-      message: translationWarning || "Article updated successfully.",
+      message:
+        translationWarning ||
+        (validated.value.isPublished
+          ? "Article published successfully."
+          : "Draft saved successfully."),
       warning: Boolean(translationWarning),
       article: saved
         ? { ...saved, translationStatus }
@@ -127,8 +133,8 @@ export async function DELETE(request: Request, { params }: RouteContext) {
 
   try {
     const { id } = await params;
-    const existing = await prisma.article.findUnique({
-      where: { id },
+    const existing = await prisma.article.findFirst({
+      where: { id, language: "en" },
       select: { translationGroupId: true },
     });
     if (!existing) return NextResponse.json({ error: "Article not found." }, { status: 404 });

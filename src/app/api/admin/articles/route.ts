@@ -21,13 +21,11 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const q = url.searchParams.get("q")?.trim();
     const category = url.searchParams.get("category")?.trim();
-    const language = url.searchParams.get("language")?.trim();
     const status = url.searchParams.get("status")?.trim();
     const date = url.searchParams.get("date")?.trim();
-    const where: Prisma.ArticleWhereInput = {};
+    const where: Prisma.ArticleWhereInput = { language: "en" };
 
     if (category) where.category = category;
-    if (language) where.language = language;
     if (status === "published") where.isPublished = true;
     if (status === "draft") where.isPublished = false;
     if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
@@ -107,7 +105,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        message: "Article created successfully.",
+        message: requestedPublish
+          ? "Article published successfully."
+          : "Draft saved successfully.",
         article: saved
           ? { ...saved, translationStatus }
           : article,

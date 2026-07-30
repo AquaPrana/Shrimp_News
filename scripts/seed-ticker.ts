@@ -7,6 +7,7 @@
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "@prisma/client";
 import { fallbackMarketPrices } from "../src/data/fallback-market-prices";
+import { fallbackValue } from "../src/lib/market-data/client";
 
 /** 15 Jul 2026, 06:00 PM IST */
 const LAST_UPDATED = new Date("2026-07-15T12:30:00.000Z");
@@ -45,6 +46,9 @@ async function main() {
   await prisma.tickerItem.createMany({
     data: fallbackMarketPrices.map((item, index) => ({
       label: item.label,
+      value: fallbackValue(item),
+      type: "market",
+      displayOrder: index,
       price: item.price,
       currency: item.currency || "INR",
       unit: item.unit,

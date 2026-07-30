@@ -4,7 +4,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  LANGUAGE_NAMES,
   resolveArticleTaxonomy,
   subcategoriesForMain,
   type AdminArticle,
@@ -76,7 +75,7 @@ function toFormState(article?: AdminArticle): FormState {
     imageUrl: resolveFormImageUrl(article),
     mainCategory: taxonomy.mainCategory,
     category: taxonomy.category,
-    language: article.language,
+    language: "en",
     isPublished: article.isPublished,
   };
 }
@@ -310,8 +309,7 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
 
     const contentForSave =
       form.content.trim() || !article ? form.content : article.content;
-    const excerptForSave =
-      form.excerpt.trim() || !article?.excerpt ? form.excerpt : article.excerpt;
+    const excerptForSave = form.excerpt;
 
     if (editorHtmlToPlainText(contentForSave).length < 50) {
       setIsError(true);
@@ -373,9 +371,13 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
       }
       router.push("/admin/articles");
       router.refresh();
-    } catch {
+    } catch (error) {
       setIsError(true);
-      setMessage("Unable to save the article right now.");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to save the article right now.",
+      );
     } finally {
       setBusy(false);
     }
@@ -390,6 +392,18 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
   const hasPreview = Boolean(previewSrc);
   const isUploading = uploadStatus === "uploading";
   const publishDisabled = busy || isUploading;
+  const sourceTextChanged =
+    !article ||
+    form.title !== article.title ||
+    form.excerpt !== (article.excerpt || "") ||
+    form.content !== article.content;
+  const translationsReady =
+    translationStatus?.te === "available" &&
+    translationStatus?.hi === "available";
+  const requiresAutomaticTranslation =
+    form.isPublished &&
+    form.language === "en" &&
+    (sourceTextChanged || !translationsReady);
 
   return (
     <div className="space-y-6">
@@ -675,15 +689,7 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                 }
                 className={input}
               >
-                {article ? (
-                  Object.entries(LANGUAGE_NAMES).map(([value, label]) => (
-                    <option value={value} key={value}>
-                      {label}
-                    </option>
-                  ))
-                ) : (
-                  <option value="en">English</option>
-                )}
+                <option value="en">English</option>
               </select>
             </Field>
             <Field label="Status">
@@ -714,7 +720,9 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                   ? "Uploading..."
                   : busy
                     ? form.isPublished
-                      ? "Translating & publishing…"
+                      ? requiresAutomaticTranslation
+                        ? "Translating & Publishing…"
+                        : "Publishing…"
                       : "Saving…"
                     : form.isPublished
                       ? "Publish"

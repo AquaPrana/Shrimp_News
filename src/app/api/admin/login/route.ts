@@ -1,126 +1,161 @@
-import { NextResponse } from "next/server";
 import { compare } from "bcryptjs";
+import { NextResponse } from "next/server";
 import {
   ADMIN_COOKIE,
+  adminCookieOptions,
   createAdminToken,
+  getAdminCredentials,
 } from "@/lib/admin-auth";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { logDatabaseError, prisma } from "@/lib/prisma";
 import { isEmail } from "@/lib/validation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(request: Request) {
-  console.info("LOGIN_REQUEST_RECEIVED");
+async function safeCompare(password: string, hash: string) {
+  if (!password || password.length > 200) return false;
+  try {
+    return await compare(password, hash);
+  } catch {
+    return false;
+  }
+}
 
-  if (!rateLimit(`admin-login:${clientIp(request)}`, 10, 15 * 60_000)) {
+export async function POST(request: Request) {
+  const ipAddress = clientIp(request);
+  if (!rateLimit(`admin-login:${ipAddress}`, 10, 15 * 60_000)) {
     return NextResponse.json(
       { error: "Too many login attempts. Try again later." },
       { status: 429 },
     );
   }
 
-  const adminEmailValue = process.env.ADMIN_EMAIL;
-  const passwordHashValue = process.env.ADMIN_PASSWORD_HASH;
-  const authSecret = process.env.AUTH_SECRET;
-
-  if (!adminEmailValue || !passwordHashValue || !authSecret) {
-    console.error("MISSING_ENV");
-    return NextResponse.json(
-      { error: "Server configuration error" },
-      { status: 500 },
-    );
-  }
-  console.info("ADMIN_ENV_AVAILABLE");
-
-  let body: { email?: string; password?: string };
+  let body: { email?: unknown; password?: unknown; rememberMe?: unknown };
   try {
-    body = (await request.json()) as {
-      email?: string;
-      password?: string;
-    };
+    body = await request.json() as typeof body;
   } catch {
-    console.warn("INVALID_CREDENTIALS");
-    return NextResponse.json(
-      { error: "Invalid email or password." },
-      { status: 401 },
-    );
+    return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
-  const normalizedEmail = typeof body.email === "string"
-    ? body.email.trim().toLowerCase()
-    : "";
+  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
   const password = typeof body.password === "string" ? body.password : "";
-  const adminEmail = adminEmailValue.trim().toLowerCase();
-  const passwordHash = passwordHashValue.trim();
-  const emailMatches = isEmail(normalizedEmail) && normalizedEmail === adminEmail;
-  console.info("EMAIL_MATCH_RESULT", { matches: emailMatches });
-
-  if (!/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(passwordHash)) {
-    console.error("BCRYPT_ERROR");
-    return NextResponse.json(
-      { error: "Server configuration error" },
-      { status: 500 },
-    );
+  const rememberMe = body.rememberMe === true;
+  const userAgent = request.headers.get("user-agent")?.slice(0, 1000) || null;
+  if (!isEmail(email)) {
+    return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
-  let passwordMatches = false;
+  const legacy = getAdminCredentials();
+  let databaseAvailable = true;
+  let admin = null as Awaited<ReturnType<typeof prisma.admin.findUnique>>;
+
   try {
-    passwordMatches = Boolean(password) && password.length <= 200
-      ? await compare(password, passwordHash)
-      : false;
-    console.info("PASSWORD_COMPARE_RESULT", { matches: passwordMatches });
-  } catch {
-    console.error("BCRYPT_ERROR");
-    return NextResponse.json(
-      { error: "Server configuration error" },
-      { status: 500 },
-    );
+    admin = await prisma.admin.findUnique({ where: { email } });
+    if (!admin && legacy?.admin.email === email) {
+      const matches = await safeCompare(password, legacy.passwordHash);
+      if (matches) {
+        admin = await prisma.admin.create({
+          data: {
+            name: legacy.admin.name,
+            email,
+            password: legacy.passwordHash,
+            role: "super_admin",
+          },
+        });
+      }
+    }
+  } catch (error) {
+    databaseAvailable = false;
+    logDatabaseError("admin.login.database", error);
   }
 
-  if (!emailMatches || !passwordMatches) {
-    console.warn("INVALID_CREDENTIALS");
-    return NextResponse.json(
-      { error: "Invalid email or password." },
-      { status: 401 },
+  if (!databaseAvailable) {
+    const matches = Boolean(
+      legacy &&
+      legacy.admin.email === email &&
+      await safeCompare(password, legacy.passwordHash),
     );
-  }
-
-  let sessionToken: string;
-  try {
-    sessionToken = await createAdminToken({
-      id: 1,
-      name: process.env.ADMIN_NAME?.trim() || "Shrimp.News Admin",
-      email: adminEmail,
-      role: "admin",
+    if (!matches || !legacy) {
+      return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+    }
+    const maxAge = rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 8;
+    const token = await createAdminToken(legacy.admin, {
+      maxAgeSeconds: maxAge,
+      legacy: true,
     });
-    console.info("SESSION_CREATED");
-  } catch {
-    console.error("SESSION_ERROR");
-    return NextResponse.json(
-      { error: "Server configuration error" },
-      { status: 500 },
-    );
+    const response = NextResponse.json({ success: true, redirectTo: "/admin" });
+    response.cookies.set(ADMIN_COOKIE, token, adminCookieOptions(maxAge));
+    return response;
   }
 
-  const response = NextResponse.json({ success: true, redirectTo: "/admin" });
+  const passwordMatches = Boolean(
+    admin &&
+    admin.isActive &&
+    await safeCompare(password, admin.password),
+  );
+
+  if (!passwordMatches || !admin) {
+    try {
+      await prisma.adminLoginAudit.create({
+        data: {
+          adminId: admin?.id || null,
+          email,
+          success: false,
+          userAgent,
+          ipAddress,
+        },
+      });
+    } catch {
+      // Login responses remain generic even if audit storage is unavailable.
+    }
+    return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+  }
+
+  const maxAge = rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 8;
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + maxAge * 1000);
   try {
-    response.cookies.set(ADMIN_COOKIE, sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 8,
+    const session = await prisma.adminSessionRecord.create({
+      data: {
+        adminId: admin.id,
+        userAgent,
+        ipAddress,
+        rememberMe,
+        expiresAt,
+      },
     });
-    console.info("COOKIE_CREATED");
-  } catch {
-    console.error("COOKIE_ERROR");
-    return NextResponse.json(
-      { error: "Server configuration error" },
-      { status: 500 },
+    await Promise.all([
+      prisma.admin.update({
+        where: { id: admin.id },
+        data: { lastLoginAt: now },
+      }),
+      prisma.adminLoginAudit.create({
+        data: {
+          adminId: admin.id,
+          email,
+          success: true,
+          userAgent,
+          ipAddress,
+        },
+      }),
+    ]);
+    const token = await createAdminToken(
+      {
+        id: admin.id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role === "editor" || admin.role === "viewer"
+          ? admin.role
+          : "super_admin",
+      },
+      { sessionId: session.id, maxAgeSeconds: maxAge },
     );
+    const response = NextResponse.json({ success: true, redirectTo: "/admin" });
+    response.cookies.set(ADMIN_COOKIE, token, adminCookieOptions(maxAge));
+    return response;
+  } catch (error) {
+    logDatabaseError("admin.login.session", error);
+    return NextResponse.json({ error: "Unable to create a secure session." }, { status: 500 });
   }
-
-  console.info("LOGIN_SUCCESS");
-  return response;
 }

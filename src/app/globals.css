@@ -150,6 +150,26 @@ html[lang="te"] .article-title {
   }
 }
 
+@keyframes social-modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes social-modal-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .ticker-track {
   animation: ticker 28s linear infinite;
   will-change: transform;
@@ -457,6 +477,8 @@ html[lang="te"] .article-title {
 .article-editor li {
   margin: 0.3rem 0;
   line-height: 1.7;
+  white-space: normal;
+  word-break: normal;
 }
 
 .article-prose strong,

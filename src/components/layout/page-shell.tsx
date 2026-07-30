@@ -46,6 +46,7 @@ export function PageShell({
 
   const showHeading =
     !hideTitleAndDescription || Boolean(customTitle || customDescription);
+  const showIntro = Boolean(eyebrowKey) || showHeading;
 
   return (
     <section className="relative overflow-x-hidden bg-white px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-16">
@@ -53,23 +54,25 @@ export function PageShell({
       <div className="pointer-events-none absolute bottom-0 left-0 h-72 w-72 rounded-full bg-orange-100/30 blur-[100px]" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-6 sm:gap-8">
-        <div className="max-w-3xl space-y-3 sm:space-y-4">
-          {eyebrowKey ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-500 sm:text-sm">
-              {t(eyebrowKey)}
-            </p>
-          ) : null}
-          {showHeading ? (
-            <>
-              <h1 className="text-2xl font-extrabold tracking-tight text-[#0B3A6E] sm:text-4xl lg:text-5xl">
-                {customTitle || t(titleKey)}
-              </h1>
-              <p className="max-w-2xl text-sm leading-7 text-slate-600 sm:text-lg sm:leading-8">
-                {customDescription || t(descriptionKey)}
+        {showIntro ? (
+          <div className="max-w-3xl space-y-3 sm:space-y-4">
+            {eyebrowKey ? (
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-500 sm:text-sm">
+                {t(eyebrowKey)}
               </p>
-            </>
-          ) : null}
-        </div>
+            ) : null}
+            {showHeading ? (
+              <>
+                <h1 className="text-2xl font-extrabold tracking-tight text-[#0B3A6E] sm:text-4xl lg:text-5xl">
+                  {customTitle || t(titleKey)}
+                </h1>
+                <p className="max-w-2xl text-sm leading-7 text-slate-600 sm:text-lg sm:leading-8">
+                  {customDescription || t(descriptionKey)}
+                </p>
+              </>
+            ) : null}
+          </div>
+        ) : null}
 
         {children ??
           (resolvedParagraphs.length > 0 ? (

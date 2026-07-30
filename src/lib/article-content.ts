@@ -195,7 +195,14 @@ export function cleanWordHtml(html: string) {
     .replace(/<\/span>/gi, "")
     .replace(/&nbsp;/gi, " ")
     .replace(/\u00a0/g, " ")
-    .replace(/<li\b[^>]*>\s*<p\b[^>]*>([\s\S]*?)<\/p>\s*<\/li>/gi, "<li>$1</li>")
+    .replace(/<li\b[^>]*>([\s\S]*?)<\/li>/gi, (_match, inner: string) => {
+      const content = inner
+        .replace(/<\/?(?:p|div)\b[^>]*>/gi, " ")
+        .replace(/<br\s*\/?>/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      return content ? `<li>${content}</li>` : "";
+    })
     .replace(/<h1\b([^>]*)>/gi, "<h2$1>")
     .replace(/<\/h1>/gi, "</h2>")
     .replace(/<h[4-6]\b([^>]*)>/gi, "<h3$1>")

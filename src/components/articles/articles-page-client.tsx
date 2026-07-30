@@ -22,7 +22,7 @@ function ArticlesContent({
       ? "india"
       : topic === "global"
         ? "global"
-        : "articlesEyebrow";
+        : undefined;
 
   const titleKey: TranslationKey =
     topic === "india"
@@ -43,7 +43,9 @@ function ArticlesContent({
       eyebrowKey={eyebrowKey}
       titleKey={titleKey}
       descriptionKey={descriptionKey}
-      hideTitleAndDescription={!topic && !query}
+      hideTitleAndDescription={
+        !query && topic !== "india" && topic !== "global"
+      }
       customTitle={query ? `Search results for “${query}”` : undefined}
       customDescription={
         query ? "Matching articles from across Shrimp News." : undefined
@@ -52,6 +54,7 @@ function ArticlesContent({
       <ArticleGrid
         topic={topic}
         query={query}
+        headingKey={!topic && !query ? "latestNews" : undefined}
         initialArticles={initialArticles}
       />
     </PageShell>

@@ -1,242 +1,387 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+/* eslint-disable @next/next/no-img-element */
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { TickerItemType } from "@/lib/market-data/client";
 
-type TickerDirection = "up" | "down" | "neutral";
-
-type TickerItemRow = {
+type TickerRow = {
   id: string;
   label: string;
-  price: number;
-  currency: string;
-  unit: string;
-  changePercent: number | null;
-  direction: string;
-  sortOrder: number;
+  value: string;
+  description: string | null;
+  type: TickerItemType;
+  linkUrl: string | null;
+  linkLabel: string | null;
+  imageUrl: string | null;
   isActive: boolean;
+  displayOrder: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  createdAt: string;
   updatedAt: string;
 };
 
 type FormState = {
   id: string | null;
   label: string;
-  price: string;
-  currency: string;
-  unit: string;
-  changePercent: string;
-  direction: TickerDirection;
-  sortOrder: string;
+  value: string;
+  description: string;
+  type: TickerItemType;
+  linkUrl: string;
+  linkLabel: string;
+  imageUrl: string;
   isActive: boolean;
-  updatedAtLocal: string;
+  displayOrder: string;
+  startsAt: string;
+  endsAt: string;
 };
 
-const DEFAULT_UPDATED_LOCAL = "2026-07-15T18:00";
+type ApiBody = {
+  success?: boolean;
+  message?: string;
+  items?: TickerRow[];
+  item?: TickerRow;
+  lastUpdated?: string;
+  url?: string;
+  error?: string;
+};
 
-function toLocalInputValue(iso: string) {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return DEFAULT_UPDATED_LOCAL;
+const TYPE_LABELS: Record<TickerItemType, string> = {
+  market: "Market Price",
+  announcement: "Announcement",
+  update: "Website Update",
+  promotion: "Promotion",
+};
 
-  const pad = (value: number) => String(value).padStart(2, "0");
-  // Display/edit in IST (UTC+5:30) to match the required admin timestamp.
-  const ist = new Date(date.getTime() + 5.5 * 60 * 60 * 1000);
-  return `${ist.getUTCFullYear()}-${pad(ist.getUTCMonth() + 1)}-${pad(ist.getUTCDate())}T${pad(ist.getUTCHours())}:${pad(ist.getUTCMinutes())}`;
-}
-
-function localInputToIso(localValue: string) {
-  // Treat admin datetime-local as IST and convert to UTC ISO.
-  const match = localValue.match(
-    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/,
-  );
-  if (!match) return "";
-  const [, y, m, d, hh, mm] = match;
-  const utcMs = Date.UTC(
-    Number(y),
-    Number(m) - 1,
-    Number(d),
-    Number(hh) - 5,
-    Number(mm) - 30,
-  );
-  return new Date(utcMs).toISOString();
-}
-
-function emptyForm(sortOrder = 0): FormState {
+function emptyForm(displayOrder = 0): FormState {
   return {
     id: null,
     label: "",
-    price: "",
-    currency: "INR",
-    unit: "kg",
-    changePercent: "",
-    direction: "neutral",
-    sortOrder: String(sortOrder),
+    value: "",
+    description: "",
+    type: "market",
+    linkUrl: "",
+    linkLabel: "",
+    imageUrl: "",
     isActive: true,
-    updatedAtLocal: DEFAULT_UPDATED_LOCAL,
+    displayOrder: String(displayOrder),
+    startsAt: "",
+    endsAt: "",
   };
 }
 
-function formFromItem(item: TickerItemRow): FormState {
+function toLocalInput(value: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
+    .toISOString()
+    .slice(0, 16);
+}
+
+function toIso(value: string) {
+  return value ? new Date(value).toISOString() : "";
+}
+
+function fromRow(item: TickerRow): FormState {
   return {
     id: item.id,
     label: item.label,
-    price: String(item.price),
-    currency: item.currency || "INR",
-    unit: item.unit || "kg",
-    changePercent:
-      item.changePercent == null ? "" : String(item.changePercent),
-    direction: (["up", "down", "neutral"].includes(item.direction)
-      ? item.direction
-      : "neutral") as TickerDirection,
-    sortOrder: String(item.sortOrder),
+    value: item.value,
+    description: item.description || "",
+    type: item.type,
+    linkUrl: item.linkUrl || "",
+    linkLabel: item.linkLabel || "",
+    imageUrl: item.imageUrl || "",
     isActive: item.isActive,
-    updatedAtLocal: toLocalInputValue(item.updatedAt),
+    displayOrder: String(item.displayOrder),
+    startsAt: toLocalInput(item.startsAt),
+    endsAt: toLocalInput(item.endsAt),
+  };
+}
+
+function itemPayload(item: FormState | TickerRow) {
+  return {
+    label: item.label,
+    value: item.value,
+    description: item.description || "",
+    type: item.type,
+    linkUrl: item.linkUrl || "",
+    linkLabel: item.linkLabel || "",
+    imageUrl: item.imageUrl || "",
+    isActive: item.isActive,
+    displayOrder: Number(item.displayOrder || 0),
+    startsAt: typeof item.startsAt === "string" && item.startsAt
+      ? item.startsAt.includes("T") && item.startsAt.length === 16
+        ? toIso(item.startsAt)
+        : item.startsAt
+      : "",
+    endsAt: typeof item.endsAt === "string" && item.endsAt
+      ? item.endsAt.includes("T") && item.endsAt.length === 16
+        ? toIso(item.endsAt)
+        : item.endsAt
+      : "",
   };
 }
 
 export function TickerManager() {
-  const [items, setItems] = useState<TickerItemRow[]>([]);
-  const [lastUpdatedLocal, setLastUpdatedLocal] = useState(DEFAULT_UPDATED_LOCAL);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [items, setItems] = useState<TickerRow[]>([]);
   const [form, setForm] = useState<FormState>(() => emptyForm());
+  const [formOpen, setFormOpen] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState("");
+  const [savedLastUpdated, setSavedLastUpdated] = useState("");
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
 
-  const load = useCallback(async () => {
+  const showMessage = useCallback((text: string, error = false) => {
+    setMessage(text);
+    setIsError(error);
+  }, []);
+
+  const load = useCallback(async (clearMessage = true) => {
     setLoading(true);
+    if (clearMessage) {
+      setMessage("");
+      setIsError(false);
+    }
     try {
-      const response = await fetch("/api/admin/ticker", { cache: "no-store" });
-      const body = await response.json();
-      if (!response.ok) {
-        throw new Error(body.error || "Unable to load ticker items.");
+      const response = await fetch("/api/admin/ticker", {
+        cache: "no-store",
+        credentials: "same-origin",
+      });
+      const body = await response.json() as ApiBody;
+      if (!response.ok || !body.success) {
+        throw new Error(body.message || "Unable to load ticker items.");
       }
       setItems(body.items || []);
-      if (typeof body.lastUpdated === "string") {
-        setLastUpdatedLocal(toLocalInputValue(body.lastUpdated));
-      }
+      const localDate = toLocalInput(body.lastUpdated || null);
+      setLastUpdated(localDate);
+      setSavedLastUpdated(body.lastUpdated || "");
     } catch (error) {
-      setIsError(true);
-      setMessage(
-        error instanceof Error ? error.message : "Unable to load ticker items.",
-      );
+      console.error("Ticker manager load failed.", error);
+      showMessage("Ticker items could not be loaded. Please refresh or try again.", true);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showMessage]);
 
   useEffect(() => {
-    void load();
+    const timeout = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(timeout);
   }, [load]);
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
+  function openAdd() {
+    setForm(emptyForm(items.length));
+    setAdvancedOpen(false);
+    setFormOpen(true);
+  }
+
+  function openEdit(item: TickerRow) {
+    setForm(fromRow(item));
+    setAdvancedOpen(Boolean(
+      item.linkUrl || item.linkLabel || item.imageUrl || item.startsAt || item.endsAt,
+    ));
+    setFormOpen(true);
+  }
+
+  function closeForm() {
+    if (busy === "form" || busy === "upload") return;
+    setFormOpen(false);
+    setForm(emptyForm(items.length));
+  }
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy("form");
+    showMessage("");
+    try {
+      const response = await fetch(
+        form.id ? `/api/admin/ticker/${form.id}` : "/api/admin/ticker",
+        {
+          method: form.id ? "PUT" : "POST",
+          credentials: "same-origin",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(itemPayload(form)),
+        },
+      );
+      const body = await response.json() as ApiBody;
+      if (!response.ok || !body.success) {
+        throw new Error(body.message || "Unable to save ticker item.");
+      }
+      setFormOpen(false);
+      showMessage(body.message || "Ticker item saved successfully.");
+      await load(false);
+    } catch (error) {
+      showMessage(
+        error instanceof Error ? error.message : "Unable to save ticker item.",
+        true,
+      );
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function toggleActive(item: TickerRow) {
+    setBusy(`toggle-${item.id}`);
+    showMessage("");
+    try {
+      const response = await fetch(`/api/admin/ticker/${item.id}`, {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ...itemPayload(item), isActive: !item.isActive }),
+      });
+      const body = await response.json() as ApiBody;
+      if (!response.ok || !body.success) {
+        throw new Error(body.message || "Unable to update ticker item.");
+      }
+      showMessage(
+        `“${item.label}” ${item.isActive ? "disabled" : "enabled"} successfully.`,
+      );
+      await load(false);
+    } catch (error) {
+      showMessage(
+        error instanceof Error ? error.message : "Unable to update ticker item.",
+        true,
+      );
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function remove(item: TickerRow) {
+    if (!window.confirm("Are you sure you want to delete this ticker item?")) return;
+    setBusy(`delete-${item.id}`);
+    showMessage("");
+    try {
+      const response = await fetch(`/api/admin/ticker/${item.id}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const body = await response.json() as ApiBody;
+      if (!response.ok || !body.success) {
+        throw new Error(body.message || "Unable to delete ticker item.");
+      }
+      showMessage(body.message || "Ticker item deleted successfully.");
+      await load(false);
+    } catch (error) {
+      showMessage(
+        error instanceof Error ? error.message : "Unable to delete ticker item.",
+        true,
+      );
+    } finally {
+      setBusy("");
+    }
+  }
+
+  function move(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= items.length) return;
+    setItems((current) => {
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next.map((item, displayOrder) => ({ ...item, displayOrder }));
+    });
+  }
+
+  async function saveOrder() {
+    setBusy("order");
+    showMessage("");
+    try {
+      const response = await fetch("/api/admin/ticker/reorder", {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          items: items.map(({ id, displayOrder }) => ({ id, displayOrder })),
+        }),
+      });
+      const body = await response.json() as ApiBody;
+      if (!response.ok || !body.success) {
+        throw new Error(body.message || "Unable to save ticker order.");
+      }
+      showMessage(body.message || "Ticker order saved successfully.");
+      await load(false);
+    } catch (error) {
+      showMessage(
+        error instanceof Error ? error.message : "Unable to save ticker order.",
+        true,
+      );
+    } finally {
+      setBusy("");
+    }
+  }
+
   async function saveLastUpdated() {
-    setBusy(true);
-    setMessage("");
-    setIsError(false);
+    setBusy("meta");
+    showMessage("");
     try {
       const response = await fetch("/api/admin/ticker", {
         method: "POST",
+        credentials: "same-origin",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           action: "updateLastUpdated",
-          lastUpdated: localInputToIso(lastUpdatedLocal),
+          lastUpdated: toIso(lastUpdated),
         }),
       });
-      const body = await response.json();
-      if (!response.ok) {
-        throw new Error(body.error || "Unable to save last updated time.");
+      const body = await response.json() as ApiBody;
+      if (!response.ok || !body.success) {
+        throw new Error(body.message || "Unable to save Ticker Last Updated.");
       }
-      if (typeof body.lastUpdated === "string") {
-        setLastUpdatedLocal(toLocalInputValue(body.lastUpdated));
+      if (body.lastUpdated) {
+        setLastUpdated(toLocalInput(body.lastUpdated));
+        setSavedLastUpdated(body.lastUpdated);
       }
-      setMessage(body.message || "Last updated time saved.");
+      showMessage(body.message || "Ticker Last Updated saved successfully.");
     } catch (error) {
-      setIsError(true);
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Unable to save last updated time.",
+      showMessage(
+        error instanceof Error ? error.message : "Unable to save Ticker Last Updated.",
+        true,
       );
     } finally {
-      setBusy(false);
+      setBusy("");
     }
   }
 
-  async function submitItem(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setBusy(true);
-    setMessage("");
-    setIsError(false);
-
-    const payload = {
-      id: form.id || undefined,
-      label: form.label,
-      price: Number(form.price),
-      currency: form.currency,
-      unit: form.unit,
-      changePercent:
-        form.changePercent.trim() === "" ? null : Number(form.changePercent),
-      direction: form.direction,
-      sortOrder: Number(form.sortOrder || 0),
-      isActive: form.isActive,
-      updatedAt: localInputToIso(form.updatedAtLocal),
-    };
-
+  async function uploadImage(file: File) {
+    setBusy("upload");
+    showMessage("");
     try {
-      const response = await fetch("/api/admin/ticker", {
-        method: form.id ? "PUT" : "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
+      const data = new FormData();
+      data.append("file", file);
+      const response = await fetch("/api/admin/upload-image", {
+        method: "POST",
+        credentials: "same-origin",
+        body: data,
       });
-      const body = await response.json();
-      if (!response.ok) {
-        throw new Error(body.error || "Unable to save ticker item.");
+      const body = await response.json() as ApiBody;
+      if (!response.ok || !body.url) {
+        throw new Error(body.message || body.error || "Image upload failed.");
       }
-      setMessage(body.message || "Ticker item saved.");
-      setForm(emptyForm(items.length + (form.id ? 0 : 1)));
-      await load();
+      setField("imageUrl", body.url);
+      showMessage("Image uploaded successfully.");
     } catch (error) {
-      setIsError(true);
-      setMessage(
-        error instanceof Error ? error.message : "Unable to save ticker item.",
+      showMessage(
+        error instanceof Error ? error.message : "Image upload failed.",
+        true,
       );
     } finally {
-      setBusy(false);
+      setBusy("");
+      if (imageInputRef.current) imageInputRef.current.value = "";
     }
   }
 
-  async function removeItem(id: string) {
-    if (!window.confirm("Delete this ticker item?")) return;
-    setBusy(true);
-    setMessage("");
-    setIsError(false);
-    try {
-      const response = await fetch("/api/admin/ticker", {
-        method: "DELETE",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      const body = await response.json();
-      if (!response.ok) {
-        throw new Error(body.error || "Unable to delete ticker item.");
-      }
-      setMessage(body.message || "Ticker item deleted.");
-      if (form.id === id) setForm(emptyForm(items.length));
-      await load();
-    } catch (error) {
-      setIsError(true);
-      setMessage(
-        error instanceof Error ? error.message : "Unable to delete ticker item.",
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const input =
-    "mt-2 h-11 w-full rounded-xl border border-slate-300 bg-white px-3 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100";
+  const input = "mt-2 h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100";
+  const helper = "mt-1.5 block text-xs font-normal leading-5 text-slate-500";
 
   return (
     <div className="space-y-6">
@@ -246,251 +391,470 @@ export function TickerManager() {
         </p>
         <h1 className="mt-2 text-3xl font-extrabold">Price Ticker Management</h1>
         <p className="mt-2 text-slate-600">
-          Manually update market values shown in the homepage ticker. These are
-          curated values, not live API prices.
+          Manage the labels and values shown in the public market ticker.
         </p>
       </header>
 
       {message ? (
         <div
-          role="status"
-          className={`rounded-xl border px-4 py-3 text-sm ${
+          role={isError ? "alert" : "status"}
+          className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm ${
             isError
               ? "border-red-200 bg-red-50 text-red-700"
               : "border-emerald-200 bg-emerald-50 text-emerald-700"
           }`}
         >
-          {message}
-        </div>
-      ) : null}
-
-      <section className="space-y-4 rounded-2xl border bg-white p-5 shadow-sm">
-        <div>
-          <h2 className="text-lg font-bold">Ticker last updated</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Controls the “Last updated” label on the website ticker.
-          </p>
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <label className="block flex-1 text-sm font-semibold">
-            Date and time
-            <input
-              type="datetime-local"
-              value={lastUpdatedLocal}
-              onChange={(event) => setLastUpdatedLocal(event.target.value)}
-              className={input}
-            />
-          </label>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void saveLastUpdated()}
-            className="h-11 rounded-xl bg-[#0B4F7A] px-5 text-sm font-bold text-white disabled:opacity-50"
-          >
-            Save last updated
-          </button>
-        </div>
-      </section>
-
-      <form
-        onSubmit={submitItem}
-        className="space-y-4 rounded-2xl border bg-white p-5 shadow-sm"
-      >
-        <div>
-          <h2 className="text-lg font-bold">
-            {form.id ? "Edit ticker item" : "Add ticker item"}
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Add or update a market name, value, change, and status.
-          </p>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="block text-sm font-semibold">
-            Item / market name
-            <input
-              required
-              value={form.label}
-              onChange={(event) => setField("label", event.target.value)}
-              className={input}
-              placeholder="Vannamei C40"
-            />
-          </label>
-          <label className="block text-sm font-semibold">
-            Price or value
-            <input
-              required
-              type="number"
-              step="any"
-              value={form.price}
-              onChange={(event) => setField("price", event.target.value)}
-              className={input}
-              placeholder="362"
-            />
-          </label>
-          <label className="block text-sm font-semibold">
-            Currency
-            <input
-              value={form.currency}
-              onChange={(event) => setField("currency", event.target.value)}
-              className={input}
-              placeholder="INR"
-            />
-          </label>
-          <label className="block text-sm font-semibold">
-            Unit
-            <input
-              value={form.unit}
-              onChange={(event) => setField("unit", event.target.value)}
-              className={input}
-              placeholder="kg"
-            />
-          </label>
-          <label className="block text-sm font-semibold">
-            Percentage change
-            <input
-              type="number"
-              step="any"
-              value={form.changePercent}
-              onChange={(event) => setField("changePercent", event.target.value)}
-              className={input}
-              placeholder="2.1"
-            />
-          </label>
-          <label className="block text-sm font-semibold">
-            Increase / decrease status
-            <select
-              value={form.direction}
-              onChange={(event) =>
-                setField("direction", event.target.value as TickerDirection)
-              }
-              className={input}
-            >
-              <option value="up">Increase</option>
-              <option value="down">Decrease</option>
-              <option value="neutral">Neutral</option>
-            </select>
-          </label>
-          <label className="block text-sm font-semibold">
-            Updated date and time
-            <input
-              required
-              type="datetime-local"
-              value={form.updatedAtLocal}
-              onChange={(event) => setField("updatedAtLocal", event.target.value)}
-              className={input}
-            />
-          </label>
-          <label className="block text-sm font-semibold">
-            Sort order
-            <input
-              type="number"
-              value={form.sortOrder}
-              onChange={(event) => setField("sortOrder", event.target.value)}
-              className={input}
-            />
-          </label>
-        </div>
-
-        <label className="flex items-center gap-2 text-sm font-semibold">
-          <input
-            type="checkbox"
-            checked={form.isActive}
-            onChange={(event) => setField("isActive", event.target.checked)}
-          />
-          Show in ticker
-        </label>
-
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="submit"
-            disabled={busy}
-            className="h-11 rounded-xl bg-[#0B4F7A] px-5 text-sm font-bold text-white disabled:opacity-50"
-          >
-            {busy ? "Saving…" : form.id ? "Update item" : "Add item"}
-          </button>
-          {form.id ? (
+          <span>{message}</span>
+          {isError ? (
             <button
               type="button"
-              disabled={busy}
-              onClick={() => setForm(emptyForm(items.length))}
-              className="h-11 rounded-xl border px-5 text-sm font-bold disabled:opacity-50"
+              onClick={() => void load()}
+              className="rounded-lg border border-red-300 bg-white px-3 py-1.5 font-bold"
             >
-              Cancel edit
+              Retry
             </button>
           ) : null}
         </div>
-      </form>
+      ) : null}
 
-      <section className="overflow-x-auto rounded-2xl border bg-white shadow-sm">
-        <table className="min-w-[900px] w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-            <tr>
-              <th className="px-4 py-3">Item</th>
-              <th className="px-4 py-3">Price</th>
-              <th className="px-4 py-3">Change</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Updated</th>
-              <th className="px-4 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {loading ? (
+      <section className="overflow-hidden rounded-2xl border bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b p-5">
+          <div>
+            <h2 className="text-lg font-bold">Current Ticker Items</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Use the arrows to adjust order, then save your changes.
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={Boolean(busy) || items.length === 0}
+            onClick={() => void saveOrder()}
+            className="h-10 rounded-xl border border-slate-300 px-4 text-sm font-bold disabled:opacity-50"
+          >
+            {busy === "order" ? "Saving…" : "Save Order"}
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[850px] text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
               <tr>
-                <td colSpan={6} className="p-10 text-center">
-                  Loading ticker items…
-                </td>
+                {["Label", "Value", "Type", "Status", "Order", "Actions"].map((label) => (
+                  <th key={label} className="px-5 py-3">{label}</th>
+                ))}
               </tr>
-            ) : items.length ? (
-              items.map((item) => (
-                <tr key={item.id}>
-                  <td className="px-4 py-4">
-                    <p className="font-semibold">{item.label}</p>
-                    <p className="text-xs text-slate-500">
-                      {item.currency || "—"} · {item.unit || "—"} · order{" "}
-                      {item.sortOrder}
-                      {!item.isActive ? " · hidden" : ""}
-                    </p>
+            </thead>
+            <tbody className="divide-y">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="p-10 text-center text-slate-500">
+                    Loading ticker items…
                   </td>
-                  <td className="px-4">{item.price}</td>
-                  <td className="px-4">
-                    {item.changePercent == null ? "—" : `${item.changePercent}%`}
+                </tr>
+              ) : items.length ? items.map((item, index) => (
+                <tr key={item.id} className="transition-colors hover:bg-slate-50/70">
+                  <td className="px-5 py-4 font-semibold">{item.label}</td>
+                  <td className="max-w-80 px-5 py-4">{item.value}</td>
+                  <td className="px-5 py-4">{TYPE_LABELS[item.type] || item.type}</td>
+                  <td className="px-5 py-4">
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                      item.isActive
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-slate-100 text-slate-600"
+                    }`}>
+                      {item.isActive ? "Active" : "Inactive"}
+                    </span>
                   </td>
-                  <td className="px-4 capitalize">{item.direction}</td>
-                  <td className="px-4 text-xs text-slate-600">
-                    {toLocalInputValue(item.updatedAt).replace("T", " ")}
-                  </td>
-                  <td className="px-4">
-                    <div className="flex gap-2">
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-1">
                       <button
                         type="button"
-                        onClick={() => setForm(formFromItem(item))}
-                        className="rounded-lg border px-3 py-1.5 text-xs font-bold"
+                        aria-label={`Move ${item.label} up`}
+                        disabled={index === 0 || Boolean(busy)}
+                        onClick={() => move(index, -1)}
+                        className="rounded-lg border px-2 py-1 disabled:opacity-30"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Move ${item.label} down`}
+                        disabled={index === items.length - 1 || Boolean(busy)}
+                        onClick={() => move(index, 1)}
+                        className="rounded-lg border px-2 py-1 disabled:opacity-30"
+                      >
+                        ↓
+                      </button>
+                      <span className="ml-2 tabular-nums">{item.displayOrder}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        disabled={Boolean(busy)}
+                        onClick={() => openEdit(item)}
+                        className="rounded-lg border px-3 py-1.5 text-xs font-bold disabled:opacity-50"
                       >
                         Edit
                       </button>
                       <button
                         type="button"
-                        disabled={busy}
-                        onClick={() => void removeItem(item.id)}
+                        disabled={Boolean(busy)}
+                        onClick={() => void toggleActive(item)}
+                        className="rounded-lg border px-3 py-1.5 text-xs font-bold disabled:opacity-50"
+                      >
+                        {busy === `toggle-${item.id}`
+                          ? "Saving…"
+                          : item.isActive ? "Disable" : "Enable"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={Boolean(busy)}
+                        onClick={() => void remove(item)}
                         className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-bold text-red-600 disabled:opacity-50"
                       >
-                        Delete
+                        {busy === `delete-${item.id}` ? "Deleting…" : "Delete"}
                       </button>
                     </div>
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="p-10 text-center text-slate-500">
-                  No ticker items yet. Add the first market value above.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )) : (
+                <tr>
+                  <td colSpan={6} className="p-10 text-center text-slate-500">
+                    No ticker items yet. Add the first item below.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </section>
+
+      <section className="rounded-2xl border bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold">Add New Ticker Item</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Add a market price, announcement, website update, or promotion.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={openAdd}
+            className="h-11 rounded-xl bg-[#0B4F7A] px-5 text-sm font-bold text-white"
+          >
+            Add Ticker Item
+          </button>
+        </div>
+      </section>
+
+      <aside className="rounded-2xl border border-cyan-100 bg-cyan-50/50 p-5">
+        <h2 className="text-lg font-bold">How ticker items appear</h2>
+        <div className="mt-4 grid gap-4 lg:grid-cols-3">
+          <Example
+            title="Market Price"
+            label="Vannamei C30"
+            value="₹445/kg ▲ 2.1%"
+            description="Andhra Pradesh farm-gate average"
+          />
+          <Example
+            title="Announcement"
+            label="Event Update"
+            value="Shrimp Retail 2026 registrations are open"
+            description="29–30 September 2026, Vijayawada"
+          />
+          <Example
+            title="Promotion"
+            label="Telaqua"
+            value="Smart pond water-quality monitoring"
+            description="Monitor pH and other pond conditions using Telaqua devices."
+            link="Learn More"
+          />
+        </div>
+        <p className="mt-3 text-xs text-slate-500">
+          These are examples only and are not saved automatically.
+        </p>
+      </aside>
+
+      <section className="rounded-2xl border bg-white p-5 shadow-sm">
+        <h2 className="text-lg font-bold">Ticker Last Updated</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          This date appears beside the public market ticker to show when the prices
+          or updates were last reviewed.
+        </p>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+          <label className="block flex-1 text-sm font-semibold">
+            Date and time
+            <input
+              type="datetime-local"
+              value={lastUpdated}
+              onChange={(event) => setLastUpdated(event.target.value)}
+              className={input}
+            />
+          </label>
+          <button
+            type="button"
+            disabled={Boolean(busy)}
+            onClick={() => setLastUpdated(toLocalInput(new Date().toISOString()))}
+            className="h-11 rounded-xl border border-slate-300 px-4 text-sm font-bold disabled:opacity-50"
+          >
+            Use Current Date &amp; Time
+          </button>
+          <button
+            type="button"
+            disabled={Boolean(busy) || !lastUpdated}
+            onClick={() => void saveLastUpdated()}
+            className="h-11 rounded-xl bg-[#0B4F7A] px-5 text-sm font-bold text-white disabled:opacity-50"
+          >
+            {busy === "meta" ? "Saving…" : "Save Last Updated"}
+          </button>
+        </div>
+        <p className="mt-3 text-sm text-slate-500">
+          Saved value:{" "}
+          <span className="font-semibold text-slate-700">
+            {savedLastUpdated
+              ? new Intl.DateTimeFormat(undefined, {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                }).format(new Date(savedLastUpdated))
+              : "Not set"}
+          </span>
+        </p>
+      </section>
+
+      {formOpen ? (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/55 p-4"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target) closeForm();
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ticker-form-title"
+            className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl"
+          >
+            <form onSubmit={submit} className="space-y-5 p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 id="ticker-form-title" className="text-xl font-bold">
+                    {form.id ? "Edit Ticker Item" : "Add Ticker Item"}
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Enter the wording exactly as it should appear in the ticker.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeForm}
+                  className="rounded-lg border px-3 py-1.5 text-sm font-bold"
+                  aria-label="Close ticker item form"
+                >
+                  Close
+                </button>
+              </div>
+
+              <label className="block text-sm font-semibold">
+                Label *
+                <input
+                  required
+                  value={form.label}
+                  onChange={(event) => setField("label", event.target.value)}
+                  className={input}
+                  placeholder="Vannamei C30"
+                />
+                <span className={helper}>The name shown before the ticker value. Example: Vannamei C30</span>
+              </label>
+
+              <label className="block text-sm font-semibold">
+                Value *
+                <input
+                  required
+                  value={form.value}
+                  onChange={(event) => setField("value", event.target.value)}
+                  className={input}
+                  placeholder="₹445/kg ▲ 2.1%"
+                />
+                <span className={helper}>The price, update or promotional message shown in the ticker. Example: ₹445/kg ▲ 2.1%</span>
+              </label>
+
+              <label className="block text-sm font-semibold">
+                Type
+                <select
+                  value={form.type}
+                  onChange={(event) => setField("type", event.target.value as TickerItemType)}
+                  className={input}
+                >
+                  <option value="market">Market Price</option>
+                  <option value="announcement">Announcement</option>
+                  <option value="update">Website Update</option>
+                  <option value="promotion">Promotion</option>
+                </select>
+                <span className={helper}>Choose what kind of information this item contains.</span>
+              </label>
+
+              <label className="block text-sm font-semibold">
+                Description
+                <textarea
+                  value={form.description}
+                  onChange={(event) => setField("description", event.target.value)}
+                  className={`${input} min-h-24 py-3`}
+                />
+                <span className={helper}>Optional extra information shown when the user clicks or hovers over the item.</span>
+              </label>
+
+              <label className="flex items-center gap-3 rounded-xl border bg-slate-50 p-4 text-sm font-semibold">
+                <input
+                  type="checkbox"
+                  checked={form.isActive}
+                  onChange={(event) => setField("isActive", event.target.checked)}
+                  className="h-4 w-4"
+                />
+                Active — show this item publicly when its schedule allows
+              </label>
+
+              <details
+                open={advancedOpen}
+                onToggle={(event) => setAdvancedOpen(event.currentTarget.open)}
+                className="rounded-xl border"
+              >
+                <summary className="cursor-pointer px-4 py-3 text-sm font-bold">
+                  Advanced Options
+                </summary>
+                <div className="grid gap-4 border-t p-4 sm:grid-cols-2">
+                  <label className="text-sm font-semibold">
+                    Link URL
+                    <input
+                      type="url"
+                      value={form.linkUrl}
+                      onChange={(event) => setField("linkUrl", event.target.value)}
+                      className={input}
+                      placeholder="https://…"
+                    />
+                  </label>
+                  <label className="text-sm font-semibold">
+                    Link label
+                    <input
+                      value={form.linkLabel}
+                      onChange={(event) => setField("linkLabel", event.target.value)}
+                      className={input}
+                      placeholder="Learn More"
+                    />
+                  </label>
+                  <label className="text-sm font-semibold">
+                    Start date
+                    <input
+                      type="datetime-local"
+                      value={form.startsAt}
+                      onChange={(event) => setField("startsAt", event.target.value)}
+                      className={input}
+                    />
+                  </label>
+                  <label className="text-sm font-semibold">
+                    End date
+                    <input
+                      type="datetime-local"
+                      min={form.startsAt || undefined}
+                      value={form.endsAt}
+                      onChange={(event) => setField("endsAt", event.target.value)}
+                      className={input}
+                    />
+                  </label>
+                  <label className="text-sm font-semibold">
+                    Display order
+                    <input
+                      type="number"
+                      value={form.displayOrder}
+                      onChange={(event) => setField("displayOrder", event.target.value)}
+                      className={input}
+                    />
+                  </label>
+                  <div className="space-y-3 text-sm font-semibold">
+                    Optional image
+                    {form.imageUrl ? (
+                      <img src={form.imageUrl} alt="" className="mt-2 h-24 w-36 rounded-xl object-cover" />
+                    ) : null}
+                    <div className="flex flex-wrap gap-2">
+                      <label className="inline-flex h-10 cursor-pointer items-center rounded-xl border bg-white px-3 text-xs font-bold">
+                        {busy === "upload" ? "Uploading…" : "Upload image"}
+                        <input
+                          ref={imageInputRef}
+                          disabled={busy === "upload"}
+                          type="file"
+                          accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                          className="sr-only"
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (file) void uploadImage(file);
+                          }}
+                        />
+                      </label>
+                      {form.imageUrl ? (
+                        <button
+                          type="button"
+                          onClick={() => setField("imageUrl", "")}
+                          className="h-10 rounded-xl border border-red-200 px-3 text-xs font-bold text-red-600"
+                        >
+                          Remove image
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <div className="flex flex-wrap justify-end gap-3 border-t pt-5">
+                <button
+                  type="button"
+                  disabled={Boolean(busy)}
+                  onClick={closeForm}
+                  className="h-11 rounded-xl border px-5 text-sm font-bold disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={Boolean(busy)}
+                  className="h-11 rounded-xl bg-[#0B4F7A] px-5 text-sm font-bold text-white disabled:opacity-50"
+                >
+                  {busy === "form"
+                    ? "Saving…"
+                    : form.id ? "Save Changes" : "Add Ticker Item"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function Example({
+  title,
+  label,
+  value,
+  description,
+  link,
+}: {
+  title: string;
+  label: string;
+  value: string;
+  description: string;
+  link?: string;
+}) {
+  return (
+    <div className="rounded-xl border bg-white p-4 text-sm shadow-sm">
+      <p className="font-bold text-[#0B4F7A]">{title}</p>
+      <dl className="mt-3 space-y-2 text-slate-600">
+        <div><dt className="font-semibold text-slate-800">Label</dt><dd>{label}</dd></div>
+        <div><dt className="font-semibold text-slate-800">Value</dt><dd>{value}</dd></div>
+        <div><dt className="font-semibold text-slate-800">Description</dt><dd>{description}</dd></div>
+        {link ? <div><dt className="font-semibold text-slate-800">Link</dt><dd>{link}</dd></div> : null}
+      </dl>
     </div>
   );
 }

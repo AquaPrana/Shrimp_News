@@ -35,11 +35,13 @@ function safeDisplayLabel(value: unknown, translationKey?: string) {
 export function ArticleGrid({
   topic,
   query,
+  headingKey,
   articles,
   initialArticles = [],
 }: {
   topic?: string | null;
   query?: string | null;
+  headingKey?: TranslationKey;
   articles?: PublicArticle[];
   initialArticles?: PublicArticle[];
 }) {
@@ -85,8 +87,9 @@ export function ArticleGrid({
   const topicTranslationKey = topic
     ? TOPIC_TRANSLATION_KEYS[topic]
     : undefined;
-  const heading =
-    topic && REGION_TOPICS.has(topic)
+  const heading = headingKey
+    ? safeDisplayLabel(t(headingKey), headingKey)
+    : topic && REGION_TOPICS.has(topic)
       ? ""
       : safeDisplayLabel(
           topicTranslationKey ? t(topicTranslationKey as TranslationKey) : "",

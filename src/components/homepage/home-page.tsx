@@ -1,6 +1,7 @@
 "use client";
 
 import { EditorialHero } from "@/components/homepage/editorial-hero";
+import { EventsGrid } from "@/components/homepage/events-grid";
 import { FeaturedArticlesCarousel } from "@/components/homepage/featured-articles-carousel";
 import { LatestArticlesGrid } from "@/components/homepage/latest-articles-grid";
 import { MarketTicker } from "@/components/homepage/market-ticker";
@@ -11,11 +12,15 @@ import { useLanguage } from "@/context/language-context";
 import { useArticles } from "@/hooks/use-articles";
 import { useLocalizedArticles } from "@/hooks/use-localized-articles";
 import type { PublicArticle } from "@/lib/article-types";
+import type { PublicEvent } from "@/lib/event-types";
+import { selectHomepageEvents } from "@/lib/events-selection";
 
 export function HomePage({
   initialArticles = [],
+  initialEvents = [],
 }: {
   initialArticles?: PublicArticle[];
+  initialEvents?: PublicEvent[];
 }) {
   const budgetToPondSlug = "from-budget-to-pond";
   const { t } = useLanguage();
@@ -45,6 +50,7 @@ export function HomePage({
       ]
     : nonHeroArticles;
   const homeArticles = homeArticleCandidates.slice(0, 12);
+  const homepageEvents = selectHomepageEvents(initialEvents);
 
   if (!featuredArticle) {
     return (
@@ -86,6 +92,10 @@ export function HomePage({
                 heading={t("latestArticles")}
               />
               <ShrimpFarmingGrid articles={articles} />
+              <EventsGrid
+                lead={homepageEvents.lead}
+                supporting={homepageEvents.supporting}
+              />
             </div>
           </div>
 
