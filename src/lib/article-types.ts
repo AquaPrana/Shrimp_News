@@ -171,6 +171,9 @@ export type AdminArticle = {
 export type AdminSubscriber = {
   id: string;
   email: string;
+  isActive: boolean;
+  subscribedAt: string;
+  updatedAt: string;
   createdAt: string;
 };
 

@@ -2,8 +2,12 @@
 
 import { FormEvent, useState } from "react";
 import { useLanguage } from "@/context/language-context";
+import { parseNewsletterEmail } from "@/lib/newsletter/email-validation";
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const INVALID_EMAIL_MESSAGE = "Please enter a valid email address.";
+const GENERAL_FAILURE_MESSAGE = "Unable to subscribe right now. Please try again.";
+const SUCCESS_MESSAGE = "Thank you for subscribing to Shrimp.News.";
+const ALREADY_SUBSCRIBED_MESSAGE = "You're already subscribed to Shrimp.News.";
 
 export function NewsletterSection() {
   const { t } = useLanguage();
@@ -11,14 +15,15 @@ export function NewsletterSection() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const emailInvalid = error === INVALID_EMAIL_MESSAGE;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (busy) return;
 
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail || !EMAIL_PATTERN.test(trimmedEmail)) {
-      setError(t("newsletterInvalidError"));
+    const parsed = parseNewsletterEmail(email);
+    if (!parsed.ok) {
+      setError(INVALID_EMAIL_MESSAGE);
       setMessage("");
       return;
     }
@@ -27,37 +32,36 @@ export function NewsletterSection() {
     setMessage("");
     setBusy(true);
     try {
-      const response = await fetch("/api/subscribers", {
+      const response = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email: trimmedEmail }),
+        body: JSON.stringify({ email: parsed.email }),
       });
-      await response.json().catch(() => null);
+      const body = (await response.json().catch(() => null)) as {
+        success?: boolean;
+        code?: string;
+        message?: string;
+      } | null;
 
-      if (response.status === 201) {
-        setMessage(t("newsletterSuccessPrefix"));
+      if (response.ok && body?.success !== false) {
+        const code = (body?.code || "").toUpperCase();
+        if (code === "ALREADY_SUBSCRIBED") {
+          setMessage(body?.message || ALREADY_SUBSCRIBED_MESSAGE);
+        } else {
+          setMessage(body?.message || SUCCESS_MESSAGE);
+        }
         setEmail("");
         return;
       }
 
-      if (response.status === 409) {
-        setError(t("newsletterAlreadySubscribed"));
+      if (body?.code === "INVALID_EMAIL") {
+        setError(INVALID_EMAIL_MESSAGE);
         return;
       }
 
-      if (response.status === 400) {
-        setError(t("newsletterInvalidError"));
-        return;
-      }
-
-      if (response.status === 429) {
-        setError(t("newsletterRateLimitError"));
-        return;
-      }
-
-      setError(t("newsletterSubmitError"));
+      setError(body?.message || GENERAL_FAILURE_MESSAGE);
     } catch {
-      setError(t("newsletterSubmitError"));
+      setError(GENERAL_FAILURE_MESSAGE);
     } finally {
       setBusy(false);
     }
@@ -91,34 +95,57 @@ export function NewsletterSection() {
                 <p className="text-sm font-medium text-slate-600">
                   {t("newsletterMondayNote")}
                 </p>
-                <label htmlFor="newsletter-email" className="sr-only">
-                  {t("newsletterEmailLabel")}
-                </label>
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <input
-                    id="newsletter-email"
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder={t("newsletterEmailPlaceholder")}
-                    disabled={busy}
-                    className="h-12 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-800 outline-none placeholder:text-slate-400 transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 disabled:opacity-60"
-                  />
-                  <button
-                    type="submit"
-                    disabled={busy}
-                    className="h-12 rounded-2xl bg-[#FF4F2E] px-6 text-sm font-bold text-white transition hover:bg-[#FF6548] hover:shadow-[0_8px_24px_rgba(255,79,46,0.28)] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {busy ? t("newsletterSubscribing") : t("newsletterSubscribe")}
-                  </button>
+                <div>
+                  {error ? (
+                    <p
+                      id="newsletter-email-error"
+                      role="alert"
+                      className="mb-1 text-[14px] font-medium text-red-600"
+                    >
+                      {error}
+                    </p>
+                  ) : null}
+                  <label htmlFor="newsletter-email" className="sr-only">
+                    {t("newsletterEmailLabel")}
+                  </label>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <input
+                      id="newsletter-email"
+                      type="email"
+                      value={email}
+                      onChange={(event) => {
+                        const nextEmail = event.target.value;
+                        setEmail(nextEmail);
+                        if (
+                          emailInvalid &&
+                          parseNewsletterEmail(nextEmail).ok
+                        ) {
+                          setError("");
+                        }
+                      }}
+                      placeholder={t("newsletterEmailPlaceholder")}
+                      disabled={busy}
+                      aria-invalid={emailInvalid}
+                      aria-describedby={
+                        error ? "newsletter-email-error" : undefined
+                      }
+                      className={`h-12 flex-1 rounded-2xl border bg-white px-4 text-sm text-slate-800 outline-none placeholder:text-slate-400 transition focus:ring-2 disabled:opacity-60 ${
+                        emailInvalid
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                          : "border-slate-200 focus:border-cyan-400 focus:ring-cyan-400/20"
+                      }`}
+                    />
+                    <button
+                      type="submit"
+                      disabled={busy}
+                      className="h-12 rounded-2xl bg-[#FF4F2E] px-6 text-sm font-bold text-white transition hover:bg-[#FF6548] hover:shadow-[0_8px_24px_rgba(255,79,46,0.28)] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {busy ? "Subscribing..." : "Subscribe free"}
+                    </button>
+                  </div>
                 </div>
-                {error ? (
-                  <p role="alert" className="text-sm text-orange-600">
-                    {error}
-                  </p>
-                ) : null}
                 {message ? (
-                  <p role="status" className="text-sm text-emerald-600">
+                  <p role="status" className="text-sm font-medium text-green-700">
                     {message}
                   </p>
                 ) : null}

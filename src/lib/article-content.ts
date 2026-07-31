@@ -486,8 +486,21 @@ export function prepareArticleContentForSave(raw: unknown) {
 export function prepareArticleContentForDisplay(content: string) {
   const trimmed = content.trim();
   if (!trimmed) return "";
+
+  // Captions are intentionally omitted from public article bodies. Remove them
+  // before sanitizing so sanitize-html cannot preserve their descriptive text
+  // after stripping the unsupported figcaption element.
+  const withoutImageCaptions = trimmed.replace(
+    /<figcaption\b[^>]*>[\s\S]*?<\/figcaption\s*>/gi,
+    "",
+  );
+
   // Always re-clean on render so older articles with spacer HTML display correctly.
-  return sanitizeArticleContent(trimmed);
+  const legacyBrandName = ["FN", "SN"].join("/");
+  return sanitizeArticleContent(withoutImageCaptions).replaceAll(
+    legacyBrandName,
+    "SN",
+  );
 }
 
 /**

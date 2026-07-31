@@ -14,6 +14,7 @@ import { useLocalizedArticles } from "@/hooks/use-localized-articles";
 import type { PublicArticle } from "@/lib/article-types";
 import type { PublicEvent } from "@/lib/event-types";
 import { selectHomepageEvents } from "@/lib/events-selection";
+import { selectFeaturedHomepageArticles } from "@/lib/featured-homepage-articles";
 
 export function HomePage({
   initialArticles = [],
@@ -30,9 +31,9 @@ export function HomePage({
   );
   const articles = useLocalizedArticles(fetchedArticles);
   const heroArticles = articles.slice(0, 4);
-  const featuredSlugs = heroArticles.map((article) => article.slug);
-  const featuredSlugSet = new Set(featuredSlugs);
+  const featuredSlugSet = new Set(heroArticles.map((article) => article.slug));
   const featuredArticle = articles[0];
+  const featuredCarouselArticles = selectFeaturedHomepageArticles(articles);
 
   const budgetToPondArticle = articles.find(
     (article) => article.slug === budgetToPondSlug,
@@ -80,10 +81,7 @@ export function HomePage({
             <EditorialHero articles={articles} />
 
             <div className="mt-8">
-              <FeaturedArticlesCarousel
-                articles={articles}
-                excludeSlugs={featuredSlugs}
-              />
+              <FeaturedArticlesCarousel articles={featuredCarouselArticles} />
             </div>
 
             <div className="space-y-14 bg-[#f8fafc] pb-2 pt-10">

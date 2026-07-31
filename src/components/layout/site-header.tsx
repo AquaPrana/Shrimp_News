@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { DesktopNav } from "@/components/layout/desktop-nav";
 import { HeaderSearch } from "@/components/layout/header-search";
 import { MobileNav } from "@/components/layout/mobile-nav";
@@ -13,6 +13,28 @@ export function SiteHeader() {
 
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+
+    const updateHeaderHeight = () => {
+      document.documentElement.style.setProperty(
+        "--header-height",
+        `${header.getBoundingClientRect().height}px`,
+      );
+    };
+
+    updateHeaderHeight();
+    const observer = new ResizeObserver(updateHeaderHeight);
+    observer.observe(header);
+
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty("--header-height");
+    };
+  }, []);
 
   useEffect(() => {
     function handleScroll() {
@@ -29,6 +51,7 @@ export function SiteHeader() {
 
   return (
     <header
+      ref={headerRef}
       className={`sticky top-0 z-[60] w-full overflow-visible transition-all duration-300 ${
         scrolled
           ? "border-b border-[#E5E7EB] bg-white/95 shadow-[0_6px_24px_rgba(15,23,42,0.09)] backdrop-blur-xl"

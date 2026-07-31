@@ -75,19 +75,14 @@ function FeaturedCarouselCard({ article }: { article: PublicArticle }) {
 
 export function FeaturedArticlesCarousel({
   articles,
-  excludeSlugs = [],
 }: {
   articles: PublicArticle[];
-  excludeSlugs?: string[];
 }) {
   const { t } = useLanguage();
   const visible = useVisibleCount();
-  const excluded = new Set(excludeSlugs);
 
-  const items = articles
-    .filter((article) => isValidFeaturedArticle(article))
-    .filter((article) => !excluded.has(article.slug))
-    .slice(0, 9);
+  // Preserve the caller-provided order exactly (curated Featured list).
+  const items = articles.filter((article) => isValidFeaturedArticle(article));
 
   const count = items.length;
   const canSlide = count > visible;

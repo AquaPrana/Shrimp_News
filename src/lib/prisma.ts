@@ -66,8 +66,14 @@ function redact(value: string | undefined) {
     process.env.ADMIN_PASSWORD_HASH,
     process.env.ADMIN_SESSION_SECRET,
     process.env.AUTH_SECRET,
+    process.env.RESEND_API_KEY,
+    process.env.CRON_SECRET,
   ].filter((secret): secret is string => Boolean(secret));
-  return secrets.reduce((text, secret) => text.replaceAll(secret, "[REDACTED]"), value);
+  const withoutSecrets = secrets.reduce(
+    (text, secret) => text.replaceAll(secret, "[REDACTED]"),
+    value,
+  );
+  return withoutSecrets.replace(/\b[a-f0-9]{64}\b/gi, "[REDACTED_TOKEN]");
 }
 
 export function logDatabaseError(context: string, error: unknown) {
@@ -85,4 +91,27 @@ export function logDatabaseError(context: string, error: unknown) {
 export function prismaErrorCode(error: unknown) {
   if (!error || typeof error !== "object" || !("code" in error)) return undefined;
   return typeof error.code === "string" ? error.code : undefined;
+}
+
+export function logRouteError(
+  route: string,
+  error: unknown,
+  httpStatus: number,
+) {
+  const value =
+    error && typeof error === "object"
+      ? (error as { name?: unknown; message?: unknown; code?: unknown })
+      : {};
+  console.error("[api:route-error]", {
+    route,
+    httpStatus,
+    prismaCode:
+      typeof value.code === "string" ? value.code : prismaErrorCode(error),
+    name: redact(
+      typeof value.name === "string" ? value.name : "UnknownError",
+    ),
+    message: redact(
+      typeof value.message === "string" ? value.message : String(error),
+    ),
+  });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage, type Language } from "@/context/language-context";
 import { useMarketPrices } from "@/hooks/use-market-prices";
 import type { MarketPriceItem } from "@/lib/market-data/client";
@@ -84,6 +84,7 @@ export function MarketTicker() {
   const copy = marketTickerCopy[language];
   const { data, isLoading, error, lastUpdated, refetch } = useMarketPrices();
   const [selected, setSelected] = useState<MarketPriceItem | null>(null);
+  const tickerRef = useRef<HTMLElement>(null);
   const tickerItems = useMemo(() => {
     const seen = new Set<string>();
     return data.filter((item) => {
@@ -94,9 +95,30 @@ export function MarketTicker() {
   }, [data]);
   const loadingItems = useMemo(() => Array.from({ length: 8 }), []);
 
+  useEffect(() => {
+    const ticker = tickerRef.current;
+    if (!ticker) return;
+
+    const updateTickerHeight = () => {
+      document.documentElement.style.setProperty(
+        "--ticker-height",
+        `${ticker.getBoundingClientRect().height}px`,
+      );
+    };
+
+    updateTickerHeight();
+    const observer = new ResizeObserver(updateTickerHeight);
+    observer.observe(ticker);
+
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty("--ticker-height");
+    };
+  }, []);
+
   return (
     <>
-      <section className="relative z-20 border-b border-[#e85a28] bg-[#ff6a3d]" aria-label={copy.tickerLabel}>
+      <section ref={tickerRef} className="relative z-20 border-b border-[#e85a28] bg-[#ff6a3d]" aria-label={copy.tickerLabel}>
         <div className="flex items-stretch">
           <div className="flex shrink-0 items-center border-r border-white/30 bg-[#e85a28] px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-white sm:px-4 sm:text-[10px]">
             <span className="max-w-[9.5rem] leading-tight sm:max-w-none">

@@ -11,7 +11,7 @@ export function BudgetToPondFeature({ className = "" }: BudgetToPondFeatureProps
   <div className="wrap-wide">
     <h1>From Budget to Pond</h1>
     <div className="subhead">Can India track its 2026 aquaculture promises all the way to the farmer?</div>
-    <p className="standfirst">India's Union Budget 2026–27 committed a record ₹2,500 crore to the Pradhan Mantri Matsya Sampada Yojana, 500 reservoirs and Amrit Sarovars, and support for around 200 fisheries start-ups. FN/SN tested every major Union-level initiative against a five-stage public-delivery standard. This is what the public record shows — and where it stops.</p>
+    <p className="standfirst">India's Union Budget 2026–27 committed a record ₹2,500 crore to the Pradhan Mantri Matsya Sampada Yojana, 500 reservoirs and Amrit Sarovars, and support for around 200 fisheries start-ups. SN tested every major Union-level initiative against a five-stage public-delivery standard. This is what the public record shows — and where it stops.</p>
 
     
     <svg className="hero-svg" viewBox="0 0 1080 300" role="img" aria-label="Five-stage public-delivery chain: announcement and sanction documented, fund release partially documented at aggregate level, operational delivery and measured outcome not located at project level.">
@@ -74,12 +74,12 @@ export function BudgetToPondFeature({ className = "" }: BudgetToPondFeatureProps
 
 <p>The sector those promises land in has grown at remarkable speed. Inland fisheries and aquaculture production rose from 61.36 lakh tonnes in 2013–14 to 151.60 lakh tonnes in 2024–25 <span className="evi g">Government-reported</span>. The announcements are clear. But public accountability begins <em>after</em> the announcement: which projects were sanctioned, where, with what money released, what is operating today — and after the infrastructure, the meetings and the platforms, did the farmer actually earn more?</p>
 
-<p>FN/SN examined whether the major Union-level aquaculture initiatives of 2026 can be traced through a complete public-delivery chain using publicly available, independently reviewable records. This is an accountability and transparency analysis. It is not an allegation of corruption or non-performance.</p>
+<p>SN examined whether the major Union-level aquaculture initiatives of 2026 can be traced through a complete public-delivery chain using publicly available, independently reviewable records. This is an accountability and transparency analysis. It is not an allegation of corruption or non-performance.</p>
 
 <span className="h2-eyebrow">Method</span>
 <h2>The five-stage public-delivery test</h2>
 
-<p>For this analysis, FN/SN applied a five-stage test — an FN/SN editorial framework, not a government standard. The test does not ask whether every 2026–27 project should already be complete; the financial year began only in April. It asks whether the public record shows a visible trail, and whether that trail can eventually lead to a measurable outcome.</p>
+<p>For this analysis, SN applied a five-stage test — an SN editorial framework, not a government standard. The test does not ask whether every 2026–27 project should already be complete; the financial year began only in April. It asks whether the public record shows a visible trail, and whether that trail can eventually lead to a measurable outcome.</p>
 
 <figure>
   <div className="panel">
@@ -116,7 +116,6 @@ export function BudgetToPondFeature({ className = "" }: BudgetToPondFeatureProps
       </g>
     </svg>
   </div>
-  <figcaption>FIG. 1 — The FN/SN five-stage public-delivery test. The words announced, allocated, approved, sanctioned, released, completed, inaugurated, operational and profitable are not interchangeable. Every government figure in this analysis carries its reporting date and classification.</figcaption>
 </figure>
 
 <p>The fifth stage is the one that matters most to the person at the pond. Revenue is not income. Production is not profit. A farmer can harvest more and still lose money if feed, power, seed, finance and mortality costs rise faster than the selling price: <strong>sales revenue − all costs − losses = net farm income</strong>.</p>
@@ -146,7 +145,6 @@ export function BudgetToPondFeature({ className = "" }: BudgetToPondFeatureProps
       <text x="40" y="165" fontFamily="'Space Grotesk',sans-serif" fontSize="13.5" fill="#9FB9B4">Plus a harvest cycle before any income outcome can honestly be measured.</text>
     </svg>
   </div>
-  <figcaption>FIG. 2 — From Budget line to farm outcome. A budget allocation establishes policy priority; it does not establish project-level expenditure.</figcaption>
 </figure>
 
 <p>The immediately preceding year shows why the distinction matters. Reported analysis of Budget documents indicates that the Department of Fisheries' 2025–26 Budget Estimate of ₹2,703.67 crore was revised down to ₹1,732.95 crore at the Revised Estimate stage, and PMMSY's ₹2,465 crore was revised to ₹1,500 crore <span className="evi g">Reported claim · Budget documents via The Wire</span>. Allocation is not release. Release is not spending. Spending is not outcome.</p>
@@ -174,7 +172,6 @@ export function BudgetToPondFeature({ className = "" }: BudgetToPondFeatureProps
       </g>
     </svg>
   </div>
-  <figcaption>FIG. 3 — Money released to a state treasury is not money converted into working assets. Utilisation lags release in the government's own reporting.</figcaption>
 </figure>
 
 <span className="h2-eyebrow">New evidence</span>
@@ -274,24 +271,23 @@ export function BudgetToPondFeature({ className = "" }: BudgetToPondFeatureProps
     <span><span className="dot n"></span> Not located in public records</span>
   </div>
   </div>
-  <figcaption>FIG. 4 — The FN/SN five-stage scoreboard, publicly verifiable as of 23 July 2026. *The Hyderabad facility is commissioned but privately financed; no Union-scheme funding link was located, so it does not constitute a public-scheme delivery trail. "Not located" means FN/SN did not find the record publicly — not that the activity did not occur.</figcaption>
 </figure>
 
 <h3>Anantnag: a sanction that shows Stage 2 is possible</h3>
 <p>On 14 March 2026, the Union Fisheries Minister announced the sanction of a ₹100 crore Integrated Aqua Park in District Anantnag, Jammu & Kashmir, alongside the release of Model Guidelines for Cold-Water Fisheries <span className="evi v">PIB · 14 Mar 2026</span>. That is a genuine Stage 2 record: a named location, an approved cost, within weeks of the Budget. It also demonstrates that early-stage timing does not prevent project-level disclosure. What the public record does not yet show: a detailed project report, a tender, a dated fund release, an implementing-agency execution record or a commissioning schedule.</p>
 
 <h3>Hyderabad: a technical milestone is not a scheme trail</h3>
-<p>On 5 January 2026, the Union Minister inaugurated an integrated RAS rainbow-trout facility in Ranga Reddy district — reported as India's first commercial-scale tropical trout farm, built by the start-up Smart Green Aquaculture at approximately USD 6 million (₹54 crore), with 44 grow-out tanks and a hatchery capacity of 1.2 million fingerlings a year <span className="evi g">Company-reported · Jan 2026</span>. It is a real engineering milestone. But FN/SN did not locate documentary evidence that Union scheme funding financed the facility, and no post-inauguration production or evaluation data has been published. A ministerial inauguration of a private facility is not, by itself, a public-scheme delivery trail — and this analysis makes no adverse suggestion about the company.</p>
+<p>On 5 January 2026, the Union Minister inaugurated an integrated RAS rainbow-trout facility in Ranga Reddy district — reported as India's first commercial-scale tropical trout farm, built by the start-up Smart Green Aquaculture at approximately USD 6 million (₹54 crore), with 44 grow-out tanks and a hatchery capacity of 1.2 million fingerlings a year <span className="evi g">Company-reported · Jan 2026</span>. It is a real engineering milestone. But SN did not locate documentary evidence that Union scheme funding financed the facility, and no post-inauguration production or evaluation data has been published. A ministerial inauguration of a private facility is not, by itself, a public-scheme delivery trail — and this analysis makes no adverse suggestion about the company.</p>
 
 <h3>Bhimavaram and Sirsa: clusters between notification and proof</h3>
-<p>The Bhimavaram Brackishwater Aquaculture Cluster — spanning about 53,861 hectares with over 42,000 ponds and government-reported productivity of around 8 tonnes per hectare — was notified under PMMSY on 11 March 2025 and reviewed by the Union Fisheries Secretary on 16 April 2026 <span className="evi v">PIB · 16 Apr 2026</span>. The review itself recorded farmer concerns: weak market linkages, limited credit access, and processing and export infrastructure gaps. What FN/SN could not locate: a cluster-specific budget, dated releases, completed cluster assets, or measured cluster-attributable change in production cost or farmer income since notification.</p>
+<p>The Bhimavaram Brackishwater Aquaculture Cluster — spanning about 53,861 hectares with over 42,000 ponds and government-reported productivity of around 8 tonnes per hectare — was notified under PMMSY on 11 March 2025 and reviewed by the Union Fisheries Secretary on 16 April 2026 <span className="evi v">PIB · 16 Apr 2026</span>. The review itself recorded farmer concerns: weak market linkages, limited credit access, and processing and export infrastructure gaps. What SN could not locate: a cluster-specific budget, dated releases, completed cluster assets, or measured cluster-attributable change in production cost or farmer income since notification.</p>
 <p>Sirsa's saline-water cluster, reviewed on 8 April 2026, comes with stronger state-level numbers — Haryana has attracted ₹760.88 crore under PMMSY (central share ₹262.17 crore), 456 RAS and biofloc units are reported established, and a ₹110 crore Integrated Aquapark has been announced for the district <span className="evi v">PIB · 8 Apr 2026</span>. The review also cited one named farm producing about 28 tonnes a year with a stated turnover of about ₹90 lakh. That single farm is the closest thing to a Stage 4–5 illustration in the entire record reviewed — and it is an official anecdote from a site visit, not a publicly reviewable trail with a sanction order, a dated release and an independently verified outcome.</p>
 
 <h3>The cage count that does not reconcile</h3>
-<p>Official statements record <strong>52,058</strong> reservoir cages approved under PMMSY as of 5 March 2026 <span className="evi v">PIB PressNote · Mar 2026</span>, while a separate official release refers to the establishment of <strong>62,836</strong> cage units, alongside 545 hectares of pens and integrated development of 23 reservoirs at ₹2,171.37 crore <span className="evi v">PIB release</span>. The two figures most plausibly reflect different dates or definitions — but no published document reconciles them, and neither is an audited count of cages currently stocked and operating. <em>FN/SN analysis:</em> the gap between the two numbers is less important than the absence of a public register that would make such a gap impossible.</p>
+<p>Official statements record <strong>52,058</strong> reservoir cages approved under PMMSY as of 5 March 2026 <span className="evi v">PIB PressNote · Mar 2026</span>, while a separate official release refers to the establishment of <strong>62,836</strong> cage units, alongside 545 hectares of pens and integrated development of 23 reservoirs at ₹2,171.37 crore <span className="evi v">PIB release</span>. The two figures most plausibly reflect different dates or definitions — but no published document reconciles them, and neither is an audited count of cages currently stocked and operating. <em>SN analysis:</em> the gap between the two numbers is less important than the absence of a public register that would make such a gap impossible.</p>
 
 <h3>NFDP: two million registrations, eight measured beneficiaries</h3>
-<p>The National Fisheries Digital Platform is, in one sense, the strongest public trail reviewed: announced, funded and operational. Government reporting showed <strong>20,25,676</strong> registrations by 18 March 2025 <span className="evi v">Lok Sabha answer · 18 Mar 2025</span>, and the National Fisheries Development Board's Chief Executive was reported in April 2025 as stating registrations had crossed 25 lakh <span className="evi g">Reported statement · ETV Bharat · Apr 2025</span>. But registration is not benefit delivery. The latest granular benefit-conversion figures located by FN/SN were published in 2025: 4,066 credit "lead applications" forwarded to banks; 684 aquaculture-insurance lead applications forwarded to insurers; and, under the one-time incentive, 29 farmers applied and <strong>8 availed</strong>, receiving ₹2,33,858.96 in total <span className="evi v">Lok Sabha answers · 18 Mar & 19 Aug 2025</span>. No official figure was located showing how many forwarded credit leads became sanctioned and disbursed loans, or how many insurance leads became issued policies and settled claims. In the July 2026 parliamentary answers reviewed, FN/SN did not locate updated national conversion figures for those outcomes. An important clarification: the eight farmers cited relate only to one specific one-time incentive reported in the August 2025 parliamentary record; they do not represent the total number of people who may have received other benefits through NFDP.</p>
+<p>The National Fisheries Digital Platform is, in one sense, the strongest public trail reviewed: announced, funded and operational. Government reporting showed <strong>20,25,676</strong> registrations by 18 March 2025 <span className="evi v">Lok Sabha answer · 18 Mar 2025</span>, and the National Fisheries Development Board's Chief Executive was reported in April 2025 as stating registrations had crossed 25 lakh <span className="evi g">Reported statement · ETV Bharat · Apr 2025</span>. But registration is not benefit delivery. The latest granular benefit-conversion figures located by SN were published in 2025: 4,066 credit "lead applications" forwarded to banks; 684 aquaculture-insurance lead applications forwarded to insurers; and, under the one-time incentive, 29 farmers applied and <strong>8 availed</strong>, receiving ₹2,33,858.96 in total <span className="evi v">Lok Sabha answers · 18 Mar & 19 Aug 2025</span>. No official figure was located showing how many forwarded credit leads became sanctioned and disbursed loans, or how many insurance leads became issued policies and settled claims. In the July 2026 parliamentary answers reviewed, SN did not locate updated national conversion figures for those outcomes. An important clarification: the eight farmers cited relate only to one specific one-time incentive reported in the August 2025 parliamentary record; they do not represent the total number of people who may have received other benefits through NFDP.</p>
 
 <figure>
   <div className="panel">
@@ -315,34 +311,33 @@ export function BudgetToPondFeature({ className = "" }: BudgetToPondFeatureProps
       </g>
     </svg>
   </div>
-  <figcaption>FIG. 5 — Registration is not benefit delivery. This chart uses the March–August 2025 conversion disclosures because they are the latest granular national conversion figures located by FN/SN as of 23 July 2026. The NFDB's Chief Executive was reported in April 2025 as stating registrations had crossed 25 lakh. A "lead application" forwarded to a bank or insurer is not a sanctioned loan, an issued policy or a settled claim.</figcaption>
 </figure>
 
 <h3>The 500 reservoirs and the 200 start-ups: lists not yet public</h3>
-<p>Under Mission Amrit Sarovar, 68,827 sarovars have been developed nationally, of which 1,222 are reported linked to fisheries <span className="evi g">Government-reported</span>. Maharashtra has reported 34 reservoirs selected in that state for integrated development <span className="evi v">PIB</span> — a genuine partial Stage 2 record. But FN/SN did not locate a consolidated national list of the 500 reservoirs with locations, approved costs, implementing agencies and intended beneficiaries; nor a public list of the approximately 200 fisheries start-ups selected for support, with the type and value of support and disbursement status.</p>
+<p>Under Mission Amrit Sarovar, 68,827 sarovars have been developed nationally, of which 1,222 are reported linked to fisheries <span className="evi g">Government-reported</span>. Maharashtra has reported 34 reservoirs selected in that state for integrated development <span className="evi v">PIB</span> — a genuine partial Stage 2 record. But SN did not locate a consolidated national list of the 500 reservoirs with locations, approved costs, implementing agencies and intended beneficiaries; nor a public list of the approximately 200 fisheries start-ups selected for support, with the type and value of support and disbursement status.</p>
 
 
 <div className="finding">
-  <div className="label">The FN/SN Finding — Reporting cut-off 23 July 2026</div>
-  <p className="gold">As of 23 July 2026, having tested India's major Union-level 2026 aquaculture initiatives against a five-stage public-delivery standard — announcement, project-specific sanction, dated fund release, operational delivery, and measured beneficiary outcome — FN/SN did not locate a single complete, publicly verifiable trail running all the way from Budget promise to a measured benefit at the pond, even though the July 2026 parliamentary record added substantial state-level sanction and release data.</p>
+  <div className="label">The SN Finding — Reporting cut-off 23 July 2026</div>
+  <p className="gold">As of 23 July 2026, having tested India's major Union-level 2026 aquaculture initiatives against a five-stage public-delivery standard — announcement, project-specific sanction, dated fund release, operational delivery, and measured beneficiary outcome — SN did not locate a single complete, publicly verifiable trail running all the way from Budget promise to a measured benefit at the pond, even though the July 2026 parliamentary record added substantial state-level sanction and release data.</p>
 </div>
 
 <div className="notmean">
   <h3>What this finding does not mean</h3>
   <ul>
     <li>It does <strong>not</strong> mean zero projects exist. Many projects are sanctioned and many assets are reported by the government.</li>
-    <li>It does <strong>not</strong> mean zero farmers benefited. The government reports large beneficiary numbers; FN/SN did not test those individually.</li>
+    <li>It does <strong>not</strong> mean zero farmers benefited. The government reports large beneficiary numbers; SN did not test those individually.</li>
     <li>It is <strong>not</strong> proof of misuse, diversion or failure. This analysis makes no such allegation against any official, agency or company.</li>
     <li>It <strong>is</strong> evidence of one thing only: that the publicly available, independently reviewable documentation did not, for any reviewed initiative, complete the chain from promise to measured outcome. A documentation gap is not automatically an implementation failure.</li>
   </ul>
 </div>
 
-<p>Some 2026–27 projects are naturally too new to have measured income results — the financial year began on 1 April. That timing explains the absence of Stages 4 and 5 for the newest initiatives. It does not explain the absence of project-level Stage 2 sanction lists, which the Anantnag record proves can be published within weeks, nor the absence of a project-level public dashboard — because the government has confirmed to Parliament that a PMMSY Management Information System already aggregates district- and State-level data for monitoring and evaluation. <em>FN/SN analysis:</em> the existence of that monitoring backbone indicates that the underlying data architecture is not starting from zero; the scope and timing of public project-level disclosure remain policy and implementation choices. Transparency should begin at Stage 2 — not wait for the final outcome.</p>
+<p>Some 2026–27 projects are naturally too new to have measured income results — the financial year began on 1 April. That timing explains the absence of Stages 4 and 5 for the newest initiatives. It does not explain the absence of project-level Stage 2 sanction lists, which the Anantnag record proves can be published within weeks, nor the absence of a project-level public dashboard — because the government has confirmed to Parliament that a PMMSY Management Information System already aggregates district- and State-level data for monitoring and evaluation. <em>SN analysis:</em> the existence of that monitoring backbone indicates that the underlying data architecture is not starting from zero; the scope and timing of public project-level disclosure remain policy and implementation choices. Transparency should begin at Stage 2 — not wait for the final outcome.</p>
 
 <span className="h2-eyebrow">Open record</span>
 <h2>What the public record does not yet establish</h2>
 
-<p>Under the FN/SN Public-Evidence Rule, this analysis is prepared from publicly available records; subjects are not contacted for pre-publication approval or verification. The following are the open, documented gaps in the public record as of the reporting cut-off. Any authority, institution or beneficiary may submit documentary evidence on any of them after publication.</p>
+<p>Under the SN Public-Evidence Rule, this analysis is prepared from publicly available records; subjects are not contacted for pre-publication approval or verification. The following are the open, documented gaps in the public record as of the reporting cut-off. Any authority, institution or beneficiary may submit documentary evidence on any of them after publication.</p>
 
 <ol className="openrec">
   <li>The complete list of the 500 reservoirs and Amrit Sarovars selected under the 2026–27 initiative, with project identifiers and locations.</li>
@@ -361,7 +356,7 @@ export function BudgetToPondFeature({ className = "" }: BudgetToPondFeatureProps
 <span className="h2-eyebrow">The constructive standard</span>
 <h2>What public proof should look like</h2>
 
-<p>The solution is not another headline. It is a project-level public dashboard — and the confirmed existence of the internal PMMSY MIS means the hardest part is already built. The model below is the <strong>FN/SN accountability model — illustrative</strong>: a proposal, not a government product.</p>
+<p>The solution is not another headline. It is a project-level public dashboard — and the confirmed existence of the internal PMMSY MIS means the hardest part is already built. The model below is the <strong>SN accountability model — illustrative</strong>: a proposal, not a government product.</p>
 
 <figure>
   <div className="panel">
@@ -370,7 +365,7 @@ export function BudgetToPondFeature({ className = "" }: BudgetToPondFeatureProps
         <rect x="30" y="26" width="940" height="408" rx="10" fill="#0E2733" stroke="#2C5560"/>
         <rect x="30" y="26" width="940" height="52" rx="10" fill="#122F3B"/>
         <circle cx="62" cy="52" r="6" fill="#58D0C3"/><circle cx="84" cy="52" r="6" fill="#D99A2B"/><circle cx="106" cy="52" r="6" fill="#8A9AA4"/>
-        <text x="140" y="58" fontFamily="'IBM Plex Mono',monospace" fontSize="13" fill="#9FD8D0" letterSpacing="2">NATIONAL FISHERIES PROJECT DASHBOARD — FN/SN ACCOUNTABILITY MODEL · ILLUSTRATIVE</text>
+        <text x="140" y="58" fontFamily="'IBM Plex Mono',monospace" fontSize="13" fill="#9FD8D0" letterSpacing="2">NATIONAL FISHERIES PROJECT DASHBOARD — SN ACCOUNTABILITY MODEL · ILLUSTRATIVE</text>
         
         <g fontSize="13.5" fill="#EAF4F2">
           <rect x="52" y="100" width="430" height="150" rx="6" fill="#12303C"/>
@@ -408,7 +403,6 @@ export function BudgetToPondFeature({ className = "" }: BudgetToPondFeatureProps
       </g>
     </svg>
   </div>
-  <figcaption>FIG. 6 — The FN/SN accountability model (illustrative). For every major project: identity, money trail, an unambiguous status vocabulary, and outcome data designed in from the start — not reconstructed after questions are asked.</figcaption>
 </figure>
 
 <span className="h2-eyebrow">For the reader</span>
@@ -423,9 +417,9 @@ export function BudgetToPondFeature({ className = "" }: BudgetToPondFeatureProps
 
 <div className="metablock">
   <h3>Methodology & editorial note</h3>
-  <p>This FN/SN Network Analysis was prepared through founding-team-led editorial analysis, supported by AI-assisted research organisation and data review. Final editorial responsibility rests with the FN/SN editorial team. All material factual claims were subjected to source verification and human editorial approval before publication. Every government figure carries its reporting date and classification; figures labelled "government-reported" are official claims not independently audited by FN/SN. The five-stage public-delivery test is an FN/SN editorial framework. Reporting cut-off: <strong>23 July 2026</strong>. Parliament's Monsoon Session continues to 13 August 2026; further answers may add to the record and will be incorporated through dated updates.</p>
-  <p><strong>Public-Evidence Rule.</strong> FN/SN articles are prepared from publicly available and independently reviewable evidence. Subjects are not routinely contacted for pre-publication approval or verification. Any subject may submit documentary evidence after publication. Where newly supplied information is verified and materially changes the record, FN/SN may issue a correction, clarification, update, or follow-up article with the date and basis of the change clearly disclosed.</p>
-  <p><strong>Legal note.</strong> This analysis evaluates the availability of public evidence as of the reporting cut-off. Absence of publicly located evidence should not be interpreted as proof that an activity did not occur. This analysis does not allege corruption, diversion of funds or project failure. FN/SN welcomes documentary responses, corrections and project-level records from the authorities, institutions and beneficiaries concerned.</p>
+  <p>This SN Network Analysis was prepared through founding-team-led editorial analysis, supported by AI-assisted research organisation and data review. Final editorial responsibility rests with the SN editorial team. All material factual claims were subjected to source verification and human editorial approval before publication. Every government figure carries its reporting date and classification; figures labelled "government-reported" are official claims not independently audited by SN. The five-stage public-delivery test is an SN editorial framework. Reporting cut-off: <strong>23 July 2026</strong>. Parliament's Monsoon Session continues to 13 August 2026; further answers may add to the record and will be incorporated through dated updates.</p>
+  <p><strong>Public-Evidence Rule.</strong> SN articles are prepared from publicly available and independently reviewable evidence. Subjects are not routinely contacted for pre-publication approval or verification. Any subject may submit documentary evidence after publication. Where newly supplied information is verified and materially changes the record, SN may issue a correction, clarification, update, or follow-up article with the date and basis of the change clearly disclosed.</p>
+  <p><strong>Legal note.</strong> This analysis evaluates the availability of public evidence as of the reporting cut-off. Absence of publicly located evidence should not be interpreted as proof that an activity did not occur. This analysis does not allege corruption, diversion of funds or project failure. SN welcomes documentary responses, corrections and project-level records from the authorities, institutions and beneficiaries concerned.</p>
 </div>
 
 <div className="metablock" style={{overflowX: "auto"}}>

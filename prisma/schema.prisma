@@ -105,9 +105,34 @@ model Article {
 }
 
 model Subscriber {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
+  id                   String               @id @default(cuid())
+  email                String               @unique
+  isActive             Boolean              @default(true)
+  subscribedAt         DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  welcomeEmailSent     Boolean              @default(false)
+  welcomeEmailSentAt   DateTime?
+  lastNewsletterSentAt DateTime?
+  unsubscribeToken     String?              @unique @db.VarChar(64)
+  createdAt            DateTime             @default(now())
+  newsletterDeliveries NewsletterDelivery[]
+
+  @@index([isActive, subscribedAt])
+}
+
+model NewsletterDelivery {
+  id             String     @id @default(cuid())
+  subscriberId   String
+  newsletterWeek String     @db.VarChar(10)
+  status         String     @default("processing")
+  sentAt         DateTime?
+  errorMessage   String?    @db.Text
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  subscriber     Subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriberId, newsletterWeek])
+  @@index([newsletterWeek, status])
 }
 
 model Event {

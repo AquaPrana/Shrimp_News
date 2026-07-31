@@ -20,8 +20,8 @@ export function NewsSidebar({ articles }: { articles: PublicArticle[] }) {
   const displayed = tab === "recent" ? recent : popular;
 
   return (
-    <div className="w-full border border-slate-200 bg-white">
-      <div className="grid grid-cols-2 border-b border-slate-200">
+    <div className="homepage-news-sidebar-panel w-full border border-slate-200 bg-white">
+      <div className="grid shrink-0 grid-cols-2 border-b border-slate-200">
         {(["recent", "popular"] as const).map((value) => (
           <button
             key={value}
@@ -40,7 +40,7 @@ export function NewsSidebar({ articles }: { articles: PublicArticle[] }) {
           </button>
         ))}
       </div>
-      <div className="relative px-5">
+      <div className="homepage-news-sidebar-list relative px-5">
         <span className="absolute bottom-5 left-[10px] top-5 w-px bg-slate-200" />
         {displayed.map((article) => (
           <article
