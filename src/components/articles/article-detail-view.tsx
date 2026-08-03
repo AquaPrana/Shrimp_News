@@ -17,8 +17,6 @@ import {
   getCategoryLabel,
   localizePublicArticle,
 } from "@/lib/article-localization";
-import { isLegacyLaunchArticleSlug } from "@/lib/legacy-articles";
-import { baseSlug } from "@/lib/public-articles-shared";
 
 type ArticleDetailViewProps = {
   slug: string;
@@ -29,7 +27,6 @@ type ArticleDetailViewProps = {
 };
 
 export function ArticleDetailView({
-  slug,
   initialArticle,
   initialRelated,
   customBody,
@@ -82,10 +79,7 @@ export function ArticleDetailView({
           <div>{customBody}</div>
         ) : (
           <article className={PAGE_CONTENT_PANEL_CLASS}>
-            <ArticleContentBody
-              content={article.content}
-              compactLegacySpacing={isLegacyLaunchArticleSlug(article.slug)}
-            />
+            <ArticleContentBody content={article.content} />
           </article>
         )}
 

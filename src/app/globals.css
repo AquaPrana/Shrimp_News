@@ -374,11 +374,26 @@ html[lang="te"] .article-title {
 }
 
 .article-prose,
-.article-content,
-.article-editor {
-  line-height: 1.75;
+.article-content {
+  width: 100%;
+  max-width: none;
   color: inherit;
+  font-size: inherit;
+  font-weight: 400;
+  line-height: 1.75;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+/* Editor-only interaction styles — do not apply to published article bodies. */
+.article-editor {
+  width: 100%;
+  max-width: none;
   min-height: 300px;
+  color: inherit;
+  font-size: inherit;
+  font-weight: 400;
+  line-height: 1.75;
   cursor: text;
   pointer-events: auto;
   user-select: text;
@@ -390,9 +405,10 @@ html[lang="te"] .article-title {
 .article-prose h2,
 .article-content h2,
 .article-editor h2 {
-  margin-top: 1.75rem;
-  margin-bottom: 0.75rem;
+  margin-top: 1.4rem;
+  margin-bottom: 0.65rem;
   padding-top: 0;
+  font-family: inherit;
   font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.4;
@@ -416,8 +432,9 @@ html[lang="te"] .article-title {
 .article-prose h3,
 .article-content h3,
 .article-editor h3 {
-  margin-top: 1.75rem;
-  margin-bottom: 0.75rem;
+  margin-top: 1.1rem;
+  margin-bottom: 0.55rem;
+  font-family: inherit;
   font-size: 1.125rem;
   font-weight: 600;
   line-height: 1.45;
@@ -430,11 +447,29 @@ html[lang="te"] .article-title {
   margin-top: 0;
 }
 
+.article-prose h4,
+.article-content h4,
+.article-editor h4 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #0b3a6e;
+}
+
 .article-prose p,
 .article-content p,
 .article-editor p {
+  width: 100%;
+  max-width: none;
   margin-top: 0;
-  margin-bottom: 1rem;
+  margin-bottom: 0.85rem;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
   line-height: 1.75;
   color: inherit;
 }
@@ -448,8 +483,10 @@ html[lang="te"] .article-title {
 /* Do not reserve tall empty space for spacer paragraphs (cleaned on save/display). */
 .article-prose p:empty,
 .article-content p:empty,
+.article-editor p:empty,
 .article-prose p:has(br:only-child),
-.article-content p:has(br:only-child) {
+.article-content p:has(br:only-child),
+.article-editor p:has(br:only-child) {
   display: none;
 }
 
@@ -459,8 +496,11 @@ html[lang="te"] .article-title {
 .article-content ol,
 .article-editor ul,
 .article-editor ol {
-  margin: 0 0 1rem;
-  padding-left: 1.5rem;
+  width: 100%;
+  max-width: none;
+  margin: 0 0 0.75rem;
+  padding-left: 1.25rem;
+  list-style-position: outside;
 }
 
 .article-prose ul:last-child,
@@ -475,10 +515,26 @@ html[lang="te"] .article-title {
 .article-prose li,
 .article-content li,
 .article-editor li {
-  margin: 0.3rem 0;
+  margin: 0.2rem 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
   line-height: 1.7;
   white-space: normal;
   word-break: normal;
+}
+
+.article-prose li > p,
+.article-content li > p,
+.article-editor li > p {
+  margin: 0;
+}
+
+.article-prose li + li,
+.article-content li + li,
+.article-editor li + li {
+  margin-top: 0.2rem;
 }
 
 .article-prose strong,
@@ -490,6 +546,23 @@ html[lang="te"] .article-title {
   font-weight: 700;
 }
 
+.article-prose em,
+.article-prose i,
+.article-content em,
+.article-content i,
+.article-editor em,
+.article-editor i {
+  font-style: italic;
+}
+
+.article-prose a,
+.article-content a,
+.article-editor a {
+  color: #0b4f7a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .article-prose img,
 .article-content img,
 .article-editor img {
@@ -499,12 +572,34 @@ html[lang="te"] .article-title {
   margin: 1.25rem 0 0;
 }
 
+.article-prose figcaption,
+.article-content figcaption,
+.article-editor figcaption {
+  margin-top: 0.5rem;
+  color: #64748b;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
 .article-prose table,
 .article-content table,
 .article-editor table {
   width: 100%;
   margin-top: 1.25rem;
   border-collapse: collapse;
+}
+
+.article-prose th,
+.article-prose td,
+.article-content th,
+.article-content td,
+.article-editor th,
+.article-editor td {
+  border: 1px solid #cbd5e1;
+  padding: 0.55rem 0.65rem;
+  vertical-align: top;
+  font-size: inherit;
+  line-height: 1.5;
 }
 
 .article-prose blockquote,
@@ -517,37 +612,13 @@ html[lang="te"] .article-title {
 }
 
 .article-prose br + br,
-.article-content br + br {
+.article-content br + br,
+.article-editor br + br {
   display: none;
 }
 
 .article-editor:focus {
   outline: none;
-}
-
-/* Tighter spacing for older seed articles only (display-time class). */
-.article-prose-legacy p,
-.article-content.article-prose-legacy p {
-  margin-bottom: 0.85rem;
-}
-
-.article-prose-legacy h2,
-.article-content.article-prose-legacy h2 {
-  margin-top: 1.4rem;
-  margin-bottom: 0.65rem;
-}
-
-.article-prose-legacy h3,
-.article-content.article-prose-legacy h3 {
-  margin-top: 1.1rem;
-  margin-bottom: 0.55rem;
-}
-
-.article-prose-legacy ul,
-.article-prose-legacy ol,
-.article-content.article-prose-legacy ul,
-.article-content.article-prose-legacy ol {
-  margin-bottom: 0.75rem;
 }
 
 /* Homepage news grid: sticky Recent/Popular beside all article sections */

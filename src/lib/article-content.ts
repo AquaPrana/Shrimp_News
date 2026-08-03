@@ -185,16 +185,15 @@ export function cleanWordHtml(html: string) {
     .replace(/<\/?(?:html|head|body|meta|link|title|xml|o:p)[^>]*>/gi, "")
     .replace(/<(\/?)(?:o|w|v|m):[^>]*>/gi, "")
     .replace(/<\/?o:p[^>]*>/gi, "")
-    .replace(/\sclass="[^"]*"/gi, "")
-    .replace(/\sstyle="[^"]*"/gi, "")
-    .replace(/\sdir="[^"]*"/gi, "")
-    .replace(/\slang="[^"]*"/gi, "")
-    .replace(/\sid="[^"]*"/gi, "")
+    // Strip presentation attributes that fight site typography.
+    .replace(/\s(?:class|style|dir|lang|id|align|width|height|face|size|color|bgcolor|border|cellpadding|cellspacing)="[^"]*"/gi, "")
+    .replace(/\s(?:class|style|dir|lang|id|align|width|height|face|size|color|bgcolor|border|cellpadding|cellspacing)='[^']*'/gi, "")
     .replace(/<\/?font\b[^>]*>/gi, "")
     .replace(/<span\b[^>]*>/gi, "")
     .replace(/<\/span>/gi, "")
     .replace(/&nbsp;/gi, " ")
     .replace(/\u00a0/g, " ")
+    // Flatten Word list paragraphs into compact list items.
     .replace(/<li\b[^>]*>([\s\S]*?)<\/li>/gi, (_match, inner: string) => {
       const content = inner
         .replace(/<\/?(?:p|div)\b[^>]*>/gi, " ")
@@ -203,6 +202,8 @@ export function cleanWordHtml(html: string) {
         .trim();
       return content ? `<li>${content}</li>` : "";
     })
+    .replace(/<(ul|ol)\b[^>]*>/gi, "<$1>")
+    .replace(/<(p|h[1-6]|blockquote|li)\b[^>]*>/gi, "<$1>")
     .replace(/<h1\b([^>]*)>/gi, "<h2$1>")
     .replace(/<\/h1>/gi, "</h2>")
     .replace(/<h[4-6]\b([^>]*)>/gi, "<h3$1>")
@@ -379,6 +380,9 @@ export function sanitizeArticleHtml(html: string) {
       img: ["http", "https"],
     },
     allowProtocolRelative: true,
+    // Never preserve Word/Docs presentation attributes.
+    allowedStyles: {},
+    allowedClasses: {},
     nonTextTags: [
       "style",
       "script",
@@ -405,6 +409,13 @@ export function sanitizeArticleHtml(html: string) {
 
         return { tagName: "a", attribs };
       },
+      p: "p",
+      h2: "h2",
+      h3: "h3",
+      ul: "ul",
+      ol: "ol",
+      li: "li",
+      blockquote: "blockquote",
     },
   });
 

@@ -1,32 +1,31 @@
 import {
-  collapseLegacyArticleWhitespace,
   prepareArticleContentForDisplay,
 } from "@/lib/article-content";
 
 type ArticleContentBodyProps = {
   content: string;
   className?: string;
-  /** Tighten spacing for older seed articles only (display-time; does not change stored HTML). */
+  /**
+   * @deprecated Ignored. All articles now use the same article-prose styles.
+   * Kept optional so older call sites keep compiling.
+   */
   compactLegacySpacing?: boolean;
 };
 
+/**
+ * Single reusable article-body renderer for every published article.
+ * Sanitizes imported HTML and applies the shared `.article-prose` typography.
+ */
 export function ArticleContentBody({
   content,
   className = "",
-  compactLegacySpacing = false,
 }: ArticleContentBodyProps) {
-  // prepareArticleContentForDisplay always re-sanitizes spacer HTML from older articles.
-  let html = prepareArticleContentForDisplay(content);
-  if (compactLegacySpacing) {
-    html = collapseLegacyArticleWhitespace(html);
-  }
+  const html = prepareArticleContentForDisplay(content);
   if (!html) return null;
 
   return (
     <div
-      className={`article-prose article-content ${
-        compactLegacySpacing ? "article-prose-legacy" : ""
-      } ${className}`.trim()}
+      className={`article-prose article-content ${className}`.trim()}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
