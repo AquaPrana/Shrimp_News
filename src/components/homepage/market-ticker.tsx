@@ -1,21 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useLanguage, type Language } from "@/context/language-context";
+import { useLanguage } from "@/context/language-context";
 import { useMarketPrices } from "@/hooks/use-market-prices";
 import type { MarketPriceItem } from "@/lib/market-data/client";
 import { marketTickerCopy } from "@/lib/market-data/localization";
 
 const FALLBACK_UPDATED_AT = "2026-07-15T12:30:00.000Z";
-const LAST_UPDATED_LOCALES: Record<Language, string> = {
-  en: "en-IN",
-  te: "te-IN",
-  hi: "hi-IN",
-};
-
-function formatLastUpdated(iso: string | null | undefined, language: Language) {
+function formatLastUpdated(iso: string | null | undefined) {
   const raw = iso && !Number.isNaN(Date.parse(iso)) ? iso : FALLBACK_UPDATED_AT;
-  return new Intl.DateTimeFormat(LAST_UPDATED_LOCALES[language], {
+  return new Intl.DateTimeFormat("en-IN", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -80,8 +74,8 @@ function TickerItemRow({
 }
 
 export function MarketTicker() {
-  const { language, t } = useLanguage();
-  const copy = marketTickerCopy[language];
+  const { t } = useLanguage();
+  const copy = marketTickerCopy;
   const { data, isLoading, error, lastUpdated, refetch } = useMarketPrices();
   const [selected, setSelected] = useState<MarketPriceItem | null>(null);
   const tickerRef = useRef<HTMLElement>(null);
@@ -122,7 +116,7 @@ export function MarketTicker() {
         <div className="flex items-stretch">
           <div className="flex shrink-0 items-center border-r border-white/30 bg-[#e85a28] px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-white sm:px-4 sm:text-[10px]">
             <span className="max-w-[9.5rem] leading-tight sm:max-w-none">
-              {`${t("lastUpdated")}: ${formatLastUpdated(lastUpdated, language)}`}
+              {`${t("lastUpdated")}: ${formatLastUpdated(lastUpdated)}`}
             </span>
           </div>
           <div className="relative h-[30px] min-w-0 flex-1 overflow-hidden sm:h-[32px]">

@@ -1,20 +1,20 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useLanguage, type TranslationKey } from "@/context/language-context";
+import { useLanguage, type CopyKey } from "@/context/language-context";
 
 /** Light content panel for navigation/category pages (not home blue cards). */
 export const PAGE_CONTENT_PANEL_CLASS =
   "rounded-2xl border border-slate-200 bg-[#F7FBFF] p-5 text-sm leading-7 text-slate-700 shadow-[0_8px_30px_rgba(15,23,42,0.04)] sm:rounded-[28px] sm:p-8 sm:text-base sm:leading-8";
 
 type PageShellProps = {
-  titleKey: TranslationKey;
-  descriptionKey: TranslationKey;
-  eyebrowKey?: TranslationKey;
+  titleKey: CopyKey;
+  descriptionKey: CopyKey;
+  eyebrowKey?: CopyKey;
   /** Single body blob (paragraphs separated by blank lines). Prefer bodyKeys for new pages. */
-  bodyKey?: TranslationKey;
-  /** Ordered translation keys — one paragraph/block per key for multilingual pages. */
-  bodyKeys?: readonly TranslationKey[];
+  bodyKey?: CopyKey;
+  /** Ordered copy keys — one paragraph/block per section. */
+  bodyKeys?: readonly CopyKey[];
   hideTitleAndDescription?: boolean;
   /** Optional overrides for search results and similar dynamic headings. */
   customTitle?: string;

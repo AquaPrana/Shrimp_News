@@ -4,31 +4,17 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   type ReactNode,
 } from "react";
-import {
-  LANGUAGE_COOKIE_KEY,
-  LANGUAGE_STORAGE_KEY,
-  type Language,
-} from "@/lib/language-preference";
-
-export type { Language };
-
-function persistLanguage(language: Language) {
-  localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-  const maxAge = 60 * 60 * 24 * 365;
-  document.cookie = `${LANGUAGE_COOKIE_KEY}=${encodeURIComponent(language)}; path=/; max-age=${maxAge}; SameSite=Lax`;
-}
+export type Language = "en";
 
 type LanguageContextValue = {
   language: Language;
-  setLanguage: (language: Language) => void;
-  t: (key: TranslationKey) => string;
+  t: (key: CopyKey) => string;
 };
 
-const translations = {
+const copy = {
   en: {
     home: "Home",
     news: "News",
@@ -65,7 +51,7 @@ const translations = {
     askPranaPreparingAnswer: "Ask Prana is preparing your answer...",
     askPranaPlaceholder: "Ask about your pond, disease, feed, prices...",
     askPranaIntro:
-      "Namaste! I'm Ask Prana - ask me anything about shrimp farming, water quality, disease, feed or markets. Ask in English, Telugu, or Hindi.",
+      "Namaste! I'm Ask Prana — ask me anything about shrimp farming, water quality, disease, feed, or markets.",
     closeAskPrana: "Close Ask Prana",
     primaryNavigation: "Primary navigation",
     toggleNavigation: "Toggle navigation",
@@ -328,602 +314,10 @@ const translations = {
     askPranaHelpDescription:
       "Ask about farming, pond health, feed, water quality, disease or shrimp markets.",
 
-    language: "Language",
-    english: "English",
-    telugu: "Telugu",
-    hindi: "Hindi",
-  },
-
-  te: {
-    home: "హోమ్",
-    news: "వార్తలు",
-    topics: "అంశాలు",
-    about: "గురించి",
-    national: "భారతదేశం",
-    international: "గ్లోబల్",
-    india: "భారతదేశం",
-    global: "గ్లోబల్",
-    articles: "వ్యాసాలు",
-    shrimpFarming: "రొయ్యల పెంపకం",
-    shrimpPrices: "రొయ్యల ధరలు",
-    shrimpHealth: "రొయ్యల ఆరోగ్యం",
-    technologyEquipment: "సాంకేతికత & పరికరాలు",
-    researchInnovations: "పరిశోధన & ఆవిష్కరణలు",
-    domesticConsumption: "దేశీయ వినియోగం",
-    marketsIndustry: "మార్కెట్లు & పరిశ్రమ",
-    aboutUs: "మా గురించి",
-    foundersMessage: "వ్యవస్థాపకుల సందేశం",
-    contactUs: "సంప్రదించండి",
-    askPrana: "Ask Prana about shrimp farming",
-    askPranaShort: "Ask Prana...",
-    askPranaButton: "Ask Prana",
-    ask: "Ask",
-    artificialIntelligence: "కృత్రిమ మేధస్సు",
-    aiAssistant: "కృత్రిమ మేధస్సు సహాయకుడు",
-    shrimpNews: "శ్రింప్ న్యూస్",
-    shrimpNewsPlain: "శ్రింప్ న్యూస్",
-    lastUpdated: "చివరిగా నవీకరించబడింది",
-    online: "ఆన్‌లైన్",
-    askPranaAiAssistant: "Ask Prana - AI Assistant",
-    askPranaNoResponse: "స్పందన అందలేదు.",
-    askPranaUnableAnswer: "Ask Prana could not answer right now.",
-    askPranaPreparingAnswer: "Ask Prana is preparing your answer...",
-    askPranaPlaceholder: "మీ చెరువు, వ్యాధి, మేత, ధరల గురించి అడగండి...",
-    askPranaIntro:
-      "నమస్తే! నేను Ask Prana — రొయ్యల సాగు, నీటి నాణ్యత, వ్యాధులు, మేత లేదా మార్కెట్ల గురించి ఏదైనా అడగండి. ఇంగ్లీష్, తెలుగు లేదా హిందీలో అడగండి.",
-    closeAskPrana: "Close Ask Prana",
-    primaryNavigation: "ప్రధాన నావిగేషన్",
-    toggleNavigation: "నావిగేషన్ టోగుల్",
-    noArticlesFound: "ఈ అంశానికి ఇంకా వ్యాసాలు లేవు.",
-    relatedArticles: "సంబంధిత వ్యాసాలు",
-
-    heroEyebrow: "భారతదేశానికి ప్రాధాన్యం · ప్రపంచ అవగాహన",
-    heroTitleStart: "ప్రపంచ రొయ్యల రంగపు",
-    heroTitleMiddle: "",
-    heroTitleHighlight: "స్పందన",
-    heroDescription:
-      "రొయ్యల పెంపకం, వాణిజ్యం మరియు వినియోగంతో సంబంధం ఉన్న వారికి వార్తలు, ధరలు, మార్కెట్ సమాచారం, సాగు సూచనలు మరియు ఉపయోగకరమైన జ్ఞానం.",
-    readLatest: "తాజా వార్తలు చదవండి",
-    exploreArticles: "వ్యాసాలను చూడండి",
-
-    latestArticles: "తాజా వ్యాసాలు",
-    latestTitle: "రొయ్యల సరఫరా శృంఖలంలోని ప్రతి దశకు సమాచారం.",
-    latestDescription:
-      "దేశీయ వినియోగం, ధరలు, ఆరోగ్యం మరియు మార్కెట్ స్థిరత్వంపై తాజా వ్యాసాలు.",
-    viewAll: "అన్నీ చూడండి",
-    recent: "ఇటీవలి",
-    popular: "ప్రజాదరణ పొందినవి",
-    featured: "ప్రత్యేకం",
-    welcomeTitle: "శ్రింప్ న్యూస్ కు స్వాగతం",
-    welcomeToShrimpNews: "శ్రింప్ న్యూస్ కు స్వాగతం",
-    welcomeDescription:
-      "రొయ్యల పరిశ్రమ వార్తలు, మార్కెట్లు, సాగు, ఆరోగ్యం మరియు ఆవిష్కరణకు మీ నమ్మకమైన మూలం.",
-    loadingArticles: "వ్యాసాలు లోడ్ అవుతున్నాయి…",
-    mainCategoryLabel: "ప్రధాన వార్తా వర్గం",
-    subcategoryLabel: "ఉపవర్గం",
-    brandName: "{shrimpNews}",
-
-    domesticTitle: "భారతదేశ రొయ్యల భవిష్యత్తు దేశీయ మార్కెట్ నుంచే ప్రారంభమవుతుంది.",
-    domesticDescription:
-      "దేశీయ డిమాండ్ Shrimp.News యొక్క ప్రధాన ప్రాధాన్యం. భారతదేశంలో రొయ్యల వినియోగం రైతులు, కుటుంబాలు మరియు బలమైన ఆహార ఆర్థిక వ్యవస్థకు ఎలా మద్దతు ఇస్తుందో తెలియజేస్తాము.",
-    whyConsumptionLags: "వినియోగం ఎందుకు వెనుకబడింది",
-    healthNutritionStories: "ఆరోగ్యం మరియు పోషక కథనాలు",
-
-    marketsLabel: "రొయ్యల మార్కెట్లు & ధరలు",
-    marketsTitle: "పరిశ్రమ నాయకుల కోసం రూపొందించిన మార్కెట్ సమాచారం.",
-    marketsDescription:
-      "రైతు స్థాయి లాభదాయకత మరియు రొయ్యల సరఫరా శృంఖలలో దీర్ఘకాలిక నమ్మకానికి ధరలు, ఎగుమతి డిమాండ్ మరియు మార్కెట్ సమతుల్యత కీలకం.",
-    farmgatePriceDrivers: "ఫారమ్‌గేట్ ధరల కారకాలు",
-    exportVsDomestic: "ఎగుమతి vs దేశీయ స్థిరత్వం",
-
-    farmingHealthLabel: "రొయ్యల సాగు & ఆరోగ్యం",
-    farmingTitle: "ఫారాలు, మేత మరియు బయోసెక్యూరిటీ కోసం ఉపయోగకరమైన సమాచారం.",
-    farmingDescription:
-      "పోషణ, వ్యాధి నివారణ, ఉత్తమ సాగు పద్ధతులు మరియు ఆరోగ్యకరమైన రొయ్యల ఉత్పత్తికి సంబంధించిన శాస్త్రీయ సమాచారం.",
-
-    liveMarketIntel: "లైవ్ మార్కెట్ సమాచారం",
-    marketsAtGlance: "రొయ్యల మార్కెట్లు ఒక చూపులో",
-    liveDashboard: "లైవ్ డ్యాష్‌బోర్డ్",
-    live: "లైవ్",
-    thisWeek: "/కిలో · ఈ వారం",
-    indiaExportsYtd: "భారత ఎగుమతులు YTD",
-    indiaExportsDesc: "2025 అదే కాలంతో పోల్చితే",
-    globalVannamei: "గ్లోబల్ వన్నామీ ఇండెక్స్",
-    globalVannameiDesc: "US$/కిలో · 12 వారాల గరిష్టం",
-    ecuadorBenchmark: "ఈక్వెడార్ బెంచ్‌మార్క్",
-    ecuadorBenchmarkDesc: "ప్రపంచ కనిష్ట ధరను నిర్ణయిస్తుంది",
-    feedCost: "మేత ఖర్చు",
-    feedCostDesc: "వరుసగా 3వ వారం తగ్గుతోంది",
-    newsExport: "సుంక భయాలు తగ్గడంతో అమెరికా షిప్‌మెంట్లు 12% పెరిగాయి",
-    newsDisease: "ముఖ్య తీర ప్రాంతాల్లో ఫారమ్ అలర్టులు స్థిరంగా ఉన్నాయి",
-    newsFeed: "వరుసగా మూడవ వారం మేత ధరలు తగ్గాయి",
-
-    readFeaturedStory: "ప్రధాన కథనం చదవండి",
-    readArticle: "వ్యాసం చదవండి",
-    imagePlaceholder: "చిత్రం స్థానం",
-
-    aquaGptEyebrow: "Ask Prana",
-    aquaGptTitle: "Ask Prana - AI Assistant",
-    aquaGptDescription:
-      "రొయ్యల సాగు, నీటి నాణ్యత, ధరలు, మార్కెట్లు, ఆరోగ్యం మరియు సాంకేతికత గురించి అడగండి. ఈ మాక్ సహాయకుడు ఆక్వాకల్చర్ పరిధిలో నమ్మకమైన అంతర్దృష్టులను అందిస్తుంది.",
-    aquaGptOnline: "ఆన్‌లైన్",
-    aquaGptPlaceholder: "ఉదా. భారత్‌లో రొయ్యల ధరలను ఏమి నిర్ణయిస్తుంది?",
-    aquaGptEmpty: "ప్రారంభించడానికి రొయ్యలకు సంబంధించిన ప్రశ్నను నమోదు చేయండి.",
-    aquaGptMockPrefix:
-      "Ask Prana సంబంధిత వ్యాసాలు చదవమని మరియు పరిశ్రమ ఉత్తమ పద్ధతులను చూడమని సూచిస్తుంది. ఇది మాక్ ప్రతిస్పందన:",
-    aquaPrompt1: "రొయ్యల ఫారమ్‌గేట్ ధరలను ఏమి ప్రభావితం చేస్తుంది?",
-    aquaPrompt2: "చెరువుల్లో రొయ్యల వ్యాధిని ఎలా నివారించాలి?",
-    aquaPrompt3: "భారత్‌కు ఉత్తమ రొయ్యల మేత పద్ధతులు",
-
-    newsletterEyebrow: "{shrimpNews} బ్రీఫ్",
-    newsletterTitle: "ది ష్రింప్ బ్రీఫ్",
-    newsletterDescription:
-      "ధరలు, వ్యాధి హెచ్చరికలు, విధాన అప్‌డేట్లు మరియు మార్కెట్ సమాచారం — ప్రతి సోమవారం. ఎప్పటికీ ఉచితం.",
-    newsletterMondayNote:
-      "మీకు ప్రతి సోమవారం ష్రింప్ బ్రీఫ్ అందుతుంది — ఎప్పటికీ ఉచితం.",
-    newsletterEmailLabel: "ఇమెయిల్ చిరునామా",
-    newsletterEmailPlaceholder: "you@company.com",
-    newsletterSubscribe: "ఉచితంగా సబ్‌స్క్రైబ్ చేయండి",
-    newsletterSubscribing: "సబ్‌స్క్రైబ్ అవుతోంది...",
-    newsletterEmptyError: "దయచేసి సరైన ఇమెయిల్ చిరునామాను నమోదు చేయండి.",
-    newsletterInvalidError: "దయచేసి సరైన ఇమెయిల్ చిరునామాను నమోదు చేయండి.",
-    newsletterAlreadySubscribed: "ఈ ఇమెయిల్ ఇప్పటికే సబ్‌స్క్రైబ్ అయి ఉంది.",
-    newsletterRateLimitError: "చాలా ప్రయత్నాలు జరిగాయి. దయచేసి తర్వాత మళ్లీ ప్రయత్నించండి.",
-    newsletterSubmitError: "ఏదో తప్పు జరిగింది. దయచేసి మళ్లీ ప్రయత్నించండి.",
-    newsletterSuccessPrefix: "సబ్‌స్క్రైబ్ అయినందుకు ధన్యవాదాలు!",
-    newsletterSuccessSuffix: "",
-    articlesLoadError: "వ్యాసాలు తాత్కాలికంగా అందుబాటులో లేవు. దయచేసి మళ్లీ ప్రయత్నించండి.",
-    askPranaThinking: "Ask Prana is thinking...",
-
-    footerTagline:
-      "{shrimpNews} ప్రపంచ రొయ్యల పరిశ్రమకు మార్కెట్ ధరలు, సాగు సమాచారం, వ్యాధి నవీకరణలు, సాంకేతిక అంతర్దృష్టులు మరియు పరిశ్రమ వార్తలను అందిస్తుంది.",
-    footerSubTagline: "భారత్ ఫారమ్‌ల నుంచి ప్రపంచ మార్కెట్ల వరకు.",
-    categories: "వర్గాలు",
-    latestNews: "తాజా వార్తలు",
-    aquaticHealth: "జల ఆరోగ్యం",
-    researchInnovation: "పరిశోధన & ఆవిష్కరణ",
-    prices: "ధరలు",
-    followShrimpNews: "{shrimpNews}‌ను అనుసరించండి",
-    allRightsReserved: "© 2026 {shrimpNews}. అన్ని హక్కులు రక్షించబడ్డాయి.",
-    privacyPolicy: "గోప్యతా విధానం",
-    terms: "నిబంధనలు",
-    disclaimer: "డిస్‌క్లైమర్",
-    contact: "సంప్రదించండి",
-    ventureLine: "A Fishery News venture · Aquacultureను కలుపుతూ, ఆవిష్కరణను సాధ్యం చేస్తూ",
-    backToTop: "పైకి వెళ్లండి",
-
-    pageComingSoon: "ఈ విభాగం కంటెంట్ త్వరలో జోడించబడుతుంది.",
-
-    aboutEyebrow: "మా గురించి",
-    aboutTitle: "{shrimpNews} గురించి",
-    aboutDescription: "ప్రపంచ రొయ్యల పరిశ్రమ కోసం ప్రత్యేకంగా నిర్మించిన భారత్ యొక్క మొదటి అంకిత డిజిటల్ మీడియా వేదిక.",
-    aboutBody: "Shrimp.News ప్రపంచ రొయ్యల పరిశ్రమ కోసం ప్రత్యేకంగా నిర్మించిన భారత్ యొక్క మొదటి అంకిత డిజిటల్ మీడియా వేదిక.\n\nమా లక్ష్యం—ప్రతి వాటాదారుకు నమ్మదగిన సమాచారం, ఆచరణాత్మక జ్ఞానం, మార్కెట్ ఇంటెలిజెన్స్ ఒకే వేదికపై అందించడం.\n\nభారత్‌లో దేశీయ రొయ్యల వినియోగాన్ని పెంచడం మా ముఖ్య ప్రాధాన్యం.",
-
-    pricesEyebrow: "రొయ్యల ధరలు",
-    pricesTitle: "నిర్ణయం తీసుకునే ముందు ధరను తెలుసుకోండి",
-    pricesDescription: "ఫారమ్‌గేట్ ధరలు, కౌంట్ ఆధారిత అప్‌డేట్లు, వారపు ట్రెండ్లు మరియు మార్కెట్ అంతర్దృష్టి.",
-    pricesBody: "రొయ్యల ధరలు స్టాకింగ్ నుంచి కోత, కొనుగోలు, వ్యాపారం వరకు ప్రతి నిర్ణయాన్ని ప్రభావితం చేస్తాయి.\n\nమీకు దొరికేది\nఫారమ్‌గేట్ ధరలు\nకౌంట్/సైజు వారీ అప్‌డేట్లు\nవారపు ట్రెండ్లు మరియు విశ్లేషణ\nకాలానుగుణ ధర మార్పులు",
-
-    farmingEyebrow: "రొయ్యల సాగు",
-    farmingPageTitle: "రొయ్యల ఉత్పత్తిదారుల కోసం ఆచరణాత్మక మార్గదర్శకం",
-    farmingPageDescription:
-      "చెరువు సిద్ధం, మేత, నీటి నాణ్యత మరియు ఫారమ్ నిర్వహణ వనరుల కోసం ఈ విభాగం రూపొందించబడింది.",
-    farmingBody: "విజయవంతమైన రొయ్యల సాగు చెరువు నిర్వహణ, ఆరోగ్యకర సీడ్, స్థిర మేత, బయోసెక్యూరిటీ, సకాల కోతపై ఆధారపడుతుంది. క్రింది సాగు కథనాలు ఆచరణాత్మక మార్గదర్శం ఇస్తాయి.",
-
-    domesticEyebrow: "దేశీయ వినియోగం",
-    domesticPageTitle: "భారత రొయ్యలకు బలమైన మార్కెట్ నిర్మాణం",
-    domesticPageDescription: "భారత్ అగ్ర రొయ్యల ఉత్పత్తిదారు అయినా దేశీయ వినియోగం ఇంకా తక్కువగానే ఉంది.",
-    domesticBody: "Shrimp.News దృష్టిలో దేశీయ రొయ్యల వినియోగం పెంచడం భారత రొయ్యల పరిశ్రమ భవిష్యత్తుకు అతిపెద్ద అవకాశం.\n\nబలమైన దేశీయ మార్కెట్ రైతులు, ప్రాసెసర్లు, రిటైలర్లు, వినియోగదారులకు విలువ సృష్టించి ఎగుమతి ఆధారపడటాన్ని తగ్గిస్తుంది.",
-
-    marketsEyebrow: "మార్కెట్లు మరియు పరిశ్రమ",
-    marketsPageTitle: "రొయ్యల పరిశ్రమను రూపొందించే ట్రెండ్లు",
-    marketsPageDescription: "మార్కెట్ పరిస్థితులు, వాణిజ్యం, విధానం, పెట్టుబడులు మరియు పరిశ్రమ అభివృద్ధులు.",
-    marketsBody: "Shrimp.News సమయానుకూల మార్కెట్ ఇంటెలిజెన్స్ మరియు పరిశ్రమ అంతర్దృష్టులు అందిస్తుంది.\n\nమీకు దొరికేది\nపరిశ్రమ వార్తలు\nఎగుమతి మరియు వాణిజ్య అభివృద్ధులు\nప్రభుత్వ విధానాలు\nప్రాసెసింగ్ మరియు విలువ జోడింపు అప్‌డేట్లు",
-
-    healthEyebrow: "రొయ్యల ఆరోగ్యం",
-    healthTitle: "ఆరోగ్యకర రొయ్యలు. ఆరోగ్యకర ఫారాలు. మెరుగైన లాభాలు.",
-    healthDescription: "రొయ్యల ఆరోగ్యం, వ్యాధి నివారణ, బయోసెక్యూరిటీ, నీటి నాణ్యతపై ఆచరణాత్మక సమాచారం.",
-    healthBody: "ఆరోగ్యకర రొయ్యలు విజయవంతమైన సాగుకు పునాది. వ్యాధి వ్యాప్తి ప్రాణాలు, ఉత్పత్తి, లాభాలపై తీవ్ర ప్రభావం చూపుతుంది.\n\nమీకు దొరికేది\nEHP, WSSV, AHPND/EMS, Vibrio\nబయోసెక్యూరిటీ\nనీటి నాణ్యత నిర్వహణ\nఆచరణాత్మక ఫారమ్ మార్గదర్శకాలు",
-
-    techEyebrow: "సాంకేతికత",
-    techTitle: "ఆవిష్కరణ మరియు ఆక్వాకల్చర్ సాంకేతికత",
-    techDescription:
-      "ఆధునిక సాధనాలు, మానిటరింగ్ వ్యవస్థలు మరియు ఉద్భవిస్తున్న ఫారమ్ సాంకేతికత అంతర్దృష్టులు ఇక్కడ ఫీచర్ చేయబడతాయి.",
-    techBody: "సాంకేతికత రొయ్యల సాగును స్మార్ట్‌గా మారుస్తోంది. సెన్సార్లు, ఆటోమేషన్, AI సహాయ నిర్ణయాల వరకు—తదుపరి దశాబ్ద ఆక్వాకల్చర్‌ అంతర్దృష్టులను అన్వేషించండి.",
-
-    articlesEyebrow: "వ్యాసాలు",
-    articlesTitle: "మొదటి 20 లాంచ్ వ్యాసాలు",
-    articlesDescription:
-      "సైట్ అనుభవానికి సరిపోయేలా రూపొందించిన ఎడిటోరియల్ కథనాలు, మార్కెట్ అంతర్దృష్టి మరియు రొయ్యల సమాచారం యొక్క లాంచ్ ఆర్కైవ్.",
-    newsIndiaTitle: "భారత రొయ్యల పరిశ్రమ అప్‌డేట్‌లతో ఉండండి",
-    newsIndiaDescription:
-      "ష్రింప్.న్యూస్ భారత రొయ్యల రంగం నుంచి తాజా వార్తలు, విధానాలు, సాగు అప్‌డేట్‌లు, వ్యాధి అలర్ట్‌లు, పరిశోధన, పెట్టుబడులు మరియు పరిశ్రమ కార్యక్రమాలను అందిస్తుంది. భారత రొయ్యల సాగు మరియు ఆక్వాకల్చర్‌ను రూపొందిస్తున్న కథనాలపై మిమ్మల్ని అప్‌డేట్‌గా ఉంచుతుంది.",
-    newsGlobalTitle: "ముఖ్యమైన గ్లోబల్ పరిణామాలు",
-    newsGlobalDescription:
-      "ప్రపంచ రొయ్యల పరిశ్రమ నిరంతరం మారుతోంది. Shrimp.News మార్కెట్ ట్రెండ్‌లు, వాణిజ్యం, సాంకేతికత, పరిశోధన, సస్టైనబిలిటీ మరియు ప్రధాన ఉత్పత్తి/వినియోగ దేశాల విధాన అప్‌డేట్‌లతో మిమ్మల్ని గ్లోబల్ రొయ్యల పర్యావరణ వ్యవస్థకు అనుసంధానం చేస్తుంది.",
-    articleDetailEyebrow: "వ్యాసం",
-    articleDetailTitle: "డైనమిక్ వ్యాస వివరాలు",
-    articleDetailDescription:
-      "భవిష్యత్ ఎడిటోరియల్ కంటెంట్ మరియు SEO మెటాడేటా కోసం వ్యాస వివర రూట్‌లు సిద్ధం చేయబడ్డాయి.",
-    articleDetailBody:
-      "కంటెంట్ అందుబాటులోకి వచ్చిన తర్వాత ఈ రూట్ ఎంచుకున్న వ్యాసాన్ని చూపుతుంది.",
-
-    founderEyebrow: "వ్యవస్థాపకుల సందేశం",
-    founderTitle: "వ్యవస్థాపకుల నుంచి సందేశం",
-    founderDescription:
-      "ఈ పేజీ వ్యవస్థాపకుల దృక్పథం, దృష్టి మరియు ప్లాట్‌ఫామ్ దీర్ఘకాలిక లక్ష్యాలను హోస్ట్ చేస్తుంది.",
-    founderBody: "భారత్ ప్రపంచంలోని అగ్ర రొయ్యల ఉత్పత్తిదారు దేశాలలో ఒకటిగా నిలిచింది.\n\nఅయితే ఒక ముఖ్యమైన ప్రశ్న Shrimp.News సృష్టికి ప్రేరణం ఇచ్చింది: రొయ్యల పర్యావరణ వ్యవస్థన్ని ఒకచోట కలిపే ప్రత్యేక ప్రపంచ వేదిక ఎందుకు లేదు?\n\nShrimp.News ఆ ప్రశ్నకు జవాబుడానికి సృష్టించబడింది.",
-
-    contactEyebrow: "సంప్రదించండి",
-    contactTitle: "మమ్మల్ని సంప్రదించండి",
-    contactDescription:
-      "Shrimp.News కోసం ఎడిటోరియల్, వ్యాపారం మరియు భాగస్వామ్య విచారణలు.",
-    contactGeneralEnquiries: "సాధారణ విచారణలు",
-    contactEditorialLabel: "ఎడిటోరియల్",
-    contactBusinessLabel: "వ్యాపారం",
-    contactClosing:
-      "ఎడిటోరియల్ ఆలోచనలు, భాగస్వామ్యాలు, ప్రకటనలు మరియు ప్రపంచ రొయ్యల పరిశ్రమకు సంబంధించిన కథన సూచనలను స్వాగతిస్తాము.",
-
-    askPageEyebrow: "Ask Pranaని అడగండి",
-    askPageTitle: "రొయ్యల సమాచార సహాయకుడిని అడగండి",
-    askPageDescription:
-      "రొయ్యల సాగు, ధరలు, ఆరోగ్యం మరియు ఎడిటోరియల్ ప్రశ్నలకు మద్దతు ఇవ్వడానికి ఈ అనుభవం సిద్ధం చేయబడుతోంది.",
-    askPageBody:
-      "కంటెంట్ మరియు ఇంటరాక్షన్ మోడల్ ఖరారైన తర్వాత Ask Prana అనుభవం అమలు చేయబడుతుంది.",
-
-    privacyEyebrow: "గోప్యతా విధానం",
-    privacyTitle: "గోప్యతా విధానం",
-    privacyDescription:
-      "Shrimp.News మీ వ్యక్తిగత సమాచారాన్ని ఎలా సేకరిస్తుంది, ఉపయోగిస్తుంది మరియు రక్షిస్తుంది.",
-    privacyP1:
-      "Shrimp.News మీ గోప్యతను గౌరవిస్తుంది మరియు మీ వ్యక్తిగత సమాచారాన్ని రక్షించడానికి కట్టుబడి ఉంది.",
-    privacyP2:
-      "మా వెబ్‌సైట్ ద్వారా సేకరించిన సమాచారం—సంప్రదింపు ఫారమ్‌లు, న్యూస్‌లెటర్ సబ్‌స్క్రిప్షన్లు, కుకీలు మరియు వినియోగదారు పరస్పర చర్యలు—మా సేవలను మెరుగుపరచడానికి, ప్రేక్షకులతో సంప్రదించడానికి మరియు వినియోగదారు అనుభవాన్ని పెంచడానికి మాత్రమే ఉపయోగించబడుతుంది.",
-    privacyP3:
-      "చట్టం ప్రకారం అవసరమైనా లేదా మా సేవలను నడపడానికి అవసరమైనా తప్ప, మేము వ్యక్తిగత సమాచారాన్ని మూడవ పక్షాలకు అమ్మము, అద్దెకు ఇవ్వము లేదా పంచుకోము.",
-    privacyP4:
-      "Shrimp.Newsను యాక్సెస్ చేసి ఉపయోగించడం ద్వారా, మీరు ఈ గోప్యతా విధానం ప్రకారం సమాచార సేకరణ మరియు ఉపయోగానికి సమ్మతి తెలుపుతున్నారు.",
-    privacyP5:
-      "ఈ గోప్యతా విధానం ముందస్తు నోటీసు లేకుండా కాలానుగుణంగా నవీకరించబడవచ్చు.",
-
-    termsEyebrow: "నిబంధనలు మరియు షరతులు",
-    termsTitle: "నిబంధనలు మరియు షరతులు",
-    termsDescription:
-      "Shrimp.Newsను ఉపయోగించేటప్పుడు వర్తించే నియమాలు.",
-    termsP1:
-      "Shrimp.Newsను యాక్సెస్ చేసి ఉపయోగించడం ద్వారా, మీరు ఈ నిబంధనలు మరియు షరతులను పాటించడానికి అంగీకరిస్తున్నారు.",
-    termsP2:
-      "Shrimp.Newsలో ప్రచురించిన అన్ని కంటెంట్—వ్యాసాలు, చిత్రాలు, గ్రాఫిక్స్, వీడియోలు, నివేదికలు మరియు ఇతర సామగ్రి—వర్తించే మేధో సంపత్తి చట్టాల ద్వారా రక్షించబడుతుంది.",
-    termsP3:
-      "సరైన ఆపాదనతో వ్యక్తిగత మరియు వాణిజ్యేతర ప్రయోజనాల కోసం కంటెంట్‌ను పంచుకోవచ్చు. ముందస్తు రాతపూర్వక అనుమతి లేకుండా పునరుత్పత్తి, సవరణ లేదా వాణిజ్య ఉపయోగం నిషేధించబడింది.",
-    termsP4:
-      "Shrimp.Newsలో ప్రచురించిన సమాచారం విద్యా, సమాచార మరియు పరిశ్రమ అవగాహన ప్రయోజనాల కోసం ఉద్దేశించబడింది.",
-    termsP5:
-      "Shrimp.News వెబ్‌సైట్ కంటెంట్, సేవలు మరియు ఈ నిబంధనలు & షరతులను ముందస్తు నోటీసు లేకుండా ఎప్పుడైనా సవరించే హక్కును కలిగి ఉంది.",
-    termsP6:
-      "వెబ్‌సైట్‌ను కొనసాగించి ఉపయోగించడం ఈ నిబంధనల తాజా వెర్షన్‌ను అంగీకరించడమే.",
-
-    disclaimerEyebrow: "డిస్‌క్లైమర్",
-    disclaimerTitle: "డిస్‌క్లైమర్",
-    disclaimerDescription:
-      "Shrimp.Newsలో ప్రచురించిన సమాచారం గురించి ముఖ్యమైన పరిమితులు.",
-    disclaimerP1:
-      "Shrimp.Newsలో అందుబాటులో ఉన్న సమాచారం విద్యా, సమాచార మరియు పరిశ్రమ అవగాహన ప్రయోజనాల కోసం మాత్రమే అందించబడుతుంది.",
-    disclaimerP2:
-      "ప్రచురిత కంటెంట్ యొక్క ఖచ్చితత్వం మరియు నమ్మకత్వాన్ని నిర్ధారించడానికి ప్రతి ప్రయత్నం చేసినప్పటికీ, అన్ని సమాచారం పూర్తి, ప్రస్తుత లేదా లోపరహితమని Shrimp.News హామీ ఇవ్వదు.",
-    disclaimerP3:
-      "రొయ్యల సాగు, వ్యాధి నిర్వహణ, నీటి నాణ్యత, పోషకాహారం, మార్కెట్లు, ధరలు, సాంకేతికత, ఎగుమతులు మరియు విధానాలపై వ్యాసాలను వృత్తిపరమైన వెటర్నరీ, ఆర్థిక, చట్టపరమైన, పెట్టుబడి లేదా నియంత్రణ సలహాగా పరిగణించకూడదు.",
-    disclaimerP4:
-      "సాగు, వ్యాపారం, ఆర్థిక లేదా నిర్వహణ నిర్ణయాలు తీసుకునే ముందు అర్హత కలిగిన నిపుణులను సంప్రదించాలని పాఠకులను ప్రోత్సహిస్తున్నాము.",
-    disclaimerP5:
-      "ఈ వెబ్‌సైట్‌లో ప్రచురించిన సమాచారం ఉపయోగం వల్ల కలిగే ఏదైనా ప్రత్యక్ష లేదా పరోక్ష నష్టానికి Shrimp.News, దాని ప్రచురణకర్తలు, ఎడిటర్లు మరియు సహకారులు బాధ్యులు కాదు.",
-
-    askPranaHelpTitle: "Ask Prana ఎలా సహాయం చేయగలదు?",
-    askPranaHelpDescription:
-      "సాగు, చెరువు ఆరోగ్యం, మేత, నీటి నాణ్యత, వ్యాధి లేదా రొయ్యల మార్కెట్ల గురించి అడగండి.",
-
-    language: "భాష",
-    english: "ఇంగ్లీష్",
-    telugu: "తెలుగు",
-    hindi: "హిందీ",
-  },
-
-  hi: {
-    home: "होम",
-    news: "समाचार",
-    topics: "विषय",
-    about: "परिचय",
-    national: "भारत",
-    international: "वैश्विक",
-    india: "भारत",
-    global: "वैश्विक",
-    articles: "लेख",
-    shrimpFarming: "झींगा पालन",
-    shrimpPrices: "झींगा कीमतें",
-    shrimpHealth: "झींगा स्वास्थ्य",
-    technologyEquipment: "प्रौद्योगिकी एवं उपकरण",
-    researchInnovations: "अनुसंधान एवं नवाचार",
-    domesticConsumption: "घरेलू खपत",
-    marketsIndustry: "बाज़ार एवं उद्योग",
-    aboutUs: "हमारे बारे में",
-    foundersMessage: "संस्थापक का संदेश",
-    contactUs: "संपर्क करें",
-    askPrana: "Ask Prana about shrimp farming",
-    askPranaShort: "Ask Prana...",
-    askPranaButton: "Ask Prana",
-    ask: "Ask",
-    artificialIntelligence: "कृत्रिम बुद्धिमत्ता",
-    aiAssistant: "कृत्रिम बुद्धिमत्ता सहायक",
-    shrimpNews: "श्रिम्प न्यूज़",
-    shrimpNewsPlain: "श्रिम्प न्यूज़",
-    lastUpdated: "अंतिम बार अपडेट किया गया",
-    online: "ऑनलाइन",
-    askPranaAiAssistant: "Ask Prana - AI Assistant",
-    askPranaNoResponse: "कोई उत्तर प्राप्त नहीं हुआ।",
-    askPranaUnableAnswer: "Ask Prana could not answer right now.",
-    askPranaPreparingAnswer: "Ask Prana is preparing your answer...",
-    askPranaPlaceholder: "अपने तालाब, रोग, फ़ीड, कीमतों के बारे में पूछें...",
-    askPranaIntro:
-      "नमस्ते! मैं Ask Prana हूं — झींगा पालन, पानी की गुणवत्ता, रोग, फ़ीड या बाज़ारों के बारे में कुछ भी पूछें। अंग्रेज़ी, तेलुगु या हिंदी में पूछें।",
-    closeAskPrana: "Close Ask Prana",
-    primaryNavigation: "मुख्य नेविगेशन",
-    toggleNavigation: "नेविगेशन टॉगल करें",
-    noArticlesFound: "इस विषय के लिए अभी कोई लेख नहीं मिला.",
-    relatedArticles: "संबंधित लेख",
-
-    heroEyebrow: "भारत प्रथम · वैश्विक दृष्टिकोण",
-    heroTitleStart: "वैश्विक झींगा बाज़ार की",
-    heroTitleMiddle: "",
-    heroTitleHighlight: "धड़कन",
-    heroDescription:
-      "झींगा उत्पादकों, व्यापारियों और उपभोक्ताओं के लिए समाचार, झींगा कीमतें, बाज़ार जानकारी, पालन संबंधी सुझाव और उपयोगी ज्ञान.",
-    readLatest: "नवीनतम पढ़ें",
-    exploreArticles: "लेख देखें",
-
-    latestArticles: "नवीनतम लेख",
-    latestTitle: "झींगा आपूर्ति श्रृंखला के हर हिस्से के लिए जानकारी.",
-    latestDescription:
-      "घरेलू खपत, कीमतों, स्वास्थ्य और बाज़ार स्थिरता पर नवीनतम लेख.",
-    viewAll: "सभी देखें",
-    recent: "हाल के",
-    popular: "लोकप्रिय",
-    featured: "विशेष",
-    welcomeTitle: "श्रिम्प न्यूज़ में आपका स्वागत है",
-    welcomeToShrimpNews: "श्रिम्प न्यूज़ में आपका स्वागत है",
-    welcomeDescription:
-      "झींगा उद्योग समाचार, बाज़ार, पालन, स्वास्थ्य और नवाचार के लिए आपका विश्वसनीय स्रोत.",
-    loadingArticles: "लेख लोड हो रहे हैं…",
-    mainCategoryLabel: "मुख्य समाचार श्रेणी",
-    subcategoryLabel: "उपश्रेणी",
-    brandName: "{shrimpNews}",
-
-    domesticTitle: "भारत में झींगा का भविष्य घरेलू बाज़ार से शुरू होता है.",
-    domesticDescription:
-      "घरेलू मांग Shrimp.News की प्रमुख प्राथमिकता है. हम बताते हैं कि भारत में झींगा का सेवन किसानों, परिवारों और मजबूत खाद्य अर्थव्यवस्था को कैसे समर्थन देता है.",
-    whyConsumptionLags: "खपत क्यों पीछे है",
-    healthNutritionStories: "स्वास्थ्य और पोषण की कहानियाँ",
-
-    marketsLabel: "झींगा बाज़ार और कीमतें",
-    marketsTitle: "उद्योग के नेताओं के लिए तैयार की गई बाज़ार जानकारी.",
-    marketsDescription:
-      "फार्म स्तर की लाभप्रदता और झींगा आपूर्ति श्रृंखला में दीर्घकालिक विश्वास के लिए कीमतें, निर्यात मांग और बाज़ार संतुलन महत्वपूर्ण हैं.",
-    farmgatePriceDrivers: "फार्मगेट कीमत के कारक",
-    exportVsDomestic: "निर्यात बनाम घरेलू स्थिरता",
-
-    farmingHealthLabel: "झींगा पालन और स्वास्थ्य",
-    farmingTitle: "फार्म, फ़ीड और जैव सुरक्षा के लिए व्यावहारिक जानकारी.",
-    farmingDescription:
-      "पोषण, रोग रोकथाम, सर्वोत्तम पालन पद्धतियों और स्वस्थ झींगा उत्पादन के विज्ञान से संबंधित लेख.",
-
-    liveMarketIntel: "लाइव बाज़ार जानकारी",
-    marketsAtGlance: "झींगा बाज़ार एक नज़र में",
-    liveDashboard: "लाइव डैशबोर्ड",
-    live: "लाइव",
-    thisWeek: "/किग्रा · इस सप्ताह",
-    indiaExportsYtd: "भारत निर्यात YTD",
-    indiaExportsDesc: "2025 की समान अवधि की तुलना में",
-    globalVannamei: "ग्लोबल वन्नामी इंडेक्स",
-    globalVannameiDesc: "US$/किग्रा · 12-सप्ताह उच्च",
-    ecuadorBenchmark: "इक्वाडोर बेंचमार्क",
-    ecuadorBenchmarkDesc: "वैश्विक न्यूनतम निर्धारित करता है",
-    feedCost: "फ़ीड लागत",
-    feedCostDesc: "लगातार तीसरे सप्ताह में राहत",
-    newsExport: "टैरिफ चिंता कम होने से अमेरिकी शिपमेंट में 12% वृद्धि",
-    newsDisease: "मुख्य तटीय क्षेत्रों में फार्म अलर्ट स्थिर हैं",
-    newsFeed: "लगातार तीसरे सप्ताह फ़ीड कीमतें घटीं",
-
-    readFeaturedStory: "विशेष कहानी पढ़ें",
-    readArticle: "लेख पढ़ें",
-    imagePlaceholder: "छवि प्लेसहोल्डर",
-
-    aquaGptEyebrow: "Ask Prana",
-    aquaGptTitle: "Ask Prana - AI Assistant",
-    aquaGptDescription:
-      "झींगा पालन, जल गुणवत्ता, कीमतों, बाज़ार, स्वास्थ्य और तकनीक के बारे में पूछें. यह मॉक सहायक एक्वाकल्चर तक सीमित विश्वसनीय जानकारी खोजने में मदद करता है.",
-    aquaGptOnline: "ऑनलाइन",
-    aquaGptPlaceholder: "उदा. भारत में झींगा कीमतें क्या तय करती हैं?",
-    aquaGptEmpty: "शुरू करने के लिए झींगा से संबंधित प्रश्न दर्ज करें.",
-    aquaGptMockPrefix:
-      "Ask Prana संबंधित लेख पढ़ने और उद्योग की सर्वोत्तम प्रथाएँ देखने का सुझाव देता है. यह एक मॉक प्रतिक्रिया है:",
-    aquaPrompt1: "झींगा फार्मगेट कीमतों को क्या प्रभावित करता है?",
-    aquaPrompt2: "तालाबों में झींगा रोग कैसे रोकें?",
-    aquaPrompt3: "भारत के लिए सर्वश्रेष्ठ झींगा फ़ीड पद्धतियाँ",
-
-    newsletterEyebrow: "{shrimpNews} ब्रीफ़",
-    newsletterTitle: "द श्रिंप ब्रीफ़",
-    newsletterDescription:
-      "कीमतें, रोग अलर्ट, नीति अपडेट और बाज़ार जानकारी — हर सोमवार. हमेशा मुफ़्त.",
-    newsletterMondayNote:
-      "आपको हर सोमवार श्रिम्प ब्रीफ़ मिलेगा — हमेशा मुफ़्त.",
-    newsletterEmailLabel: "ईमेल पता",
-    newsletterEmailPlaceholder: "you@company.com",
-    newsletterSubscribe: "मुफ़्त सदस्यता लें",
-    newsletterSubscribing: "सदस्यता हो रही है...",
-    newsletterEmptyError: "कृपया एक मान्य ईमेल पता दर्ज करें.",
-    newsletterInvalidError: "कृपया एक मान्य ईमेल पता दर्ज करें.",
-    newsletterAlreadySubscribed: "यह ईमेल पहले से सदस्यता में है.",
-    newsletterRateLimitError: "बहुत अधिक प्रयास हो चुके हैं. कृपया बाद में पुनः प्रयास करें.",
-    newsletterSubmitError: "कुछ गलत हो गया. कृपया पुनः प्रयास करें.",
-    newsletterSuccessPrefix: "सदस्यता लेने के लिए धन्यवाद!",
-    newsletterSuccessSuffix: "",
-    articlesLoadError: "लेख अस्थायी रूप से उपलब्ध नहीं हैं. कृपया पुनः प्रयास करें.",
-    askPranaThinking: "Ask Prana is thinking...",
-
-    footerTagline:
-      "{shrimpNews} वैश्विक झींगा पारिस्थितिकी तंत्र के लिए बाज़ार कीमतें, पालन जानकारी, रोग अपडेट, तकनीक अंतर्दृष्टि और उद्योग समाचार प्रदान करता है.",
-    footerSubTagline: "भारत के फार्म से वैश्विक बाज़ार तक.",
-    categories: "श्रेणियाँ",
-    latestNews: "नवीनतम समाचार",
-    aquaticHealth: "जलीय स्वास्थ्य",
-    researchInnovation: "शोध और नवाचार",
-    prices: "कीमतें",
-    followShrimpNews: "{shrimpNews} को फ़ॉलो करें",
-    allRightsReserved: "© 2026 {shrimpNews}. सर्वाधिकार सुरक्षित.",
-    privacyPolicy: "गोपनीयता नीति",
-    terms: "नियम",
-    disclaimer: "अस्वीकरण",
-    contact: "संपर्क",
-    ventureLine: "A Fishery News venture · एक्वाकल्चर जोड़ना, नवाचार सक्षम करना",
-    backToTop: "ऊपर जाएँ",
-
-    pageComingSoon: "इस अनुभाग की सामग्री जल्द जोड़ी जाएगी.",
-
-    aboutEyebrow: "हमारे बारे में",
-    aboutTitle: "{shrimpNews} के बारे में",
-    aboutDescription: "वैश्विक झींगा उद्योग के लिए बनाया गया भारत का पहला समर्पित डिजिटल मीडिया प्लेटफ़ॉर्म.",
-    aboutBody: "Shrimp.News वैश्विक झींगा उद्योग के लिए बनाया गया भारत का पहला समर्पित डिजिटल मीडिया प्लेटफ़ॉर्म है.\n\nहमारा उद्देश्य: हर हिस्सेदार को विश्वसनीय जानकारी, व्यावहारिक ज्ञान और बाजार इंटेलिजेंस एक ही स्थान पर मिलें.\n\nभारत में घरेलू झींगा खपत बढाना हमारी मुख्य प्राथमिकता है.",
-
-    pricesEyebrow: "झींगा कीमतें",
-    pricesTitle: "निर्णय से पहले कीमत जानें",
-    pricesDescription: "फार्मगेट कीमतें, काउंट-आधारित अपडेट, साप्ताहिक रुझान और बाजार अंतर्दृष्टि.",
-    pricesBody: "झींगा कीमतें स्टॉकिंग से कटाई, खरीद और व्यापार तक हर निर्णय को प्रभावित करती हैं.\n\nआपको यहाँ मिलेगा\nफार्मगेट कीमतें\nकाउंट/साइज अपडेट\nसाप्ताहिक रुझान और विश्लेषण\nमौसमी मूल्य बदलाव",
-
-    farmingEyebrow: "झींगा पालन",
-    farmingPageTitle: "झींगा उत्पादकों के लिए व्यावहारिक मार्गदर्शन",
-    farmingPageDescription:
-      "तालाब तैयारी, फ़ीड, जल गुणवत्ता और फार्म प्रबंधन संसाधनों के लिए यह अनुभाग संरचित है.",
-    farmingBody: "सफल झींगा पालन तालाब प्रबंधन, स्वस्थ बीज, स्थिर फ़ीड, जैव सुरक्षा और समय पर कटाई पर निर्भर करता है. नीचे पालन लेख व्यावहारिक मार्गदर्शन देते हैं.",
-
-    domesticEyebrow: "घरेलू खपत",
-    domesticPageTitle: "भारतीय झींगे के लिए मजबूत बाजार",
-    domesticPageDescription: "भारत अग्रणी झींगा उत्पादक है, फिर भी घरेलू खपत अपेक्षाकृत कम है.",
-    domesticBody: "Shrimp.News का मानना है कि घरेलू झींगा खपत बढाना भारत के झींगा उद्योग का बड़ा अवसर है.\n\nमजबूत घरेलू बाजार किसानों, प्रोसेसरों, रिटेलरों और उपभोक्ताओं के लिए मूल्य बनाता है और निर्यात पर निर्भरता घटाता है.",
-
-    marketsEyebrow: "बाज़ार और उद्योग",
-    marketsPageTitle: "झींगा उद्योग को आकार देने वाले रुझान",
-    marketsPageDescription: "बाजार स्थितियाँ, व्यापार, नीति, निवेश और उद्योग विकास.",
-    marketsBody: "Shrimp.News समयानुकूल बाजार इंटेलिजेंस और उद्योग अंतर्दृष्टि देता है.\n\nआपको यहाँ मिलेगा\nउद्योग समाचार\nनिर्यात और व्यापार विकास\nसरकारी नीति\nप्रोसेसिंग और वैल्यू-एडेड अपडेट",
-
-    healthEyebrow: "झींगा स्वास्थ्य",
-    healthTitle: "स्वस्थ झींगा. स्वस्थ फार्म. बेहतर लाभ.",
-    healthDescription: "झींगा स्वास्थ्य, रोग रोकथाम, जैव सुरक्षा और जल गुणवत्ता पर व्यावहारिक जानकारी.",
-    healthBody: "स्वस्थ झींगा सफल पालन की नींव है. रोग प्रकोप सर्वाइवल, उत्पादन और लाभ पर गंभीर प्रभाव डाल सकते हैं.\n\nआपको यहाँ मिलेगा\nEHP, WSSV, AHPND/EMS, Vibrio\nजैव सुरक्षा\nजल गुणवत्ता प्रबंधन\nव्यावहारिक फार्म मार्गदर्शिकाएँ",
-
-    techEyebrow: "तकनीक",
-    techTitle: "नवाचार और एक्वाकल्चर तकनीक",
-    techDescription:
-      "आधुनिक उपकरण, निगरानी प्रणालियाँ और उभरती फार्म तकनीक अंतर्दृष्टि यहाँ दिखाई जाएँगी.",
-    techBody: "तकनीक झींगा पालन को स्मार्ट बना रही है. सेंसर, ऑटोमेशन और AI-सहायित निर्णयों तक—अगले दशक की एक्वाकल्चर अंतर्दृष्टि देखें.",
-
-    articlesEyebrow: "लेख",
-    articlesTitle: "पहले 20 लॉन्च लेख",
-    articlesDescription:
-      "साइट अनुभव से मेल खाते संपादकीय कहानियों, बाज़ार अंतर्दृष्टि और झींगा जानकारी का पॉलिश्ड लॉन्च आर्काइव.",
-    newsIndiaTitle: "भारत के झींगा उद्योग से जुड़े रहें",
-    newsIndiaDescription:
-      "श्रिम्प.न्यूज़ भारत के झींगा क्षेत्र की ताज़ा खबरें और विकास लाता है—सरकारी नीतियाँ, फार्मिंग अपडेट, रोग अलर्ट, शोध, निवेश और उद्योग पहलों तक। हमारी राष्ट्रीय कवरेज आपको भारतीय झींगा पालन और एक्वाकल्चर को आकार देने वाली कहानियों से अवगत रखती है।",
-    newsGlobalTitle: "महत्वपूर्ण वैश्विक विकास",
-    newsGlobalDescription:
-      "वैश्विक झींगा उद्योग लगातार बदल रहा है। Shrimp.News बाज़ार रुझान, व्यापार, तकनीक, शोध, स्थिरता और प्रमुख उत्पादक/उपभोक्ता देशों की नीति अपडेट सहित अंतरराष्ट्रीय विकास कवर करता है, ताकि आप वैश्विक झींगा पारिस्थितिकी तंत्र से जुड़े रहें।",
-    articleDetailEyebrow: "लेख",
-    articleDetailTitle: "डायनामिक लेख विवरण",
-    articleDetailDescription:
-      "भविष्य की संपादकीय सामग्री और SEO मेटाडेटा के लिए लेख विवरण रूट तैयार किए गए हैं.",
-    articleDetailBody:
-      "सामग्री उपलब्ध होने पर यह रूट चुने गए लेख को दिखाएगा.",
-
-    founderEyebrow: "संस्थापक का संदेश",
-    founderTitle: "संस्थापक का संदेश",
-    founderDescription:
-      "यह पेज संस्थापक के दृष्टिकोण, दृष्टि और प्लेटफ़ॉर्म के दीर्घकालिक लक्ष्यों को होस्ट करेगा.",
-    founderBody: "भारत विश्व के प्रमुख झींगा उत्पादक देशों में से एक बन चुका है.\n\nफिर भी एक महत्वपूर्ण प्रश्न ने Shrimp.News की रचना की: पूरे झींगा पारिस्थितिकी तंत्र को जोडने वाला कोई समर्पित वैश्विक प्लेटफ़ॉर्म क्यों नहीं?\n\nShrimp.News उसी प्रश्न का उत्तर देने के लिए बनाया गया.",
-
-    contactEyebrow: "संपर्क करें",
-    contactTitle: "हमसे संपर्क करें",
-    contactDescription:
-      "Shrimp.News के लिए संपादकीय, व्यवसाय और साझेदारी पूछताछ.",
-    contactGeneralEnquiries: "सामान्य पूछताछ",
-    contactEditorialLabel: "संपादकीय",
-    contactBusinessLabel: "व्यवसाय",
-    contactClosing:
-      "हम वैश्विक झींगा उद्योग से जुड़े संपादकीय विचार, साझेदारी, विज्ञापन और कहानी सुझावों का स्वागत करते हैं.",
-
-    askPageEyebrow: "Ask Prana से पूछें",
-    askPageTitle: "झींगा जानकारी सहायक से पूछें",
-    askPageDescription:
-      "झींगा पालन, कीमतों, स्वास्थ्य और संपादकीय प्रश्नों का समर्थन करने के लिए यह अनुभव तैयार किया जा रहा है.",
-    askPageBody:
-      "सामग्री और इंटरैक्शन मॉडल तय होने के बाद Ask Prana अनुभव लागू किया जाएगा.",
-
-    privacyEyebrow: "गोपनीयता नीति",
-    privacyTitle: "गोपनीयता नीति",
-    privacyDescription:
-      "Shrimp.News आपकी व्यक्तिगत जानकारी कैसे एकत्र करता है, उपयोग करता है और सुरक्षित रखता है.",
-    privacyP1:
-      "Shrimp.News आपकी गोपनीयता का सम्मान करता है और आपकी व्यक्तिगत जानकारी की सुरक्षा के लिए प्रतिबद्ध है.",
-    privacyP2:
-      "हमारी वेबसाइट के माध्यम से एकत्र जानकारी—संपर्क फ़ॉर्म, न्यूज़लेटर सदस्यता, कुकीज़ और उपयोगकर्ता इंटरैक्शन—का उपयोग केवल हमारी सेवाओं को बेहतर बनाने, दर्शकों से संवाद करने और उपयोगकर्ता अनुभव बढ़ाने के लिए किया जाता है.",
-    privacyP3:
-      "कानून द्वारा आवश्यक होने या हमारी सेवाएँ संचालित करने के लिए आवश्यक होने के अलावा, हम व्यक्तिगत जानकारी को तीसरे पक्ष को बेचते, किराए पर देते या साझा नहीं करते.",
-    privacyP4:
-      "Shrimp.News का उपयोग करके, आप इस गोपनीयता नीति के अनुसार जानकारी के संग्रह और उपयोग के लिए सहमति देते हैं.",
-    privacyP5:
-      "यह गोपनीयता नीति बिना पूर्व सूचना के समय-समय पर अपडेट की जा सकती है.",
-
-    termsEyebrow: "नियम और शर्तें",
-    termsTitle: "नियम और शर्तें",
-    termsDescription:
-      "Shrimp.News का उपयोग करते समय लागू होने वाले नियम.",
-    termsP1:
-      "Shrimp.News का उपयोग करके, आप इन नियमों और शर्तों का पालन करने के लिए सहमत होते हैं.",
-    termsP2:
-      "Shrimp.News पर प्रकाशित सभी सामग्री—लेख, चित्र, ग्राफ़िक्स, वीडियो, रिपोर्ट और अन्य सामग्री—लागू बौद्धिक संपदा कानूनों द्वारा संरक्षित है.",
-    termsP3:
-      "उचित श्रेय के साथ व्यक्तिगत और गैर-व्यावसायिक उद्देश्यों के लिए सामग्री साझा की जा सकती है. पूर्व लिखित अनुमति के बिना पुनरुत्पादन, संशोधन या व्यावसायिक उपयोग निषिद्ध है.",
-    termsP4:
-      "Shrimp.News पर प्रकाशित जानकारी शैक्षिक, सूचनात्मक और उद्योग जागरूकता उद्देश्यों के लिए है.",
-    termsP5:
-      "Shrimp.News बिना पूर्व सूचना के किसी भी समय वेबसाइट सामग्री, सेवाएँ और इन नियमों व शर्तों को संशोधित करने का अधिकार रखता है.",
-    termsP6:
-      "वेबसाइट का निरंतर उपयोग इन नियमों के नवीनतम संस्करण की स्वीकृति माना जाता है.",
-
-    disclaimerEyebrow: "अस्वीकरण",
-    disclaimerTitle: "अस्वीकरण",
-    disclaimerDescription:
-      "Shrimp.News पर प्रकाशित जानकारी से जुड़ी महत्वपूर्ण सीमाएँ.",
-    disclaimerP1:
-      "Shrimp.News पर उपलब्ध जानकारी केवल शैक्षिक, सूचनात्मक और उद्योग जागरूकता उद्देश्यों के लिए प्रदान की जाती है.",
-    disclaimerP2:
-      "प्रकाशित सामग्री की सटीकता और विश्वसनीयता सुनिश्चित करने का हर प्रयास किया जाता है, फिर भी Shrimp.News यह गारंटी नहीं देता कि सभी जानकारी पूर्ण, वर्तमान या त्रुटिरहित है.",
-    disclaimerP3:
-      "झींगा पालन, रोग प्रबंधन, जल गुणवत्ता, पोषण, बाज़ार, कीमतें, तकनीक, निर्यात और नीति पर लेखों को पेशेवर पशुचिकित्सा, वित्तीय, कानूनी, निवेश या नियामक सलाह नहीं माना जाना चाहिए.",
-    disclaimerP4:
-      "पालन, व्यवसाय, वित्तीय या प्रबंधन निर्णय लेने से पहले योग्य पेशेवरों से परामर्श करने के लिए पाठकों को प्रोत्साहित किया जाता है.",
-    disclaimerP5:
-      "इस वेबसाइट पर प्रकाशित जानकारी के उपयोग से होने वाले किसी भी प्रत्यक्ष या अप्रत्यक्ष नुकसान के लिए Shrimp.News, इसके प्रकाशक, संपादक और योगदानकर्ता जिम्मेदार नहीं होंगे.",
-
-    askPranaHelpTitle: "Ask Prana कैसे मदद कर सकता है?",
-    askPranaHelpDescription:
-      "पालन, तालाब स्वास्थ्य, फ़ीड, जल गुणवत्ता, रोग या झींगा बाज़ारों के बारे में पूछें.",
-
-    language: "भाषा",
-    english: "अंग्रेज़ी",
-    telugu: "तेलुगु",
-    hindi: "हिंदी",
   },
 } as const;
 
-export type TranslationKey = keyof typeof translations.en;
+export type CopyKey = keyof typeof copy.en;
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(
   undefined,
@@ -940,32 +334,22 @@ export function LanguageProvider({
   void initialLanguage;
   const language: Language = "en";
 
-  useEffect(() => {
-    persistLanguage("en");
-    document.documentElement.lang = "en";
-  }, []);
-
-  const setLanguage = useCallback((_newLanguage: Language) => {
-    persistLanguage("en");
-    document.documentElement.lang = "en";
-  }, []);
-
-  const t = useCallback((key: TranslationKey) => {
-    const value = translations.en[key];
+  const t = useCallback((key: CopyKey) => {
+    const value = copy.en[key];
     if (value == null || value === "") {
       if (process.env.NODE_ENV !== "production") {
-        console.warn(`[i18n] Missing translation key: ${String(key)} (en)`);
+        console.warn(`[copy] Missing key: ${String(key)}`);
       }
       return "";
     }
     if (typeof value !== "string") {
       if (process.env.NODE_ENV !== "production") {
-        console.warn(`[i18n] Invalid translation value for key: ${String(key)}`);
+        console.warn(`[copy] Invalid value for key: ${String(key)}`);
       }
       return "";
     }
     if (key !== "shrimpNews" && value.includes("{shrimpNews}")) {
-      return value.replaceAll("{shrimpNews}", translations.en.shrimpNews);
+      return value.replaceAll("{shrimpNews}", copy.en.shrimpNews);
     }
     return value;
   }, []);
@@ -973,10 +357,9 @@ export function LanguageProvider({
   const value = useMemo(
     () => ({
       language,
-      setLanguage,
       t,
     }),
-    [language, setLanguage, t],
+    [language, t],
   );
 
   return (

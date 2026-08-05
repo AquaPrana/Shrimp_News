@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { useLanguage, type TranslationKey } from "@/context/language-context";
+import { useLanguage, type CopyKey } from "@/context/language-context";
 
 type NavItem =
-  | { labelKey: TranslationKey; href: string }
+  | { labelKey: CopyKey; href: string }
   | {
-      labelKey: TranslationKey;
-      submenu: Array<{ labelKey: TranslationKey; href: string }>;
+      labelKey: CopyKey;
+      submenu: Array<{ labelKey: CopyKey; href: string }>;
     };
 
 const navItems: NavItem[] = [

@@ -5,7 +5,7 @@ import {
   PAGE_CONTENT_PANEL_CLASS,
   PageShell,
 } from "@/components/layout/page-shell";
-import { useLanguage, type TranslationKey } from "@/context/language-context";
+import { useLanguage, type CopyKey } from "@/context/language-context";
 import type { PublicArticle } from "@/lib/article-types";
 
 export function CategoryArticlesView({
@@ -16,10 +16,10 @@ export function CategoryArticlesView({
   topic,
   initialArticles,
 }: {
-  eyebrowKey: TranslationKey;
-  titleKey: TranslationKey;
-  descriptionKey: TranslationKey;
-  bodyKey: TranslationKey;
+  eyebrowKey: CopyKey;
+  titleKey: CopyKey;
+  descriptionKey: CopyKey;
+  bodyKey: CopyKey;
   topic: string;
   initialArticles: PublicArticle[];
 }) {

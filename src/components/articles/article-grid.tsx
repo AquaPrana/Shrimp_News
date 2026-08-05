@@ -3,12 +3,11 @@
 import { ArticleCard } from "@/components/homepage/article-card";
 import {
   useLanguage,
-  type TranslationKey,
+  type CopyKey,
 } from "@/context/language-context";
 import { useArticles } from "@/hooks/use-articles";
-import { useLocalizedArticles } from "@/hooks/use-localized-articles";
 import type { PublicArticle } from "@/lib/article-types";
-import { TOPIC_TRANSLATION_KEYS } from "@/lib/public-articles-shared";
+import { TOPIC_LABELS } from "@/lib/public-articles-shared";
 
 const REGION_TOPICS = new Set([
   "india",
@@ -17,13 +16,13 @@ const REGION_TOPICS = new Set([
   "international",
 ]);
 
-function safeDisplayLabel(value: unknown, translationKey?: string) {
+function safeDisplayLabel(value: unknown, copyKey?: string) {
   if (typeof value !== "string") return "";
 
   const label = value.trim();
   if (
     !label ||
-    label === translationKey ||
+    label === copyKey ||
     /^(undefined|null|\[object Object\])$/i.test(label)
   ) {
     return "";
@@ -41,7 +40,7 @@ export function ArticleGrid({
 }: {
   topic?: string | null;
   query?: string | null;
-  headingKey?: TranslationKey;
+  headingKey?: CopyKey;
   articles?: PublicArticle[];
   initialArticles?: PublicArticle[];
 }) {
@@ -56,7 +55,7 @@ export function ArticleGrid({
     initialArticles,
   );
   const sourceList = articles ?? fetched;
-  const list = useLocalizedArticles(sourceList);
+  const list = sourceList;
 
   if (shouldFetch && loading && list.length === 0) {
     return (
@@ -84,17 +83,11 @@ export function ArticleGrid({
     );
   }
 
-  const topicTranslationKey = topic
-    ? TOPIC_TRANSLATION_KEYS[topic]
-    : undefined;
   const heading = headingKey
     ? safeDisplayLabel(t(headingKey), headingKey)
     : topic && REGION_TOPICS.has(topic)
       ? ""
-      : safeDisplayLabel(
-          topicTranslationKey ? t(topicTranslationKey as TranslationKey) : "",
-          topicTranslationKey,
-        );
+      : safeDisplayLabel(topic ? TOPIC_LABELS[topic] : "");
 
   return (
     <div className="space-y-6">

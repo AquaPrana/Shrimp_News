@@ -27,13 +27,12 @@ export default async function Overview() {
   }> = [];
 
   const results = await Promise.allSettled([
-    prisma.article.count({ where: { language: "en" } }),
-    prisma.article.count({ where: { language: "en", isPublished: true } }),
-    prisma.article.count({ where: { language: "en", isPublished: false } }),
+    prisma.article.count(),
+    prisma.article.count({ where: { isPublished: true } }),
+    prisma.article.count({ where: { isPublished: false } }),
     prisma.event.count(),
     prisma.subscriber.count(),
     prisma.article.findMany({
-      where: { language: "en" },
       orderBy: { updatedAt: "desc" },
       take: 8,
       select: {

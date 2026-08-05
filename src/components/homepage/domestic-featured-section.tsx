@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArticleCoverImage } from "@/components/articles/article-cover-image";
 import { useLanguage } from "@/context/language-context";
-import { getCategoryLabel } from "@/lib/article-localization";
+import { getCategoryLabel } from "@/lib/article-formatting";
 import type { PublicArticle } from "@/lib/article-types";
 import { formatArticleDate } from "@/lib/format-date";
 import { baseSlug } from "@/lib/public-articles-shared";
@@ -59,11 +59,7 @@ export function DomesticFeaturedSection({
                     {getCategoryLabel(article.category, language)}
                   </span>
                   <h3
-                    className={`article-title mt-2 text-lg font-extrabold text-slate-900 transition-colors group-hover:text-[#0B4F7A] ${
-                      language === "te"
-                        ? "h-auto min-h-0 overflow-visible leading-[1.4]"
-                        : "line-clamp-3 leading-snug"
-                    }`}
+                    className="article-title mt-2 line-clamp-3 text-lg font-extrabold leading-snug text-slate-900 transition-colors group-hover:text-[#0B4F7A]"
                   >
                     {article.title}
                   </h3>

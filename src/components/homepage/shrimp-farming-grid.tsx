@@ -83,11 +83,7 @@ export function ShrimpFarmingGrid({ articles }: { articles: PublicArticle[] }) {
                 </div>
                 <div className="min-w-0">
                   <h3
-                    className={`article-title text-sm font-extrabold text-slate-900 transition-colors group-hover:text-[#0B4F7A] sm:text-base ${
-                      language === "te"
-                        ? "h-auto min-h-0 overflow-visible leading-[1.4]"
-                        : "line-clamp-3 leading-snug"
-                    }`}
+                    className="article-title line-clamp-3 text-sm font-extrabold leading-snug text-slate-900 transition-colors group-hover:text-[#0B4F7A] sm:text-base"
                   >
                     {article.title}
                   </h3>

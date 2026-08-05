@@ -55,20 +55,14 @@ function mapArticleResponse(value: unknown): AdminArticle | null {
       "category",
       "subcategory",
     ]) as AdminArticle["category"],
-    language: stringField(record, [
-      "language",
-    ]) as AdminArticle["language"],
     isPublished:
       typeof record.isPublished === "boolean"
         ? record.isPublished
         : record.status === "published",
+    isFeatured: record.isFeatured === true,
+    isPopular: record.isPopular === true,
     createdAt: stringField(record, ["createdAt"]) ?? "",
     updatedAt: stringField(record, ["updatedAt"]) ?? "",
-    translationStatus:
-      record.translationStatus &&
-      typeof record.translationStatus === "object"
-        ? record.translationStatus as AdminArticle["translationStatus"]
-        : undefined,
   };
 }
 

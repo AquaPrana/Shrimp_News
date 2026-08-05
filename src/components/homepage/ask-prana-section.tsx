@@ -10,7 +10,7 @@ type ChatResponse = {
 };
 
 export function AskPranaSection() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   const [question, setQuestion] = useState("");
   const [response, setResponse] = useState<string | null>(null);
@@ -37,8 +37,7 @@ export function AskPranaSection() {
     setIsLoading(true);
     setResponse(null);
 
-    const languageLabel =
-      language === "te" ? "Telugu" : language === "hi" ? "Hindi" : "English";
+    const languageLabel = "English";
 
     try {
       const request = await fetch("/api/chat", {

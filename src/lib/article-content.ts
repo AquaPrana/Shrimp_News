@@ -26,6 +26,7 @@ const ALLOWED_TAGS = [
 ];
 
 const HEADING_MAX_LENGTH = 120;
+export const MAX_ARTICLE_HTML_LENGTH = 5_000_000;
 const BULLET_PATTERN = /^[\s]*(?:[•\-\*·▪◦‣–—]|\d+[.)])\s+(.+)$/;
 const HTML_TAG_PATTERN = /<\/?[a-z][\s\S]*?>/i;
 const BLOCK_TAG_PATTERN =
@@ -93,6 +94,11 @@ function wrapParagraph(text: string) {
   return `<p>${escapeHtml(trimmed)}</p>`;
 }
 
+function wrapParagraphLines(lines: string[]) {
+  const content = lines.map((line) => escapeHtml(line.trim())).join("<br>");
+  return content ? `<p>${content}</p>` : "";
+}
+
 function wrapHeading(text: string, level: "h2" | "h3" = "h2") {
   const trimmed = text.trim();
   if (!trimmed) return "";
@@ -157,8 +163,16 @@ function plainBlockToHtml(block: string) {
       continue;
     }
 
-    parts.push(wrapParagraph(line));
-    index += 1;
+    const paragraphLines: string[] = [];
+    while (
+      index < lines.length &&
+      !BULLET_PATTERN.test(lines[index]) &&
+      !looksLikeHeading(lines[index])
+    ) {
+      paragraphLines.push(lines[index]);
+      index += 1;
+    }
+    parts.push(wrapParagraphLines(paragraphLines));
   }
 
   return parts.join("");
@@ -181,6 +195,22 @@ export function plainTextToArticleHtml(value: string): string {
 /** Remove Word / Docs / office-specific markup before sanitizing pasted HTML. */
 export function cleanWordHtml(html: string) {
   return html
+    // Word may copy a complete document. Keep only the clipboard fragment when present.
+    .replace(
+      /^[\s\S]*?<!--\s*StartFragment\s*-->([\s\S]*?)<!--\s*EndFragment\s*-->[\s\S]*$/i,
+      "$1",
+    )
+    // Preserve semantic formatting that Word commonly expresses only as styles/classes.
+    .replace(
+      /<p\b[^>]*(?:MsoTitle|MsoHeading\s*1|MsoHeading1|mso-outline-level\s*:\s*0)[^>]*>([\s\S]*?)<\/p>/gi,
+      "<h2>$1</h2>",
+    )
+    .replace(
+      /<p\b[^>]*(?:MsoSubtitle|MsoHeading\s*[2-6]|MsoHeading[2-6]|mso-outline-level\s*:\s*[1-8])[^>]*>([\s\S]*?)<\/p>/gi,
+      "<h3>$1</h3>",
+    )
+    .replace(/<span\b[^>]*style=(?:"[^"]*font-weight\s*:\s*(?:bold|[6-9]00)[^"]*"|'[^']*font-weight\s*:\s*(?:bold|[6-9]00)[^']*')[^>]*>([\s\S]*?)<\/span>/gi, "<strong>$1</strong>")
+    .replace(/<span\b[^>]*style=(?:"[^"]*font-style\s*:\s*italic[^"]*"|'[^']*font-style\s*:\s*italic[^']*')[^>]*>([\s\S]*?)<\/span>/gi, "<em>$1</em>")
     .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/<\/?(?:html|head|body|meta|link|title|xml|o:p)[^>]*>/gi, "")
     .replace(/<(\/?)(?:o|w|v|m):[^>]*>/gi, "")
@@ -448,22 +478,21 @@ function countHtmlBlocks(html: string) {
 
 /** Choose the paste conversion that preserves the most structure. */
 export function pasteClipboardToArticleHtml(html: string, plain: string) {
-  const trimmedHtml = html.replace(/<!--[\s\S]*?-->/g, "").trim();
-  const fromPlain = plainTextToArticleHtml(plain);
-
-  if (!trimmedHtml) return fromPlain;
+  // Keep Word's StartFragment/EndFragment comments until cleanWordHtml has
+  // extracted the actual clipboard selection from a full Office document.
+  const trimmedHtml = html.trim();
+  if (!trimmedHtml) return plainTextToArticleHtml(plain);
 
   try {
     const fromHtml = formatArticleHtml(trimmedHtml);
-    const plainBlocks = countHtmlBlocks(fromPlain);
     const htmlBlocks = countHtmlBlocks(fromHtml);
 
-    // Prefer HTML paste when it has real structure; otherwise plain text path.
-    if (htmlBlocks === 0) return fromPlain;
-    if (fromPlain && plainBlocks > htmlBlocks * 1.5) return fromPlain;
-    return fromHtml || fromPlain;
+    // A usable HTML clipboard payload preserves Word formatting and is cleaned
+    // exactly once. Plain text is only converted when HTML has no real blocks.
+    if (fromHtml && htmlBlocks > 0) return fromHtml;
+    return plainTextToArticleHtml(plain);
   } catch {
-    return fromPlain;
+    return plainTextToArticleHtml(plain);
   }
 }
 
@@ -487,11 +516,21 @@ export function prepareArticleContentForSave(raw: unknown) {
     };
   }
 
-  if (html.length > 500_000) {
+  if (html.length > MAX_ARTICLE_HTML_LENGTH) {
     return { ok: false as const, error: "Article content is too long." };
   }
 
   return { ok: true as const, value: html };
+}
+
+/** An empty/missing editor payload must never erase a stored article body. */
+export function preserveExistingArticleContent(
+  candidate: unknown,
+  existing: string,
+) {
+  return typeof candidate === "string" && candidate.trim()
+    ? candidate
+    : existing;
 }
 
 export function prepareArticleContentForDisplay(content: string) {

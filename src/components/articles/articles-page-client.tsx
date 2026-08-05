@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import { ArticleGrid } from "@/components/articles/article-grid";
 import { PageShell } from "@/components/layout/page-shell";
-import type { TranslationKey } from "@/context/language-context";
+import type { CopyKey } from "@/context/language-context";
 import type { PublicArticle } from "@/lib/article-types";
 import { normalizeArticleTopic } from "@/lib/public-articles-shared";
 
@@ -16,7 +16,7 @@ function ArticlesContent({
   query: string | null;
   initialArticles: PublicArticle[];
 }) {
-  const eyebrowKey: TranslationKey | undefined = query
+  const eyebrowKey: CopyKey | undefined = query
     ? undefined
     : topic === "india"
       ? "india"
@@ -24,14 +24,14 @@ function ArticlesContent({
         ? "global"
         : undefined;
 
-  const titleKey: TranslationKey =
+  const titleKey: CopyKey =
     topic === "india"
       ? "newsIndiaTitle"
       : topic === "global"
         ? "newsGlobalTitle"
         : "articlesTitle";
 
-  const descriptionKey: TranslationKey =
+  const descriptionKey: CopyKey =
     topic === "india"
       ? "newsIndiaDescription"
       : topic === "global"

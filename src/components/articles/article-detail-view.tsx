@@ -7,7 +7,6 @@ import { ArticleCoverImage } from "@/components/articles/article-cover-image";
 import { ArticleGrid } from "@/components/articles/article-grid";
 import { PAGE_CONTENT_PANEL_CLASS } from "@/components/layout/page-shell";
 import { useLanguage } from "@/context/language-context";
-import { useLocalizedArticles } from "@/hooks/use-localized-articles";
 import {
   readingTimeMinutes,
   type PublicArticle,
@@ -15,8 +14,7 @@ import {
 import {
   formatReadTime,
   getCategoryLabel,
-  localizePublicArticle,
-} from "@/lib/article-localization";
+} from "@/lib/article-formatting";
 
 type ArticleDetailViewProps = {
   slug: string;
@@ -33,8 +31,8 @@ export function ArticleDetailView({
   hideDefaultHeader = false,
 }: ArticleDetailViewProps) {
   const { language, t } = useLanguage();
-  const article = localizePublicArticle(initialArticle, language);
-  const related = useLocalizedArticles(initialRelated, language);
+  const article = initialArticle;
+  const related = initialRelated;
   const cover = article.featuredImageUrl || "/images/articles/ArticleImage.jpeg";
 
   return (

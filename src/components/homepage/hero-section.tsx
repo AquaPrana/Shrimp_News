@@ -7,8 +7,7 @@ import type { PublicArticle } from "@/lib/article-types";
 import { baseSlug } from "@/lib/public-articles-shared";
 
 export function HeroSection({ featuredArticle }: { featuredArticle?: PublicArticle }) {
-  const { t, language } = useLanguage();
-  const isTeluguHero = language === "te";
+  const { t } = useLanguage();
 
   return (
     <section className="relative overflow-hidden bg-white px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-10 lg:px-8 lg:pb-24 lg:pt-12">
@@ -26,11 +25,7 @@ export function HeroSection({ featuredArticle }: { featuredArticle?: PublicArtic
 
           <div className="space-y-8">
             <h1
-              className={`hero-title hero-fade-in max-w-[780px] font-black tracking-[-0.045em] text-[#0B3A6E] sm:tracking-[-0.055em] ${
-                isTeluguHero
-                  ? "h-auto min-h-0 overflow-visible text-[26px] leading-[1.4] sm:text-[38px] lg:text-[48px] xl:text-[52px]"
-                  : "text-[34px] leading-[0.95] sm:text-[52px] sm:leading-[0.92] lg:text-[72px] xl:text-[80px]"
-              }`}
+              className="hero-title hero-fade-in max-w-[780px] text-[34px] font-black leading-[0.95] tracking-[-0.045em] text-[#0B3A6E] sm:text-[52px] sm:leading-[0.92] sm:tracking-[-0.055em] lg:text-[72px] xl:text-[80px]"
               style={{ animationDelay: "0.15s" }}
             >
               <span className="block">{t("heroTitleStart")}</span>

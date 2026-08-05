@@ -1,6 +1,6 @@
 import { PageShell } from "@/components/layout/page-shell";
 
-/** Add new terms paragraphs here — each key must exist in en/te/hi translations. */
+/** Ordered terms copy keys. */
 const TERMS_BODY_KEYS = [
   "termsP1",
   "termsP2",

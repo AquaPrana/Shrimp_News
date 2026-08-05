@@ -1,5 +1,5 @@
 import type { Language } from "@/context/language-context";
-import { formatLocalizedDate } from "@/lib/article-localization";
+import { formatLocalizedDate } from "@/lib/article-formatting";
 import type { ArticleLanguage } from "@/lib/article-types";
 
 export function formatArticleDate(

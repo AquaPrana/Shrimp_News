@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArticleCoverImage } from "@/components/articles/article-cover-image";
 import { useLanguage } from "@/context/language-context";
 import type { PublicArticle } from "@/lib/article-types";
-import { getCategoryLabel } from "@/lib/article-localization";
+import { getCategoryLabel } from "@/lib/article-formatting";
 import { formatArticleDate } from "@/lib/format-date";
 import { baseSlug } from "@/lib/public-articles-shared";
 

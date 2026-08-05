@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
 import { verifyAdminApi } from "@/lib/admin-auth";
-import {
-  deleteArticleTranslationGroup,
-  getArticleTranslationStatus,
-  syncArticleTranslations,
-} from "@/lib/article-translations-sync";
-import { baseSlug } from "@/lib/public-articles";
 import { logDatabaseError, prisma, prismaErrorCode } from "@/lib/prisma";
 import { validatePrismaArticleInput } from "@/lib/validation";
+import { preserveExistingArticleContent } from "@/lib/article-content";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,14 +16,9 @@ export async function GET(request: Request, { params }: RouteContext) {
 
   try {
     const { id } = await params;
-    const article = await prisma.article.findFirst({
-      where: { id, language: "en" },
-    });
+    const article = await prisma.article.findUnique({ where: { id } });
     if (!article) return NextResponse.json({ error: "Article not found." }, { status: 404 });
-    const translationStatus = await getArticleTranslationStatus(article);
-    return NextResponse.json({
-      article: { ...article, translationStatus },
-    });
+    return NextResponse.json({ article });
   } catch (error) {
     logDatabaseError("articles.get", error);
     return NextResponse.json({ error: "Failed to load article." }, { status: 500 });
@@ -43,35 +33,24 @@ export async function PUT(request: Request, { params }: RouteContext) {
   try {
     const { id } = await params;
     const body = await request.json() as Record<string, unknown>;
-    const existing = await prisma.article.findFirst({
-      where: { id, language: "en" },
-    });
+    const existing = await prisma.article.findUnique({ where: { id } });
     if (!existing) return NextResponse.json({ error: "Article not found." }, { status: 404 });
 
     const mergedInput: Record<string, unknown> = {
       title: body.title ?? existing.title,
       slug: body.slug ?? existing.slug,
-      content:
-        typeof body.content === "string" && body.content.trim()
-          ? body.content
-          : existing.content,
+      content: preserveExistingArticleContent(body.content, existing.content),
       excerpt: body.excerpt !== undefined ? body.excerpt : existing.excerpt,
       imageUrl: body.imageUrl !== undefined ? body.imageUrl : existing.imageUrl,
       mainCategory: body.mainCategory ?? existing.mainCategory,
       category: body.category ?? existing.category,
-      language: body.language ?? existing.language,
       isPublished: body.isPublished ?? existing.isPublished,
+      isFeatured: body.isFeatured ?? existing.isFeatured,
+      isPopular: body.isPopular ?? existing.isPopular,
     };
     const validated = validatePrismaArticleInput(mergedInput);
     if (!validated.ok) {
       return NextResponse.json({ error: validated.error }, { status: 400 });
-    }
-
-    if (existing.language === "en") {
-      validated.value.language = "en";
-      validated.value.slug = baseSlug(validated.value.slug);
-    } else {
-      validated.value.language = existing.language as typeof validated.value.language;
     }
 
     const duplicate = await prisma.article.findFirst({
@@ -82,35 +61,15 @@ export async function PUT(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: "Another article already uses this slug." }, { status: 409 });
     }
 
-    let article;
-    let translationWarning: string | null = null;
-    if (existing.language === "en") {
-      const translation = await syncArticleTranslations(id, validated.value);
-      if (!translation.ok) {
-        translationWarning = translation.error;
-      }
-      article = await prisma.article.findUnique({ where: { id } });
-    } else {
-      article = await prisma.article.update({
-        where: { id },
-        data: validated.value,
-      });
-    }
-
-    const saved = await prisma.article.findUnique({ where: { id } });
-    const translationStatus = saved
-      ? await getArticleTranslationStatus(saved)
-      : undefined;
+    const article = await prisma.article.update({
+      where: { id },
+      data: validated.value,
+    });
     return NextResponse.json({
-      message:
-        translationWarning ||
-        (validated.value.isPublished
+      message: validated.value.isPublished
           ? "Article published successfully."
-          : "Draft saved successfully."),
-      warning: Boolean(translationWarning),
-      article: saved
-        ? { ...saved, translationStatus }
-        : article,
+          : "Draft saved successfully.",
+      article,
     });
   } catch (error) {
     logDatabaseError("articles.update", error);
@@ -133,16 +92,13 @@ export async function DELETE(request: Request, { params }: RouteContext) {
 
   try {
     const { id } = await params;
-    const existing = await prisma.article.findFirst({
-      where: { id, language: "en" },
-      select: { translationGroupId: true },
+    const existing = await prisma.article.findUnique({
+      where: { id },
+      select: { id: true },
     });
     if (!existing) return NextResponse.json({ error: "Article not found." }, { status: 404 });
 
-    const deletedGroup = await deleteArticleTranslationGroup(existing.translationGroupId);
-    if (!deletedGroup) {
-      await prisma.article.delete({ where: { id } });
-    }
+    await prisma.article.delete({ where: { id } });
 
     return NextResponse.json({ message: "Article deleted successfully." });
   } catch (error) {

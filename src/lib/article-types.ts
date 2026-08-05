@@ -97,9 +97,8 @@ export function resolveArticleTaxonomy(input: {
   return { mainCategory, category };
 }
 
-export const ARTICLE_LANGUAGES = ["en", "hi", "te"] as const;
 export const ARTICLE_STATUSES = ["draft", "published"] as const;
-export type ArticleLanguage = (typeof ARTICLE_LANGUAGES)[number];
+export type ArticleLanguage = "en";
 export type ArticleStatus = (typeof ARTICLE_STATUSES)[number];
 
 export type PublicArticle = {
@@ -112,9 +111,10 @@ export type PublicArticle = {
   featuredImageAlt: string;
   mainCategory: ArticleMainCategory;
   category: ArticleCategory;
-  language: ArticleLanguage;
   author: string;
   status: ArticleStatus;
+  isFeatured: boolean;
+  isPopular: boolean;
   seoTitle: string;
   seoDescription: string;
   sourceUrl: string | null;
@@ -122,28 +122,12 @@ export type PublicArticle = {
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
-  /** Stored multilingual fields for instant client-side language selection. */
-  titleEn: string;
-  summaryEn: string;
-  contentEn: string;
-  titleTe: string;
-  summaryTe: string;
-  contentTe: string;
-  titleHi: string;
-  summaryHi: string;
-  contentHi: string;
-  translationAvailable: {
-    en: boolean;
-    te: boolean;
-    hi: boolean;
-  };
 };
 
 export type Subscriber = {
   id: string;
   name: string | null;
   email: string;
-  language: ArticleLanguage | null;
   status: "active" | "unsubscribed";
   subscribedAt: string;
 };
@@ -157,15 +141,11 @@ export type AdminArticle = {
   imageUrl: string | null;
   mainCategory: ArticleMainCategory;
   category: ArticleCategory;
-  language: ArticleLanguage;
   isPublished: boolean;
+  isFeatured: boolean;
+  isPopular: boolean;
   createdAt: string;
   updatedAt: string;
-  translationStatus?: {
-    en: "available";
-    te: "available" | "pending" | "missing" | "failed";
-    hi: "available" | "pending" | "missing" | "failed";
-  };
 };
 
 export type AdminSubscriber = {
@@ -175,12 +155,6 @@ export type AdminSubscriber = {
   subscribedAt: string;
   updatedAt: string;
   createdAt: string;
-};
-
-export const LANGUAGE_NAMES: Record<ArticleLanguage, string> = {
-  en: "English",
-  hi: "Hindi",
-  te: "Telugu",
 };
 
 export function readingTimeMinutes(content: string) {

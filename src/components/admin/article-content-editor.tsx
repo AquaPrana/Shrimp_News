@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, type ClipboardEvent } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import {
   isHtmlArticleContent,
-  pasteClipboardToArticleHtml,
   plainTextToArticleHtml,
   prepareArticleContentForDisplay,
 } from "@/lib/article-content";
@@ -24,68 +23,28 @@ function toEditorHtml(value: string) {
     : plainTextToArticleHtml(trimmed);
 }
 
-function insertHtmlAtCursor(editor: HTMLDivElement, html: string) {
-  editor.focus();
-
-  const selection = window.getSelection();
-  if (!selection) {
-    editor.insertAdjacentHTML("beforeend", html);
-    return;
-  }
-
-  if (selection.rangeCount === 0 || !editor.contains(selection.anchorNode)) {
-    const range = document.createRange();
-    range.selectNodeContents(editor);
-    range.collapse(false);
-    selection.removeAllRanges();
-    selection.addRange(range);
-  }
-
-  const range = selection.getRangeAt(0);
-  range.deleteContents();
-
-  const template = document.createElement("template");
-  template.innerHTML = html;
-  const fragment = template.content;
-  const lastNode = fragment.lastChild;
-  range.insertNode(fragment);
-
-  if (lastNode) {
-    range.setStartAfter(lastNode);
-    range.collapse(true);
-    selection.removeAllRanges();
-    selection.addRange(range);
-  }
-}
-
 export function ArticleContentEditor({
   value,
   onChange,
   className = "",
 }: ArticleContentEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
-  const lastSyncedValue = useRef<string | null>(null);
+  const lastEmittedHtml = useRef("");
   const hasInitialized = useRef(false);
   const savedSelection = useRef<Range | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const editor = editorRef.current;
-    if (!editor) return;
+    if (!editor || hasInitialized.current) return;
 
-    if (!hasInitialized.current) {
-      editor.innerHTML = toEditorHtml(value);
-      lastSyncedValue.current = value;
-      hasInitialized.current = true;
-      return;
-    }
+    const initialHtml = toEditorHtml(value);
+    editor.innerHTML = initialHtml;
+    lastEmittedHtml.current = initialHtml;
+    hasInitialized.current = true;
 
-    // The live editor DOM is the source of truth while the user is editing.
-    // Parent form renders must never replace it or disturb the caret.
-    if (document.activeElement === editor) return;
-    if (value === lastSyncedValue.current) return;
-
-    editor.innerHTML = toEditorHtml(value);
-    lastSyncedValue.current = value;
+    // The editor is deliberately uncontrolled after this initialization.
+    // Add/Edit remount it for a different article, while ordinary form
+    // re-renders must never replace live DOM or move the caret.
   }, [value]);
 
   useEffect(() => {
@@ -110,10 +69,12 @@ export function ArticleContentEditor({
     const editor = editorRef.current;
     if (!editor) return;
 
-    // Never sanitize or replace the DOM during typing. Recognized pasted HTML
-    // is cleaned before insertion, and the API performs final cleanup on save.
+    // Never sanitize or replace the live DOM during typing or paste. Native
+    // browser paste stays immediate; Preview and the API perform safe cleanup.
     const html = editor.innerHTML;
-    lastSyncedValue.current = html;
+    if (html === lastEmittedHtml.current) return;
+
+    lastEmittedHtml.current = html;
     onChange(html);
   }
 
@@ -148,54 +109,6 @@ export function ArticleContentEditor({
       document.execCommand("formatBlock", false, command);
     }
 
-    syncEditorContent();
-  }
-
-  function handlePaste(event: ClipboardEvent<HTMLDivElement>) {
-    const editor = editorRef.current;
-    if (!editor) return;
-
-    const html = event.clipboardData.getData("text/html");
-    const text =
-      event.clipboardData.getData("text/plain") ||
-      event.clipboardData.getData("text") ||
-      event.clipboardData.getData("Text");
-
-    let inserted = pasteClipboardToArticleHtml(html, text);
-    if (!inserted && text.trim()) {
-      inserted = plainTextToArticleHtml(text);
-    }
-    if (!inserted && text.trim()) {
-      // Last resort: escape plain text into paragraphs so paste still works.
-      inserted = text
-        .replace(/\r\n/g, "\n")
-        .split(/\n{2,}/)
-        .map((block) => block.trim())
-        .filter(Boolean)
-        .map(
-          (block) =>
-            `<p>${block
-              .replace(/&/g, "&amp;")
-              .replace(/</g, "&lt;")
-              .replace(/>/g, "&gt;")
-              .replace(/\n/g, "<br>")}</p>`,
-        )
-        .join("");
-    }
-
-    if (!inserted) {
-      // Some Word, Outlook, PDF, remote-desktop, and browser clipboard paths
-      // expose only RTF or another private format. Do not cancel those pastes:
-      // let the browser insert its native representation, then sync it. Final
-      // sanitization remains part of preview/save instead of moving the caret.
-      window.setTimeout(() => {
-        syncEditorContent();
-      }, 0);
-      return;
-    }
-
-    event.preventDefault();
-    insertHtmlAtCursor(editor, inserted);
     syncEditorContent();
   }
 
@@ -238,13 +151,22 @@ export function ArticleContentEditor({
         tabIndex={0}
         onInput={syncEditorContent}
         onBlur={syncEditorContent}
-        onPaste={handlePaste}
+        onFocus={() => {
+          const editor = editorRef.current;
+          const selection = window.getSelection();
+          if (!editor || !selection || selection.rangeCount === 0) return;
+
+          const range = selection.getRangeAt(0);
+          if (editor.contains(range.commonAncestorContainer)) {
+            savedSelection.current = range.cloneRange();
+          }
+        }}
         className="article-editor pointer-events-auto min-h-[420px] w-full cursor-text select-text whitespace-pre-wrap break-words rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm leading-7 text-slate-800 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
       />
 
       <p className="mt-2 text-xs text-slate-500">
         Paste from Word or Google Docs to keep headings, paragraphs, and lists.
-        Extra blank lines and Word styles are cleaned automatically.
+        Word-only styles are cleaned safely when you preview or save.
       </p>
     </div>
   );

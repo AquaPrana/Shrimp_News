@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { verifyAdminApi } from "@/lib/admin-auth";
-import {
-  getArticleTranslationStatus,
-  syncArticleTranslations,
-} from "@/lib/article-translations-sync";
-import { baseSlug } from "@/lib/public-articles";
 import { logDatabaseError, prisma, prismaErrorCode } from "@/lib/prisma";
 import { validatePrismaArticleInput } from "@/lib/validation";
 
@@ -23,7 +18,7 @@ export async function GET(request: Request) {
     const category = url.searchParams.get("category")?.trim();
     const status = url.searchParams.get("status")?.trim();
     const date = url.searchParams.get("date")?.trim();
-    const where: Prisma.ArticleWhereInput = { language: "en" };
+    const where: Prisma.ArticleWhereInput = {};
 
     if (category) where.category = category;
     if (status === "published") where.isPublished = true;
@@ -61,9 +56,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: validated.error }, { status: 400 });
     }
 
-    validated.value.language = "en";
-    validated.value.slug = baseSlug(validated.value.slug);
-
     const duplicate = await prisma.article.findUnique({
       where: { slug: validated.value.slug },
       select: { id: true },
@@ -72,45 +64,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "An article with this slug already exists." }, { status: 409 });
     }
 
-    const requestedPublish = validated.value.isPublished;
     const article = await prisma.article.create({
-      data: {
-        ...validated.value,
-        isPublished: false,
-        translationGroupId: crypto.randomUUID(),
-      },
+      data: validated.value,
     });
-
-    const translation = await syncArticleTranslations(article.id, {
-      ...validated.value,
-      isPublished: requestedPublish,
-    });
-    const saved = await prisma.article.findUnique({ where: { id: article.id } });
-    const translationStatus = saved
-      ? await getArticleTranslationStatus(saved)
-      : undefined;
-
-    if (!translation.ok) {
-      return NextResponse.json(
-        {
-          message: translation.error,
-          warning: true,
-          article: saved
-            ? { ...saved, translationStatus }
-            : { ...article, translationStatus },
-        },
-        { status: 201 },
-      );
-    }
 
     return NextResponse.json(
       {
-        message: requestedPublish
+        message: validated.value.isPublished
           ? "Article published successfully."
           : "Draft saved successfully.",
-        article: saved
-          ? { ...saved, translationStatus }
-          : article,
+        article,
       },
       { status: 201 },
     );

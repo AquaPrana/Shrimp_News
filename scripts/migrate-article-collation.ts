@@ -32,17 +32,6 @@ const TEXT_COLUMNS = [
   "imageUrl",
   "mainCategory",
   "category",
-  "language",
-  "translationGroupId",
-  "titleEn",
-  "summaryEn",
-  "contentEn",
-  "titleTe",
-  "summaryTe",
-  "contentTe",
-  "titleHi",
-  "summaryHi",
-  "contentHi",
 ] as const;
 
 type ColumnMeta = {

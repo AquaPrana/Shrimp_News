@@ -47,19 +47,11 @@ npm run admin:create -- --email admin@example.com --name "Shrimp.News Admin" --p
 
 For better shell-history hygiene, put the password temporarily in `ADMIN_BOOTSTRAP_PASSWORD` and omit `--password`. Remove that temporary variable afterward. The script hashes with bcrypt (cost 12) before writing and never stores a plaintext password.
 
-## 5. Import the existing launch stories
-
-```bash
-npm run db:seed-articles
-```
-
-This imports the existing 20 stories in English, Hindi, and Telugu. Existing slugs are not overwritten, so the command is safe to run again.
-
-## 6. Configure Vercel
+## 5. Configure Vercel
 
 In **Vercel Project → Settings → Environment Variables**, add `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_SSL`, and `ADMIN_SESSION_SECRET` for Production and Preview as appropriate. Redeploy after saving them. Do not add them to Git or expose them to browser code.
 
-## 7. Local and acceptance testing
+## 6. Local and acceptance testing
 
 1. Run `npm run dev` and open `/admin/login`.
 2. Sign in, create a draft, and confirm it is visible in Admin → Articles but absent from `/`, `/articles`, and its category page.

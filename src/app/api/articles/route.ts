@@ -12,6 +12,8 @@ export async function GET(request: Request) {
     const category = url.searchParams.get("category");
     const topic = url.searchParams.get("topic");
     const q = url.searchParams.get("q");
+    const featured = url.searchParams.get("featured") ?? url.searchParams.get("isFeatured");
+    const popular = url.searchParams.get("popular") ?? url.searchParams.get("isPopular");
     const limit = Math.min(
       Math.max(Number(url.searchParams.get("limit") || 60), 1),
       100,
@@ -21,6 +23,12 @@ export async function GET(request: Request) {
     if (category && !ARTICLE_CATEGORIES.includes(category as never)) {
       return NextResponse.json({ error: "Invalid category." }, { status: 400 });
     }
+    if (featured !== null && featured !== "true" && featured !== "false") {
+      return NextResponse.json({ error: "Featured filter must be true or false." }, { status: 400 });
+    }
+    if (popular !== null && popular !== "true" && popular !== "false") {
+      return NextResponse.json({ error: "Popular filter must be true or false." }, { status: 400 });
+    }
 
     // Returns all stored language fields; clients select via getLocalizedArticle.
     const articles = await queryPublishedArticles({
@@ -29,6 +37,8 @@ export async function GET(request: Request) {
       q,
       limit,
       page,
+      ...(featured === null ? {} : { isFeatured: featured === "true" }),
+      ...(popular === null ? {} : { isPopular: popular === "true" }),
     });
 
     return NextResponse.json({ articles, page, limit });

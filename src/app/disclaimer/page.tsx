@@ -1,6 +1,6 @@
 import { PageShell } from "@/components/layout/page-shell";
 
-/** Add new disclaimer paragraphs here — each key must exist in en/te/hi translations. */
+/** Ordered disclaimer copy keys. */
 const DISCLAIMER_BODY_KEYS = [
   "disclaimerP1",
   "disclaimerP2",

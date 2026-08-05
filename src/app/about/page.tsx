@@ -2,41 +2,16 @@
 
 import Image from "next/image";
 import { PAGE_CONTENT_PANEL_CLASS } from "@/components/layout/page-shell";
-import {
-  useLanguage,
-  type Language,
-} from "@/context/language-context";
+import { useLanguage } from "@/context/language-context";
 
-const EDITORIAL_EMAIL = "editor@shrimp.news";
+const EDITORIAL_EMAIL = "info@shrimp.news";
 const CONTACT_PHONE = "+91 7075527682";
 
-const sectionLabels: Record<
-  Language,
-  {
-    foundersMessage: string;
-    coFoundersMessage: string;
-    founderRole: string;
-    coFounderRole: string;
-  }
-> = {
-  en: {
-    foundersMessage: "Founder's Message",
-    coFoundersMessage: "Co-Founder's Message",
-    founderRole: "Founder & CEO",
-    coFounderRole: "Co-Founder & COO",
-  },
-  te: {
-    foundersMessage: "వ్యవస్థాపకుడి సందేశం",
-    coFoundersMessage: "సహ వ్యవస్థాపకుడి సందేశం",
-    founderRole: "వ్యవస్థాపకుడు & CEO",
-    coFounderRole: "సహ వ్యవస్థాపకుడు & COO",
-  },
-  hi: {
-    foundersMessage: "संस्थापक का संदेश",
-    coFoundersMessage: "सह-संस्थापक का संदेश",
-    founderRole: "संस्थापक और CEO",
-    coFounderRole: "सह-संस्थापक और COO",
-  },
+const sectionLabels = {
+  foundersMessage: "Founder's Message",
+  coFoundersMessage: "Co-Founder's Message",
+  founderRole: "Founder & CEO",
+  coFounderRole: "Co-Founder & COO",
 };
 
 const founders = [
@@ -161,8 +136,8 @@ function FounderSection({
 }
 
 export default function AboutPage() {
-  const { language, t } = useLanguage();
-  const labels = sectionLabels[language];
+  const { t } = useLanguage();
+  const labels = sectionLabels;
   const aboutParagraphs = t("aboutBody")
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.trim())

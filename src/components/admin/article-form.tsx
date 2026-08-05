@@ -8,7 +8,6 @@ import {
   subcategoriesForMain,
   type AdminArticle,
   type ArticleCategory,
-  type ArticleLanguage,
   type ArticleMainCategory,
 } from "@/lib/article-types";
 import { editorHtmlToPlainText } from "@/lib/article-content";
@@ -24,8 +23,9 @@ type FormState = {
   imageUrl: string;
   mainCategory: ArticleMainCategory;
   category: ArticleCategory;
-  language: ArticleLanguage;
   isPublished: boolean;
+  isFeatured: boolean;
+  isPopular: boolean;
 };
 
 const ANDHRA_FEATURED_IMAGE =
@@ -39,8 +39,9 @@ const empty: FormState = {
   imageUrl: "",
   mainCategory: "india",
   category: "Shrimp Farming",
-  language: "en",
   isPublished: false,
+  isFeatured: false,
+  isPopular: false,
 };
 
 type UploadStatus = "idle" | "uploading" | "success" | "error";
@@ -75,8 +76,9 @@ function toFormState(article?: AdminArticle): FormState {
     imageUrl: resolveFormImageUrl(article),
     mainCategory: taxonomy.mainCategory,
     category: taxonomy.category,
-    language: "en",
     isPublished: article.isPublished,
+    isFeatured: article.isFeatured,
+    isPopular: article.isPopular,
   };
 }
 
@@ -86,11 +88,7 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(
     () => Boolean(article && article.slug !== slugify(article.title)),
   );
-  const [translationStatus, setTranslationStatus] = useState(
-    article?.translationStatus,
-  );
   const [sourceArticleId, setSourceArticleId] = useState(article?.id || "");
-  const [retryingTranslation, setRetryingTranslation] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
@@ -249,35 +247,6 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
     }));
   }
 
-  async function retryTranslation(target: "all" | "te" | "hi" = "all") {
-    if (!sourceArticleId) return;
-    setRetryingTranslation(true);
-    setMessage("");
-    setIsError(false);
-    try {
-      const query = target === "all" ? "" : `?language=${target}`;
-      const response = await fetch(
-        `/api/admin/articles/${sourceArticleId}/translate${query}`,
-        { method: "POST" },
-      );
-      const body = await response.json();
-      if (body.translationStatus) {
-        setTranslationStatus(body.translationStatus);
-      }
-      if (!response.ok) {
-        setIsError(true);
-        setMessage(body.error || "Unable to retry translation.");
-        return;
-      }
-      setMessage(body.message || "Translations are available.");
-    } catch {
-      setIsError(true);
-      setMessage("Unable to retry translation right now.");
-    } finally {
-      setRetryingTranslation(false);
-    }
-  }
-
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isUploading) {
@@ -341,13 +310,6 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
         setMessage(body.error || "Unable to save the article.");
         if (typeof body.article?.id === "string") {
           setSourceArticleId(body.article.id);
-          setTranslationStatus(
-            body.article.translationStatus || {
-              en: "available",
-              te: "failed",
-              hi: "failed",
-            },
-          );
         }
         if (typeof body.error === "string" && /image/i.test(body.error)) {
           setImageError(body.error);
@@ -361,14 +323,7 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
       if (typeof body.article?.id === "string") {
         setSourceArticleId(body.article.id);
       }
-      if (body.article?.translationStatus) {
-        setTranslationStatus(body.article.translationStatus);
-      }
       setMessage(body.message || "Article saved successfully.");
-      if (body.warning) {
-        setIsError(true);
-        return;
-      }
       router.push("/admin/articles");
       router.refresh();
     } catch (error) {
@@ -392,19 +347,6 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
   const hasPreview = Boolean(previewSrc);
   const isUploading = uploadStatus === "uploading";
   const publishDisabled = busy || isUploading;
-  const sourceTextChanged =
-    !article ||
-    form.title !== article.title ||
-    form.excerpt !== (article.excerpt || "") ||
-    form.content !== article.content;
-  const translationsReady =
-    translationStatus?.te === "available" &&
-    translationStatus?.hi === "available";
-  const requiresAutomaticTranslation =
-    form.isPublished &&
-    form.language === "en" &&
-    (sourceTextChanged || !translationsReady);
-
   return (
     <div className="space-y-6">
       <header>
@@ -620,52 +562,6 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                 <option value="global">Global</option>
               </select>
             </Field>
-            {(article?.language === "en" || sourceArticleId) &&
-            translationStatus ? (
-              <div className="space-y-3 border-t border-slate-100 pt-4">
-                <p className="text-sm font-semibold">Translation status</p>
-                <div className="space-y-1 text-sm text-slate-600">
-                  <p>English: {translationStatus.en}</p>
-                  <p>Telugu: {translationStatus.te}</p>
-                  <p>Hindi: {translationStatus.hi}</p>
-                </div>
-                {translationStatus.te !== "available" ||
-                translationStatus.hi !== "available" ? (
-                  <div className="flex flex-wrap gap-3">
-                    {translationStatus.te !== "available" ? (
-                      <button
-                        type="button"
-                        onClick={() => void retryTranslation("te")}
-                        disabled={retryingTranslation || busy}
-                        className="text-sm font-bold text-cyan-700 disabled:opacity-50"
-                      >
-                        Retry Telugu translation
-                      </button>
-                    ) : null}
-                    {translationStatus.hi !== "available" ? (
-                      <button
-                        type="button"
-                        onClick={() => void retryTranslation("hi")}
-                        disabled={retryingTranslation || busy}
-                        className="text-sm font-bold text-cyan-700 disabled:opacity-50"
-                      >
-                        Retry Hindi translation
-                      </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      onClick={() => void retryTranslation("all")}
-                      disabled={retryingTranslation || busy}
-                      className="text-sm font-bold text-cyan-700 disabled:opacity-50"
-                    >
-                      {retryingTranslation
-                        ? "Retrying translation…"
-                        : "Retry all translations"}
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
             <Field label="Subcategory">
               <select
                 value={form.category}
@@ -681,17 +577,6 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                 ))}
               </select>
             </Field>
-            <Field label="Language">
-              <select
-                value={form.language}
-                onChange={(event) =>
-                  setField("language", event.target.value as ArticleLanguage)
-                }
-                className={input}
-              >
-                <option value="en">English</option>
-              </select>
-            </Field>
             <Field label="Status">
               <select
                 value={form.isPublished ? "published" : "draft"}
@@ -704,6 +589,38 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                 <option value="published">Published</option>
               </select>
             </Field>
+            <fieldset className="space-y-3 border-t border-slate-100 pt-4">
+              <legend className="text-sm font-semibold">Homepage placement</legend>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3">
+                <input
+                  type="checkbox"
+                  checked={form.isFeatured}
+                  onChange={(event) => setField("isFeatured", event.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-[#0B4F7A]"
+                />
+                <span>
+                  <span className="block text-sm font-bold">Featured article</span>
+                  <span className="block text-xs font-normal text-slate-500">
+                    Show this article in Featured article collections.
+                  </span>
+                </span>
+              </label>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3">
+                <input
+                  type="checkbox"
+                  checked={form.isPopular}
+                  onChange={(event) => setField("isPopular", event.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-orange-500"
+                />
+                <span>
+                  <span className="block text-sm font-bold">Popular article</span>
+                  <span className="block text-xs font-normal text-slate-500">
+                    Show this article in Popular article collections.
+                  </span>
+                </span>
+              </label>
+              <Hint>Both options are independent and are off by default.</Hint>
+            </fieldset>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
@@ -720,9 +637,7 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                   ? "Uploading..."
                   : busy
                     ? form.isPublished
-                      ? requiresAutomaticTranslation
-                        ? "Translating & Publishing…"
-                        : "Publishing…"
+                      ? "Publishing…"
                       : "Saving…"
                     : form.isPublished
                       ? "Publish"
@@ -746,6 +661,16 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
             <p className="mt-5 text-xs font-bold uppercase tracking-[0.3em] text-cyan-600">
               {form.mainCategory} · {form.category}
             </p>
+            {form.isFeatured || form.isPopular ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {form.isFeatured ? (
+                  <span className="rounded-full bg-cyan-100 px-2.5 py-1 text-xs font-bold text-cyan-800">Featured</span>
+                ) : null}
+                {form.isPopular ? (
+                  <span className="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-bold text-orange-800">Popular</span>
+                ) : null}
+              </div>
+            ) : null}
             <h1 className="mt-3 text-3xl font-extrabold text-[#0B3A6E] sm:text-5xl">
               {form.title || "Untitled article"}
             </h1>

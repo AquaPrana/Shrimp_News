@@ -7,6 +7,7 @@ import { useLanguage } from "@/context/language-context";
 import type { PublicArticle } from "@/lib/article-types";
 import { formatArticleDate } from "@/lib/format-date";
 import { baseSlug } from "@/lib/public-articles-shared";
+import { selectPopularHomepageArticles } from "@/lib/featured-homepage-articles";
 
 const FALLBACK = "/images/articles/ArticleImage.jpeg";
 
@@ -14,9 +15,7 @@ export function NewsSidebar({ articles }: { articles: PublicArticle[] }) {
   const { t, language } = useLanguage();
   const [tab, setTab] = useState<"recent" | "popular">("recent");
   const recent = articles.slice(0, 5);
-  const popular = [...articles]
-    .sort((a, b) => b.content.length - a.content.length)
-    .slice(0, 5);
+  const popular = selectPopularHomepageArticles(articles).slice(0, 5);
   const displayed = tab === "recent" ? recent : popular;
 
   return (
@@ -63,11 +62,7 @@ export function NewsSidebar({ articles }: { articles: PublicArticle[] }) {
               </span>
               <span className="min-w-0">
                 <span
-                  className={`article-title block text-[16px] font-extrabold text-slate-900 transition group-hover:text-[#0B4F7A] ${
-                    language === "te"
-                      ? "h-auto min-h-0 overflow-visible leading-[1.4]"
-                      : "line-clamp-3 leading-[1.3]"
-                  }`}
+                  className="article-title block line-clamp-3 text-[16px] font-extrabold leading-[1.3] text-slate-900 transition group-hover:text-[#0B4F7A]"
                 >
                   {article.title}
                 </span>

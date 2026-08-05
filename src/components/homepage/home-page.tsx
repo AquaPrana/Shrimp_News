@@ -10,7 +10,6 @@ import { NewsletterSection } from "@/components/homepage/newsletter-section";
 import { ShrimpFarmingGrid } from "@/components/homepage/shrimp-farming-grid";
 import { useLanguage } from "@/context/language-context";
 import { useArticles } from "@/hooks/use-articles";
-import { useLocalizedArticles } from "@/hooks/use-localized-articles";
 import type { PublicArticle } from "@/lib/article-types";
 import type { PublicEvent } from "@/lib/event-types";
 import { selectHomepageEvents } from "@/lib/events-selection";
@@ -29,7 +28,7 @@ export function HomePage({
     { limit: 60 },
     initialArticles,
   );
-  const articles = useLocalizedArticles(fetchedArticles);
+  const articles = fetchedArticles;
   const heroArticles = articles.slice(0, 4);
   const featuredSlugSet = new Set(heroArticles.map((article) => article.slug));
   const featuredArticle = articles[0];
@@ -98,7 +97,7 @@ export function HomePage({
           </div>
 
           <aside className="homepage-news-sidebar">
-            <NewsSidebar articles={homeArticles} />
+            <NewsSidebar articles={articles} />
           </aside>
         </div>
       </section>

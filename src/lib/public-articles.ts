@@ -3,22 +3,16 @@ import "server-only";
 import type { Article as PrismaArticle, Prisma } from "@prisma/client";
 import type {
   ArticleCategory,
-  ArticleLanguage,
   ArticleMainCategory,
   PublicArticle,
 } from "@/lib/article-types";
 import { resolveArticleTaxonomy } from "@/lib/article-types";
-import {
-  getAuthorLabel,
-  hasStoredLanguageFields,
-} from "@/lib/article-localization";
 import { logDatabaseError, prisma } from "@/lib/prisma";
 import {
   TOPIC_CATEGORIES as SHARED_TOPIC_CATEGORIES,
   TOPIC_LABELS,
   baseSlug,
   isArticleTopic,
-  languageFromSlug,
   normalizeArticleTopic,
 } from "@/lib/public-articles-shared";
 
@@ -27,7 +21,6 @@ export {
   TOPIC_LABELS,
   isArticleTopic,
   baseSlug,
-  languageFromSlug,
   normalizeArticleTopic,
 };
 
@@ -51,9 +44,10 @@ const FIXED_FEATURE_ARTICLES: readonly PublicArticle[] = [
     featuredImageAlt: "From Budget to Pond – Aquaculture Analysis",
     mainCategory: "india",
     category: "Research & Innovations",
-    language: "en",
-    author: getAuthorLabel("en"),
+    author: "Shrimp News Editorial",
     status: "published",
+    isFeatured: false,
+    isPopular: false,
     seoTitle:
       "From Budget to Pond — Can India Track Its 2026 Aquaculture Promises to the Farmer?",
     seoDescription:
@@ -63,22 +57,6 @@ const FIXED_FEATURE_ARTICLES: readonly PublicArticle[] = [
     createdAt: "2026-07-23T00:00:00.000Z",
     updatedAt: "2026-07-23T00:00:00.000Z",
     publishedAt: "2026-07-23T00:00:00.000Z",
-    titleEn:
-      "From Budget to Pond — Can India Track Its 2026 Aquaculture Promises to the Farmer?",
-    summaryEn:
-      "India’s major 2026 aquaculture commitments are tested against a five-stage public-delivery standard, from Budget announcement to measurable benefit at the pond.",
-    contentEn: "",
-    titleTe: "",
-    summaryTe: "",
-    contentTe: "",
-    titleHi: "",
-    summaryHi: "",
-    contentHi: "",
-    translationAvailable: {
-      en: true,
-      te: false,
-      hi: false,
-    },
   },
 ];
 
@@ -107,14 +85,6 @@ function resolvePublicImageUrl(slug: string, imageUrl: string | null) {
   return ARTICLE_IMAGE_OVERRIDES[slug] ?? imageUrl;
 }
 
-function textOrEmpty(value: string | null | undefined) {
-  return value?.trim() || "";
-}
-
-/**
- * Map a canonical English article row that stores all language fields.
- * Display title/excerpt/content default to English; clients select via getLocalizedArticle.
- */
 export function mapPublicArticle(article: PrismaArticle): PublicArticle {
   const createdAt = article.createdAt.toISOString();
   const featuredImageUrl = resolvePublicImageUrl(article.slug, article.imageUrl);
@@ -126,69 +96,39 @@ export function mapPublicArticle(article: PrismaArticle): PublicArticle {
     taxonomy.mainCategory === "global" ? "international" : "national";
   const topicTopics = SUBCATEGORY_TOPICS[taxonomy.category] || [];
 
-  const titleEn = textOrEmpty(article.titleEn) || article.title;
-  const summaryEn = textOrEmpty(article.summaryEn) || article.excerpt || "";
-  const contentEn = textOrEmpty(article.contentEn) || article.content;
-  const titleTe = textOrEmpty(article.titleTe);
-  const summaryTe = textOrEmpty(article.summaryTe);
-  const contentTe = textOrEmpty(article.contentTe);
-  const titleHi = textOrEmpty(article.titleHi);
-  const summaryHi = textOrEmpty(article.summaryHi);
-  const contentHi = textOrEmpty(article.contentHi);
-
   return {
     id: article.id,
-    title: titleEn,
+    title: article.title,
     slug: baseSlug(article.slug),
-    excerpt: summaryEn,
-    content: contentEn,
+    excerpt: article.excerpt || "",
+    content: article.content,
     featuredImageUrl,
-    featuredImageAlt: titleEn,
+    featuredImageAlt: article.title,
     mainCategory: taxonomy.mainCategory,
     category: taxonomy.category,
-    language: "en",
-    author: getAuthorLabel("en"),
+    author: "Shrimp News Editorial",
     status: "published",
-    seoTitle: titleEn,
-    seoDescription: summaryEn,
+    isFeatured: article.isFeatured,
+    isPopular: article.isPopular,
+    seoTitle: article.title,
+    seoDescription: article.excerpt || "",
     sourceUrl: null,
     topics: [regionTopic, ...topicTopics],
     createdAt,
     updatedAt: article.updatedAt.toISOString(),
     publishedAt: createdAt,
-    titleEn,
-    summaryEn,
-    contentEn,
-    titleTe,
-    summaryTe,
-    contentTe,
-    titleHi,
-    summaryHi,
-    contentHi,
-    translationAvailable: {
-      en: hasStoredLanguageFields(
-        { titleEn, contentEn, title: titleEn, content: contentEn },
-        "en",
-      ),
-      te: Boolean(titleTe && contentTe),
-      hi: Boolean(titleHi && contentHi),
-    },
   };
 }
 
-export function localizedSlug(slug: string, language: ArticleLanguage) {
-  const base = baseSlug(slug);
-  return language === "en" ? base : `${base}-${language}`;
-}
-
 type ListOptions = {
-  language?: ArticleLanguage;
   topic?: string | null;
   category?: string | null;
   mainCategory?: string | null;
   q?: string | null;
   limit?: number;
   page?: number;
+  isFeatured?: boolean;
+  isPopular?: boolean;
 };
 
 function normalizeRegion(value: string | null | undefined) {
@@ -256,6 +196,8 @@ function fixedArticleMatchesOptions(
   }
 
   if (rawQuery && !articleMatchesPublicSearch(article, rawQuery)) return false;
+  if (typeof options.isFeatured === "boolean" && article.isFeatured !== options.isFeatured) return false;
+  if (typeof options.isPopular === "boolean" && article.isPopular !== options.isPopular) return false;
 
   return true;
 }
@@ -281,8 +223,14 @@ function buildBasePublishedWhere(
   const requestedRegion = normalizeRegion(options.mainCategory);
   const where: Prisma.ArticleWhereInput = {
     isPublished: true,
-    language: "en",
   };
+
+  if (typeof options.isFeatured === "boolean") {
+    where.isFeatured = options.isFeatured;
+  }
+  if (typeof options.isPopular === "boolean") {
+    where.isPopular = options.isPopular;
+  }
 
   if (topicRegion) {
     where.mainCategory = regionFilter(topicRegion);
@@ -304,7 +252,6 @@ function buildBasePublishedWhere(
 function articleMatchesPublicSearch(
   article: {
     title: string;
-    titleEn?: string | null;
     category: string;
     mainCategory?: string | null;
   },
@@ -322,7 +269,7 @@ function articleMatchesPublicSearch(
   const normalizedQuery = applyCategoryAlias(normalizeSearchValue(trimmed));
   if (!normalizedQuery) return true;
 
-  const titleSource = `${article.title ?? ""} ${article.titleEn ?? ""}`.trim();
+  const titleSource = article.title ?? "";
   const normalizedTitle = normalizeSearchValue(titleSource);
   // Schema: `category` = topic subcategory; `mainCategory` = india | global.
   const normalizedCategory = applyCategoryAlias(
@@ -389,7 +336,6 @@ export async function queryPublishedArticles(
       articleMatchesPublicSearch(
         {
           title: article.title,
-          titleEn: article.titleEn,
           category: article.category,
           mainCategory: article.mainCategory,
         },
@@ -429,39 +375,10 @@ export async function getPublishedArticleBySlug(
   if (fixed) return fixed;
 
   try {
-    const base = baseSlug(slug);
     const source = await prisma.article.findFirst({
-      where: {
-        isPublished: true,
-        language: "en",
-        slug: {
-          in: [base, `${base}-te`, `${base}-hi`, slug],
-        },
-      },
+      where: { isPublished: true, slug },
     });
-    if (!source) {
-      // Legacy: article may only exist as a te/hi row — resolve English sibling.
-      const any = await prisma.article.findFirst({
-        where: {
-          isPublished: true,
-          slug: { in: [base, `${base}-te`, `${base}-hi`, slug] },
-        },
-      });
-      if (!any) return null;
-      if (any.language === "en") return mapPublicArticle(any);
-      const english = any.translationGroupId
-        ? await prisma.article.findFirst({
-            where: {
-              translationGroupId: any.translationGroupId,
-              language: "en",
-              isPublished: true,
-            },
-          })
-        : await prisma.article.findFirst({
-            where: { slug: base, language: "en", isPublished: true },
-          });
-      return english ? mapPublicArticle(english) : null;
-    }
+    if (!source) return null;
     return mapPublicArticle(source);
   } catch (error) {
     logDatabaseError("public-articles.get", error);

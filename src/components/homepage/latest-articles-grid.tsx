@@ -5,7 +5,7 @@ import { ArticleCoverImage } from "@/components/articles/article-cover-image";
 import { useLanguage } from "@/context/language-context";
 import type { PublicArticle } from "@/lib/article-types";
 import { formatArticleDate } from "@/lib/format-date";
-import { getCategoryLabel } from "@/lib/article-localization";
+import { getCategoryLabel } from "@/lib/article-formatting";
 import { baseSlug } from "@/lib/public-articles-shared";
 
 export function LatestArticlesGrid({
@@ -60,11 +60,7 @@ export function LatestArticlesGrid({
                     {categoryLabel}
                   </span>
                   <span
-                    className={`article-title text-lg font-extrabold drop-shadow-md sm:text-xl ${
-                      language === "te"
-                        ? "h-auto min-h-0 overflow-visible leading-[1.4]"
-                        : "line-clamp-3 leading-snug"
-                    }`}
+                    className="article-title line-clamp-3 text-lg font-extrabold leading-snug drop-shadow-md sm:text-xl"
                   >
                     {article.title}
                   </span>

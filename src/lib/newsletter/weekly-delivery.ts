@@ -145,7 +145,6 @@ export async function runWeeklyNewsletter(now = new Date()) {
   const rows = await prisma.article.findMany({
     where: {
       isPublished: true,
-      language: "en",
       createdAt: {
         gte: window.from,
         lt: window.to,

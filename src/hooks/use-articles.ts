@@ -4,16 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/context/language-context";
 import type { PublicArticle } from "@/lib/article-types";
 
-/**
- * Fetches published articles once (all language fields included).
- * Language switching does NOT refetch — useLocalizedArticles selects fields instantly.
- */
+/** Fetch published articles for client-side lists. */
 export function useArticles(
   options: {
     topic?: string | null;
     category?: string;
     q?: string | null;
     limit?: number;
+    isFeatured?: boolean;
+    isPopular?: boolean;
   } = {},
   initialArticles: PublicArticle[] = [],
 ) {
@@ -25,6 +24,8 @@ export function useArticles(
   const category = options.category || "";
   const q = options.q || "";
   const limit = options.limit || 60;
+  const isFeatured = options.isFeatured;
+  const isPopular = options.isPopular;
   const skipInitialFetchRef = useRef(initialArticles.length > 0);
 
   useEffect(() => {
@@ -45,6 +46,12 @@ export function useArticles(
       if (topic) params.set("topic", topic);
       if (category) params.set("category", category);
       if (q) params.set("q", q);
+      if (typeof isFeatured === "boolean") {
+        params.set("featured", String(isFeatured));
+      }
+      if (typeof isPopular === "boolean") {
+        params.set("popular", String(isPopular));
+      }
 
       try {
         const response = await fetch(`/api/articles?${params}`, {
@@ -70,7 +77,7 @@ export function useArticles(
 
     void load();
     return () => controller.abort();
-  }, [topic, category, q, limit, t]);
+  }, [topic, category, q, limit, isFeatured, isPopular, t]);
 
   return { articles, loading, error };
 }

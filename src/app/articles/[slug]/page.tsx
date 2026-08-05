@@ -31,9 +31,10 @@ function createBudgetToPondFallbackArticle(): PublicArticle {
     featuredImageAlt: "From Budget to Pond – Aquaculture Analysis",
     mainCategory: "india",
     category: "Research & Innovations",
-    language: "en",
     author: "Shrimp News Editorial",
     status: "published",
+    isFeatured: false,
+    isPopular: false,
     seoTitle:
       "From Budget to Pond — Can India Track Its 2026 Aquaculture Promises to the Farmer? | Shrimp News",
     seoDescription:
@@ -43,22 +44,6 @@ function createBudgetToPondFallbackArticle(): PublicArticle {
     createdAt: now,
     updatedAt: now,
     publishedAt: now,
-    titleEn:
-      "From Budget to Pond — Can India Track Its 2026 Aquaculture Promises to the Farmer?",
-    summaryEn:
-      "India’s major 2026 aquaculture commitments are tested against a five-stage public-delivery standard, from Budget announcement to measurable benefit at the pond.",
-    contentEn: "",
-    titleTe: "",
-    summaryTe: "",
-    contentTe: "",
-    titleHi: "",
-    summaryHi: "",
-    contentHi: "",
-    translationAvailable: {
-      en: true,
-      te: false,
-      hi: false,
-    },
   };
 }
 

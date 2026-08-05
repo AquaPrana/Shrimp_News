@@ -10,7 +10,7 @@ import {
 import {
   formatReadTime,
   getCategoryLabel,
-} from "@/lib/article-localization";
+} from "@/lib/article-formatting";
 import { baseSlug } from "@/lib/public-articles-shared";
 
 export function FeaturedArticle({ article }: { article: PublicArticle }) {

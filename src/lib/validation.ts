@@ -1,12 +1,10 @@
 import {
   ARTICLE_CATEGORIES,
-  ARTICLE_LANGUAGES,
   ARTICLE_STATUSES,
   isValidMainCategory,
   isValidSubcategory,
   resolveArticleTaxonomy,
   type ArticleCategory,
-  type ArticleLanguage,
   type ArticleMainCategory,
   type ArticleStatus,
 } from "@/lib/article-types";
@@ -127,7 +125,6 @@ export type ArticleInput = {
   featuredImageUrl: string | null;
   featuredImageAlt: string;
   category: ArticleCategory;
-  language: ArticleLanguage;
   author: string;
   status: ArticleStatus;
   seoTitle: string;
@@ -145,7 +142,6 @@ export function validateArticleInput(raw: Record<string, unknown>) {
     featuredImageUrl: null,
     featuredImageAlt: sanitizePlainText(raw.featuredImageAlt, 255),
     category: raw.category as ArticleCategory,
-    language: raw.language as ArticleLanguage,
     author: sanitizePlainText(raw.author, 120),
     status: raw.status as ArticleStatus,
     seoTitle: sanitizePlainText(raw.seoTitle, 255),
@@ -190,9 +186,6 @@ export function validateArticleInput(raw: Record<string, unknown>) {
   if (!ARTICLE_CATEGORIES.includes(value.category)) {
     return { ok: false as const, error: "Choose a valid category." };
   }
-  if (!ARTICLE_LANGUAGES.includes(value.language)) {
-    return { ok: false as const, error: "Choose a valid language." };
-  }
   if (!ARTICLE_STATUSES.includes(value.status)) {
     return { ok: false as const, error: "Choose a valid status." };
   }
@@ -210,26 +203,28 @@ export type PrismaArticleInput = {
   imageUrl: string | null;
   mainCategory: ArticleMainCategory;
   category: ArticleCategory;
-  language: ArticleLanguage;
   isPublished: boolean;
+  isFeatured: boolean;
+  isPopular: boolean;
 };
 
 export function validatePrismaArticleInput(raw: Record<string, unknown>) {
   const title = sanitizePlainText(raw.title, 255);
   const slug = slugify(String(raw.slug || title));
   const excerpt = sanitizePlainText(raw.excerpt, 2_000) || null;
-  const language = sanitizePlainText(raw.language, 20) as ArticleLanguage;
   const contentResult = prepareArticleContentForSave(raw.content);
 
   if (!title) return { ok: false as const, error: "Title is required." };
   if (!slug) return { ok: false as const, error: "A valid slug is required." };
   if (!contentResult.ok) return contentResult;
-  if (!language) return { ok: false as const, error: "Language is required." };
-  if (!ARTICLE_LANGUAGES.includes(language)) {
-    return { ok: false as const, error: "Choose a valid language." };
-  }
   if (raw.isPublished !== undefined && typeof raw.isPublished !== "boolean") {
     return { ok: false as const, error: "Published status must be true or false." };
+  }
+  if (raw.isFeatured !== undefined && typeof raw.isFeatured !== "boolean") {
+    return { ok: false as const, error: "Featured status must be true or false." };
+  }
+  if (raw.isPopular !== undefined && typeof raw.isPopular !== "boolean") {
+    return { ok: false as const, error: "Popular status must be true or false." };
   }
   const taxonomy = resolveArticleTaxonomy({
     mainCategory:
@@ -261,8 +256,9 @@ export function validatePrismaArticleInput(raw: Record<string, unknown>) {
     imageUrl: image.value,
     mainCategory: taxonomy.mainCategory,
     category: taxonomy.category,
-    language,
     isPublished: raw.isPublished === true,
+    isFeatured: raw.isFeatured === true,
+    isPopular: raw.isPopular === true,
   };
   return { ok: true as const, value };
 }

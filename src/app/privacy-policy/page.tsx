@@ -1,6 +1,6 @@
 import { PageShell } from "@/components/layout/page-shell";
 
-/** Add new privacy paragraphs here — each key must exist in en/te/hi translations. */
+/** Ordered privacy copy keys. */
 const PRIVACY_BODY_KEYS = [
   "privacyP1",
   "privacyP2",

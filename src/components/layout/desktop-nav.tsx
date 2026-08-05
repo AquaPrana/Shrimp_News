@@ -5,17 +5,17 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   useLanguage,
-  type TranslationKey,
+  type CopyKey,
 } from "@/context/language-context";
 
 type DropdownKey = "news" | "topics";
 
 type NavItem =
-  | { labelKey: TranslationKey; href: string }
+  | { labelKey: CopyKey; href: string }
   | {
       key: DropdownKey;
-      labelKey: TranslationKey;
-      submenu: Array<{ labelKey: TranslationKey; href: string }>;
+      labelKey: CopyKey;
+      submenu: Array<{ labelKey: CopyKey; href: string }>;
     };
 
 const navItems: NavItem[] = [
