@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ARTICLE_CATEGORIES } from "@/lib/article-types";
+import { normalizeArticlePagination } from "@/lib/article-pagination";
 import { logDatabaseError } from "@/lib/prisma";
 import { queryPublishedArticles } from "@/lib/public-articles";
 
@@ -14,11 +15,11 @@ export async function GET(request: Request) {
     const q = url.searchParams.get("q");
     const featured = url.searchParams.get("featured") ?? url.searchParams.get("isFeatured");
     const popular = url.searchParams.get("popular") ?? url.searchParams.get("isPopular");
-    const limit = Math.min(
-      Math.max(Number(url.searchParams.get("limit") || 60), 1),
-      100,
-    );
-    const page = Math.max(Number(url.searchParams.get("page") || 1), 1);
+    const pagination = normalizeArticlePagination({
+      limit: Number(url.searchParams.get("limit") || 60),
+      page: Number(url.searchParams.get("page") || 1),
+    });
+    const { limit, page } = pagination;
 
     if (category && !ARTICLE_CATEGORIES.includes(category as never)) {
       return NextResponse.json({ error: "Invalid category." }, { status: 400 });

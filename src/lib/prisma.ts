@@ -76,15 +76,27 @@ function redact(value: string | undefined) {
   return withoutSecrets.replace(/\b[a-f0-9]{64}\b/gi, "[REDACTED_TOKEN]");
 }
 
+function redactMetadata(value: unknown): unknown {
+  if (typeof value === "string") return redact(value);
+  if (Array.isArray(value)) return value.map(redactMetadata);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [key, redactMetadata(entry)]),
+    );
+  }
+  return value;
+}
+
 export function logDatabaseError(context: string, error: unknown) {
   const value = error && typeof error === "object"
-    ? error as { name?: unknown; message?: unknown; stack?: unknown; code?: unknown }
+    ? error as { name?: unknown; message?: unknown; stack?: unknown; code?: unknown; meta?: unknown }
     : {};
   console.error(`[database:${context}]`, {
     name: redact(typeof value.name === "string" ? value.name : "UnknownError"),
     message: redact(typeof value.message === "string" ? value.message : String(error)),
     stack: redact(typeof value.stack === "string" ? value.stack : undefined),
     code: typeof value.code === "string" ? value.code : undefined,
+    meta: redactMetadata(value.meta),
   });
 }
 

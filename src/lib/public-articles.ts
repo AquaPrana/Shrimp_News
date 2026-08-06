@@ -7,6 +7,7 @@ import type {
   PublicArticle,
 } from "@/lib/article-types";
 import { resolveArticleTaxonomy } from "@/lib/article-types";
+import { normalizeArticlePagination } from "@/lib/article-pagination";
 import { logDatabaseError, prisma } from "@/lib/prisma";
 import {
   TOPIC_CATEGORIES as SHARED_TOPIC_CATEGORIES,
@@ -301,9 +302,7 @@ function articleMatchesPublicSearch(
 export async function queryPublishedArticles(
   options: ListOptions = {},
 ): Promise<PublicArticle[]> {
-  const limit = Math.min(Math.max(options.limit || 60, 1), 100);
-  const page = Math.max(options.page || 1, 1);
-  const skip = (page - 1) * limit;
+  const { limit, skip } = normalizeArticlePagination(options);
   const where = buildBasePublishedWhere(options);
   const rawQuery = options.q?.trim() ?? "";
 
