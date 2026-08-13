@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { ArticleContentBody } from "@/components/articles/article-content-body";
 import { ArticleCoverImage } from "@/components/articles/article-cover-image";
@@ -15,6 +15,7 @@ import {
   formatReadTime,
   getCategoryLabel,
 } from "@/lib/article-formatting";
+import { trackEvent } from "@/lib/analytics";
 
 type ArticleDetailViewProps = {
   slug: string;
@@ -34,6 +35,15 @@ export function ArticleDetailView({
   const article = initialArticle;
   const related = initialRelated;
   const cover = article.featuredImageUrl || "/images/articles/ArticleImage.jpeg";
+
+  useEffect(() => {
+    trackEvent("article_view", {
+      article_id: article.id,
+      article_title: article.title,
+      category: article.category,
+      publication_date: article.publishedAt || article.createdAt,
+    });
+  }, [article.id, article.title, article.category, article.publishedAt, article.createdAt]);
 
   return (
     <section className="relative overflow-x-hidden bg-white px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-16">

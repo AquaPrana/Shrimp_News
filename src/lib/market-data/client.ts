@@ -2,9 +2,13 @@ import { fallbackMarketPrices } from "@/data/fallback-market-prices";
 
 export const TICKER_ITEM_TYPES = [
   "market",
-  "update",
+  "feed",
+  "external_link",
+  "product_launch",
   "promotion",
+  "coupon",
   "announcement",
+  "custom_message",
 ] as const;
 export type TickerItemType = (typeof TICKER_ITEM_TYPES)[number];
 
@@ -17,6 +21,8 @@ export interface MarketPriceItem {
   linkUrl: string | null;
   linkLabel: string | null;
   imageUrl: string | null;
+  couponCode: string | null;
+  campaignName: string | null;
   displayOrder: number;
   updatedAt: string;
 }
@@ -59,6 +65,8 @@ export function buildDemoMarketPricesPayload(): MarketPricesApiResponse {
       linkUrl: null,
       linkLabel: null,
       imageUrl: null,
+      couponCode: null,
+      campaignName: item.label,
       displayOrder,
       updatedAt: FALLBACK_LAST_UPDATED,
     })),

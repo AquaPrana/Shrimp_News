@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   resolveArticleTaxonomy,
@@ -14,6 +14,8 @@ import { editorHtmlToPlainText } from "@/lib/article-content";
 import { normalizeArticleImageUrl, slugify } from "@/lib/validation";
 import { ArticleContentBody } from "@/components/articles/article-content-body";
 import { ArticleContentEditor } from "@/components/admin/article-content-editor";
+import type { ArticleContentEditorHandle } from "@/components/admin/article-content-editor";
+import { prepareArticleContentForDisplay } from "@/lib/article-content";
 
 type FormState = {
   title: string;
@@ -101,6 +103,8 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadInFlightRef = useRef(false);
+  const contentEditorRef = useRef<ArticleContentEditorHandle>(null);
+  const latestContentRef = useRef(form.content);
 
   useEffect(() => {
     return () => {
@@ -110,6 +114,22 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  const handleEditorContentChange = useCallback((html: string) => {
+    latestContentRef.current = html;
+  }, []);
+
+  function readLatestContent() {
+    const html = contentEditorRef.current?.getHtml() ?? latestContentRef.current;
+    latestContentRef.current = html;
+    return html;
+  }
+
+  function openPreview() {
+    const content = readLatestContent();
+    setForm((current) => ({ ...current, content }));
+    setPreview(true);
   }
 
   function validateImageField(value: string) {
@@ -276,8 +296,10 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
       return;
     }
 
-    const contentForSave =
-      form.content.trim() || !article ? form.content : article.content;
+    const liveEditorContent = readLatestContent();
+    const contentForSave = liveEditorContent.trim()
+      ? liveEditorContent
+      : article?.content || liveEditorContent;
     const excerptForSave = form.excerpt;
 
     if (editorHtmlToPlainText(contentForSave).length < 50) {
@@ -420,12 +442,15 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
               className={`${input} h-auto py-3`}
             />
           </Field>
-          <Field label="Complete article content">
+          <div className="block text-sm font-semibold">
+            <span className="block">Complete article content</span>
             <ArticleContentEditor
-              value={form.content}
-              onChange={(html) => setField("content", html)}
+              ref={contentEditorRef}
+              articleId={article?.id || "new-article"}
+              initialContent={article?.content || ""}
+              onContentChange={handleEditorContentChange}
             />
-          </Field>
+          </div>
         </section>
         <aside className="space-y-5">
           <section className="space-y-4 rounded-2xl border bg-white p-5 shadow-sm">
@@ -624,7 +649,7 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setPreview(true)}
+                onClick={openPreview}
                 className="h-11 rounded-xl border font-bold"
               >
                 Preview
@@ -684,7 +709,7 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
               />
             ) : null}
             <div className="mt-8">
-              <ArticleContentBody content={form.content} />
+              <ArticleContentBody content={prepareArticleContentForDisplay(form.content)} />
             </div>
           </article>
         </div>

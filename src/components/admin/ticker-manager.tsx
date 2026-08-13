@@ -1,7 +1,9 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-import { useCallback, useEffect, useRef, useState } from "react";
+/* eslint-disable react-hooks/set-state-in-effect */
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowDown, ArrowUp, Check, ChevronDown, Clock3, Edit3, ExternalLink, Plus, Trash2, X } from "lucide-react";
 import type { TickerItemType } from "@/lib/market-data/client";
 
 type TickerRow = {
@@ -10,59 +12,79 @@ type TickerRow = {
   value: string;
   description: string | null;
   type: TickerItemType;
+  species: string | null;
+  location: string | null;
+  company: string | null;
+  product: string | null;
+  bagSize: string | null;
+  couponCode: string | null;
+  expiryDate: string | null;
+  campaignName: string | null;
   linkUrl: string | null;
   linkLabel: string | null;
-  imageUrl: string | null;
   isActive: boolean;
   displayOrder: number;
   startsAt: string | null;
   endsAt: string | null;
-  createdAt: string;
+  price: number;
+  unit: string;
+  changePercent: number | null;
   updatedAt: string;
 };
 
 type FormState = {
   id: string | null;
-  label: string;
-  value: string;
-  description: string;
   type: TickerItemType;
-  linkUrl: string;
-  linkLabel: string;
-  imageUrl: string;
+  species: string;
+  location: string;
+  company: string;
+  product: string;
+  bagSize: string;
+  price: string;
+  unit: string;
+  priceChange: string;
+  title: string;
+  description: string;
+  couponCode: string;
+  websiteUrl: string;
+  ctaText: string;
   isActive: boolean;
   displayOrder: string;
   startsAt: string;
   endsAt: string;
 };
 
-type ApiBody = {
-  success?: boolean;
-  message?: string;
-  items?: TickerRow[];
-  item?: TickerRow;
-  lastUpdated?: string;
-  url?: string;
-  error?: string;
-};
+const TYPES: { value: TickerItemType; label: string }[] = [
+  { value: "market", label: "Shrimp Market Price" },
+  { value: "feed", label: "Feed Price" },
+  { value: "product_launch", label: "Product Launch" },
+  { value: "promotion", label: "Promotion" },
+  { value: "coupon", label: "Coupon Code" },
+  { value: "announcement", label: "Announcement" },
+  { value: "external_link", label: "Website Link" },
+  { value: "custom_message", label: "Custom Message" },
+];
 
-const TYPE_LABELS: Record<TickerItemType, string> = {
-  market: "Market Price",
-  announcement: "Announcement",
-  update: "Website Update",
-  promotion: "Promotion",
-};
+const inputClass = "mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10";
+const textareaClass = `${inputClass} h-24 resize-y py-3`;
 
-function emptyForm(displayOrder = 0): FormState {
+function blankForm(displayOrder = 0): FormState {
   return {
     id: null,
-    label: "",
-    value: "",
-    description: "",
     type: "market",
-    linkUrl: "",
-    linkLabel: "",
-    imageUrl: "",
+    species: "",
+    location: "",
+    company: "",
+    product: "",
+    bagSize: "",
+    price: "",
+    unit: "kg",
+    priceChange: "",
+    title: "",
+    description: "",
+    couponCode: "",
+    websiteUrl: "",
+    ctaText: "",
     isActive: true,
     displayOrder: String(displayOrder),
     startsAt: "",
@@ -70,791 +92,296 @@ function emptyForm(displayOrder = 0): FormState {
   };
 }
 
-function toLocalInput(value: string | null) {
+function typeLabel(type: TickerItemType) {
+  return TYPES.find((item) => item.value === type)?.label || "Ticker Item";
+}
+
+function toLocalInput(value: string | null | undefined) {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
-    .toISOString()
-    .slice(0, 16);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 }
 
 function toIso(value: string) {
   return value ? new Date(value).toISOString() : "";
 }
 
-function fromRow(item: TickerRow): FormState {
+function buildTickerParts(form: FormState) {
+  const price = form.price ? `₹${form.price}` : "";
+  const cta = form.ctaText ? `${form.ctaText} →` : "";
+  if (form.type === "market") {
+    const change = form.priceChange ? `${Number(form.priceChange) >= 0 ? "▲" : "▼"} ${Math.abs(Number(form.priceChange))}%` : "";
+    return { label: form.species, value: [price && `${price}/${form.unit || "kg"}`, change].filter(Boolean).join(" ") };
+  }
+  if (form.type === "feed") {
+    return {
+      label: [form.company, form.product].filter(Boolean).join(" "),
+      value: [form.bagSize, price && `${price}/${form.unit || "bag"}`].filter(Boolean).join(" · "),
+    };
+  }
+  if (form.type === "coupon") {
+    return {
+      label: `🎁 ${form.title}`.trim(),
+      value: [form.couponCode && `Use code ${form.couponCode}`, form.description, cta].filter(Boolean).join(" — "),
+    };
+  }
+  if (form.type === "announcement") {
+    return { label: `📢 ${form.title}`.trim(), value: [form.description, cta].filter(Boolean).join(" — ") };
+  }
+  return { label: form.title, value: [form.description, cta].filter(Boolean).join(" — ") };
+}
+
+function fromRow(row: TickerRow): FormState {
   return {
-    id: item.id,
-    label: item.label,
-    value: item.value,
-    description: item.description || "",
-    type: item.type,
-    linkUrl: item.linkUrl || "",
-    linkLabel: item.linkLabel || "",
-    imageUrl: item.imageUrl || "",
-    isActive: item.isActive,
-    displayOrder: String(item.displayOrder),
-    startsAt: toLocalInput(item.startsAt),
-    endsAt: toLocalInput(item.endsAt),
+    ...blankForm(row.displayOrder),
+    id: row.id,
+    type: row.type,
+    species: row.species || (row.type === "market" ? row.label : ""),
+    location: row.location || "",
+    company: row.company || "",
+    product: row.product || "",
+    bagSize: row.bagSize || "",
+    price: row.price ? String(row.price) : "",
+    unit: row.unit || "kg",
+    priceChange: row.changePercent == null ? "" : String(row.changePercent),
+    title: ["market", "feed"].includes(row.type) ? "" : row.label.replace(/^(🎁|📢)\s*/, ""),
+    description: row.description || "",
+    couponCode: row.couponCode || "",
+    websiteUrl: row.linkUrl || "",
+    ctaText: row.linkLabel || "",
+    isActive: row.isActive,
+    startsAt: toLocalInput(row.startsAt),
+    endsAt: toLocalInput(row.endsAt),
   };
 }
 
-function itemPayload(item: FormState | TickerRow) {
+function payload(form: FormState) {
+  const content = buildTickerParts(form);
   return {
-    label: item.label,
-    value: item.value,
-    description: item.description || "",
-    type: item.type,
-    linkUrl: item.linkUrl || "",
-    linkLabel: item.linkLabel || "",
-    imageUrl: item.imageUrl || "",
-    isActive: item.isActive,
-    displayOrder: Number(item.displayOrder || 0),
-    startsAt: typeof item.startsAt === "string" && item.startsAt
-      ? item.startsAt.includes("T") && item.startsAt.length === 16
-        ? toIso(item.startsAt)
-        : item.startsAt
-      : "",
-    endsAt: typeof item.endsAt === "string" && item.endsAt
-      ? item.endsAt.includes("T") && item.endsAt.length === 16
-        ? toIso(item.endsAt)
-        : item.endsAt
-      : "",
+    label: content.label,
+    value: content.value || content.label,
+    description: form.description,
+    type: form.type,
+    species: form.species,
+    location: form.location,
+    company: form.company,
+    product: form.product,
+    bagSize: form.bagSize,
+    price: Number(form.price || 0),
+    unit: form.unit,
+    priceChange: form.priceChange === "" ? null : Number(form.priceChange),
+    couponCode: form.couponCode,
+    campaignName: form.title || form.company || form.product || form.species || content.label,
+    linkUrl: form.websiteUrl,
+    linkLabel: form.ctaText,
+    imageUrl: "",
+    expiryDate: "",
+    startsAt: toIso(form.startsAt),
+    endsAt: toIso(form.endsAt),
+    isActive: form.isActive,
+    displayOrder: Number(form.displayOrder || 0),
   };
 }
 
 export function TickerManager() {
-  const imageInputRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<TickerRow[]>([]);
-  const [form, setForm] = useState<FormState>(() => emptyForm());
-  const [formOpen, setFormOpen] = useState(false);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState("");
-  const [savedLastUpdated, setSavedLastUpdated] = useState("");
+  const [form, setForm] = useState<FormState>(() => blankForm());
+  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [busy, setBusy] = useState("");
-  const [message, setMessage] = useState("");
-  const [isError, setIsError] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState("");
+  const [toast, setToast] = useState<{ text: string; error?: boolean } | null>(null);
+  const preview = useMemo(() => {
+    const parts = buildTickerParts(form);
+    return [parts.label, parts.value].filter(Boolean).join(" — ") || "Your ticker preview will appear here";
+  }, [form]);
 
-  const showMessage = useCallback((text: string, error = false) => {
-    setMessage(text);
-    setIsError(error);
+  const notify = useCallback((text: string, error = false) => {
+    setToast({ text, error });
+    window.setTimeout(() => setToast(null), 3600);
   }, []);
 
-  const load = useCallback(async (clearMessage = true) => {
+  const load = useCallback(async () => {
     setLoading(true);
-    if (clearMessage) {
-      setMessage("");
-      setIsError(false);
-    }
+    setLoadError(false);
     try {
-      const response = await fetch("/api/admin/ticker", {
-        cache: "no-store",
-        credentials: "same-origin",
-      });
-      const body = await response.json() as ApiBody;
-      if (!response.ok || !body.success) {
-        throw new Error(body.message || "Unable to load ticker items.");
-      }
-      setItems(body.items || []);
-      const localDate = toLocalInput(body.lastUpdated || null);
-      setLastUpdated(localDate);
-      setSavedLastUpdated(body.lastUpdated || "");
+      const response = await fetch("/api/admin/ticker", { cache: "no-store", credentials: "same-origin" });
+      const body = await response.json() as { success?: boolean; items?: unknown; lastUpdated?: unknown; message?: unknown };
+      if (!response.ok || body.success !== true) throw new Error(typeof body.message === "string" ? body.message : `Unable to load ticker items (${response.status}).`);
+      if (!Array.isArray(body.items)) throw new Error("The ticker API returned an invalid response.");
+      setItems(body.items as TickerRow[]);
+      setLastUpdated(typeof body.lastUpdated === "string" ? body.lastUpdated : "");
     } catch (error) {
       console.error("Ticker manager load failed.", error);
-      showMessage("Ticker items could not be loaded. Please refresh or try again.", true);
+      setLoadError(true);
+      notify("Ticker items could not be loaded. Please refresh or try again.", true);
     } finally {
       setLoading(false);
     }
-  }, [showMessage]);
+  }, [notify]);
 
-  useEffect(() => {
-    const timeout = window.setTimeout(() => void load(), 0);
-    return () => window.clearTimeout(timeout);
-  }, [load]);
+  useEffect(() => { void load(); }, [load]);
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
-  function openAdd() {
-    setForm(emptyForm(items.length));
-    setAdvancedOpen(false);
-    setFormOpen(true);
-  }
-
-  function openEdit(item: TickerRow) {
-    setForm(fromRow(item));
-    setAdvancedOpen(Boolean(
-      item.linkUrl || item.linkLabel || item.imageUrl || item.startsAt || item.endsAt,
-    ));
-    setFormOpen(true);
-  }
-
-  function closeForm() {
-    if (busy === "form" || busy === "upload") return;
-    setFormOpen(false);
-    setForm(emptyForm(items.length));
-  }
-
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
+  async function save(event: React.FormEvent) {
     event.preventDefault();
-    setBusy("form");
-    showMessage("");
+    setBusy("save");
     try {
-      const response = await fetch(
-        form.id ? `/api/admin/ticker/${form.id}` : "/api/admin/ticker",
-        {
-          method: form.id ? "PUT" : "POST",
-          credentials: "same-origin",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(itemPayload(form)),
-        },
-      );
-      const body = await response.json() as ApiBody;
-      if (!response.ok || !body.success) {
-        throw new Error(body.message || "Unable to save ticker item.");
-      }
-      setFormOpen(false);
-      showMessage(body.message || "Ticker item saved successfully.");
-      await load(false);
+      const response = await fetch(form.id ? `/api/admin/ticker/${form.id}` : "/api/admin/ticker", {
+        method: form.id ? "PUT" : "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload(form)),
+      });
+      const body = await response.json();
+      if (!response.ok || !body.success) throw new Error(body.message || "Unable to save ticker item.");
+      setOpen(false);
+      notify(form.id ? "Ticker item updated." : "Ticker item added.");
+      await load();
     } catch (error) {
-      showMessage(
-        error instanceof Error ? error.message : "Unable to save ticker item.",
-        true,
-      );
+      notify(error instanceof Error ? error.message : "Unable to save ticker item.", true);
     } finally {
       setBusy("");
     }
   }
 
-  async function toggleActive(item: TickerRow) {
-    setBusy(`toggle-${item.id}`);
-    showMessage("");
+  async function updateItem(item: TickerRow, changes: Partial<TickerRow>, success: string) {
+    setBusy(item.id);
     try {
       const response = await fetch(`/api/admin/ticker/${item.id}`, {
         method: "PUT",
-        credentials: "same-origin",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...itemPayload(item), isActive: !item.isActive }),
+        body: JSON.stringify({ ...item, priceChange: item.changePercent, ...changes }),
       });
-      const body = await response.json() as ApiBody;
-      if (!response.ok || !body.success) {
-        throw new Error(body.message || "Unable to update ticker item.");
-      }
-      showMessage(
-        `“${item.label}” ${item.isActive ? "disabled" : "enabled"} successfully.`,
-      );
-      await load(false);
+      const body = await response.json();
+      if (!response.ok || !body.success) throw new Error(body.message || "Unable to update ticker item.");
+      notify(success);
+      await load();
     } catch (error) {
-      showMessage(
-        error instanceof Error ? error.message : "Unable to update ticker item.",
-        true,
-      );
+      notify(error instanceof Error ? error.message : "Unable to update ticker item.", true);
     } finally {
       setBusy("");
     }
   }
 
   async function remove(item: TickerRow) {
-    if (!window.confirm("Are you sure you want to delete this ticker item?")) return;
-    setBusy(`delete-${item.id}`);
-    showMessage("");
+    if (!window.confirm(`Delete “${item.label}”? This cannot be undone.`)) return;
+    setBusy(item.id);
     try {
-      const response = await fetch(`/api/admin/ticker/${item.id}`, {
-        method: "DELETE",
-        credentials: "same-origin",
-      });
-      const body = await response.json() as ApiBody;
-      if (!response.ok || !body.success) {
-        throw new Error(body.message || "Unable to delete ticker item.");
-      }
-      showMessage(body.message || "Ticker item deleted successfully.");
-      await load(false);
+      const response = await fetch(`/api/admin/ticker/${item.id}`, { method: "DELETE" });
+      const body = await response.json();
+      if (!response.ok || !body.success) throw new Error(body.message || "Unable to delete ticker item.");
+      notify("Ticker item deleted.");
+      await load();
     } catch (error) {
-      showMessage(
-        error instanceof Error ? error.message : "Unable to delete ticker item.",
-        true,
-      );
+      notify(error instanceof Error ? error.message : "Unable to delete ticker item.", true);
     } finally {
       setBusy("");
     }
   }
 
-  function move(index: number, direction: -1 | 1) {
+  async function move(index: number, direction: -1 | 1) {
     const target = index + direction;
     if (target < 0 || target >= items.length) return;
-    setItems((current) => {
-      const next = [...current];
-      [next[index], next[target]] = [next[target], next[index]];
-      return next.map((item, displayOrder) => ({ ...item, displayOrder }));
+    const next = [...items];
+    [next[index], next[target]] = [next[target], next[index]];
+    const reordered = next.map((item, displayOrder) => ({ ...item, displayOrder }));
+    setItems(reordered);
+    const response = await fetch("/api/admin/ticker/reorder", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ items: reordered.map(({ id, displayOrder }) => ({ id, displayOrder })) }),
     });
-  }
-
-  async function saveOrder() {
-    setBusy("order");
-    showMessage("");
-    try {
-      const response = await fetch("/api/admin/ticker/reorder", {
-        method: "PATCH",
-        credentials: "same-origin",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          items: items.map(({ id, displayOrder }) => ({ id, displayOrder })),
-        }),
-      });
-      const body = await response.json() as ApiBody;
-      if (!response.ok || !body.success) {
-        throw new Error(body.message || "Unable to save ticker order.");
-      }
-      showMessage(body.message || "Ticker order saved successfully.");
-      await load(false);
-    } catch (error) {
-      showMessage(
-        error instanceof Error ? error.message : "Unable to save ticker order.",
-        true,
-      );
-    } finally {
-      setBusy("");
+    if (!response.ok) {
+      notify("Order could not be saved.", true);
+      await load();
+    } else {
+      notify("Ticker order updated.");
     }
   }
 
-  async function saveLastUpdated() {
-    setBusy("meta");
-    showMessage("");
+  async function updateTimestamp() {
+    setBusy("timestamp");
     try {
       const response = await fetch("/api/admin/ticker", {
         method: "POST",
-        credentials: "same-origin",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          action: "updateLastUpdated",
-          lastUpdated: toIso(lastUpdated),
-        }),
+        body: JSON.stringify({ action: "updateLastUpdated", lastUpdated: new Date().toISOString() }),
       });
-      const body = await response.json() as ApiBody;
-      if (!response.ok || !body.success) {
-        throw new Error(body.message || "Unable to save Ticker Last Updated.");
-      }
-      if (body.lastUpdated) {
-        setLastUpdated(toLocalInput(body.lastUpdated));
-        setSavedLastUpdated(body.lastUpdated);
-      }
-      showMessage(body.message || "Ticker Last Updated saved successfully.");
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.message || "Unable to update timestamp.");
+      setLastUpdated(body.lastUpdated);
+      notify("Ticker timestamp updated.");
     } catch (error) {
-      showMessage(
-        error instanceof Error ? error.message : "Unable to save Ticker Last Updated.",
-        true,
-      );
+      notify(error instanceof Error ? error.message : "Unable to update timestamp.", true);
     } finally {
       setBusy("");
     }
   }
-
-  async function uploadImage(file: File) {
-    setBusy("upload");
-    showMessage("");
-    try {
-      const data = new FormData();
-      data.append("file", file);
-      const response = await fetch("/api/admin/upload-image", {
-        method: "POST",
-        credentials: "same-origin",
-        body: data,
-      });
-      const body = await response.json() as ApiBody;
-      if (!response.ok || !body.url) {
-        throw new Error(body.message || body.error || "Image upload failed.");
-      }
-      setField("imageUrl", body.url);
-      showMessage("Image uploaded successfully.");
-    } catch (error) {
-      showMessage(
-        error instanceof Error ? error.message : "Image upload failed.",
-        true,
-      );
-    } finally {
-      setBusy("");
-      if (imageInputRef.current) imageInputRef.current.value = "";
-    }
-  }
-
-  const input = "mt-2 h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100";
-  const helper = "mt-1.5 block text-xs font-normal leading-5 text-slate-500";
 
   return (
-    <div className="space-y-6">
-      <header>
-        <p className="text-xs font-bold uppercase tracking-[0.28em] text-cyan-700">
-          Markets
-        </p>
-        <h1 className="mt-2 text-3xl font-extrabold">Price Ticker Management</h1>
-        <p className="mt-2 text-slate-600">
-          Manage the labels and values shown in the public market ticker.
-        </p>
-      </header>
+    <div className="mx-auto max-w-7xl space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div><p className="text-xs font-bold uppercase tracking-[.18em] text-cyan-600">Content management</p><h2 className="mt-2 text-3xl font-black tracking-tight text-slate-950">Price Ticker</h2><p className="mt-2 text-sm text-slate-500">Manage the information displayed in the scrolling ticker on Shrimp.News.</p></div>
+        <button onClick={() => { setForm(blankForm(items.length)); setOpen(true); }} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#0B4F7A] px-5 text-sm font-bold text-white shadow-lg shadow-blue-900/15 transition hover:bg-[#083d60]"><Plus size={17} /> Add Ticker Item</button>
+      </div>
 
-      {message ? (
-        <div
-          role={isError ? "alert" : "status"}
-          className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm ${
-            isError
-              ? "border-red-200 bg-red-50 text-red-700"
-              : "border-emerald-200 bg-emerald-50 text-emerald-700"
-          }`}
-        >
-          <span>{message}</span>
-          {isError ? (
-            <button
-              type="button"
-              onClick={() => void load()}
-              className="rounded-lg border border-red-300 bg-white px-3 py-1.5 font-bold"
-            >
-              Retry
-            </button>
-          ) : null}
-        </div>
-      ) : null}
-
-      <section className="overflow-hidden rounded-2xl border bg-white shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b p-5">
-          <div>
-            <h2 className="text-lg font-bold">Current Ticker Items</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Use the arrows to adjust order, then save your changes.
-            </p>
-          </div>
-          <button
-            type="button"
-            disabled={Boolean(busy) || items.length === 0}
-            onClick={() => void saveOrder()}
-            className="h-10 rounded-xl border border-slate-300 px-4 text-sm font-bold disabled:opacity-50"
-          >
-            {busy === "order" ? "Saving…" : "Save Order"}
-          </button>
-        </div>
-
+      <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/80">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[850px] text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                {["Label", "Value", "Type", "Status", "Order", "Actions"].map((label) => (
-                  <th key={label} className="px-5 py-3">{label}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="p-10 text-center text-slate-500">
-                    Loading ticker items…
-                  </td>
+          <table className="w-full min-w-[900px] text-left text-sm">
+            <thead className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500"><tr><th className="px-5 py-4">Ticker Content</th><th className="px-4 py-4">Type</th><th className="px-4 py-4">Status</th><th className="px-4 py-4">Order</th><th className="px-4 py-4">Link</th><th className="px-5 py-4 text-right">Actions</th></tr></thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? <EmptyRow label="Loading ticker items…" muted /> : loadError ? <EmptyRow label="Ticker items could not be loaded. Please refresh or try again." error /> : items.length === 0 ? <EmptyRow label="No ticker items yet" /> : items.map((item, index) => (
+                <tr key={item.id} className="hover:bg-slate-50/60">
+                  <td className="max-w-xl px-5 py-4 font-semibold text-slate-800">{item.label} <span className="text-slate-600">{item.value}</span></td>
+                  <td className="px-4 py-4"><span className="rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-bold text-[#0B4F7A]">{typeLabel(item.type)}</span></td>
+                  <td className="px-4 py-4"><button disabled={busy === item.id} onClick={() => void updateItem(item, { isActive: !item.isActive }, item.isActive ? "Ticker item deactivated." : "Ticker item activated.")} aria-label={`${item.isActive ? "Deactivate" : "Activate"} ${item.label}`} className={`relative h-6 w-11 rounded-full transition ${item.isActive ? "bg-emerald-500" : "bg-slate-300"}`}><span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition ${item.isActive ? "left-6" : "left-1"}`} /></button><span className="ml-2 text-xs font-semibold text-slate-600">{item.isActive ? "Active" : "Inactive"}</span></td>
+                  <td className="px-4 py-4"><span className="text-xs font-bold text-slate-600">{item.displayOrder}</span><div className="mt-1 flex gap-1"><button disabled={index === 0} onClick={() => void move(index, -1)} aria-label="Move up" className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 disabled:opacity-25"><ArrowUp size={15} /></button><button disabled={index === items.length - 1} onClick={() => void move(index, 1)} aria-label="Move down" className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 disabled:opacity-25"><ArrowDown size={15} /></button></div></td>
+                  <td className="px-4 py-4">{item.linkUrl ? <a href={item.linkUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-bold text-cyan-700 hover:underline">Open Link <ExternalLink size={12} /></a> : <span className="text-slate-400">—</span>}</td>
+                  <td className="px-5 py-4"><div className="flex justify-end gap-1"><button onClick={() => { setForm(fromRow(item)); setOpen(true); }} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold text-[#0B4F7A] hover:bg-cyan-50"><Edit3 size={14} /> Edit</button><button onClick={() => void remove(item)} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50"><Trash2 size={14} /> Delete</button></div></td>
                 </tr>
-              ) : items.length ? items.map((item, index) => (
-                <tr key={item.id} className="transition-colors hover:bg-slate-50/70">
-                  <td className="px-5 py-4 font-semibold">{item.label}</td>
-                  <td className="max-w-80 px-5 py-4">{item.value}</td>
-                  <td className="px-5 py-4">{TYPE_LABELS[item.type] || item.type}</td>
-                  <td className="px-5 py-4">
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                      item.isActive
-                        ? "bg-emerald-50 text-emerald-700"
-                        : "bg-slate-100 text-slate-600"
-                    }`}>
-                      {item.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        aria-label={`Move ${item.label} up`}
-                        disabled={index === 0 || Boolean(busy)}
-                        onClick={() => move(index, -1)}
-                        className="rounded-lg border px-2 py-1 disabled:opacity-30"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        aria-label={`Move ${item.label} down`}
-                        disabled={index === items.length - 1 || Boolean(busy)}
-                        onClick={() => move(index, 1)}
-                        className="rounded-lg border px-2 py-1 disabled:opacity-30"
-                      >
-                        ↓
-                      </button>
-                      <span className="ml-2 tabular-nums">{item.displayOrder}</span>
-                    </div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        disabled={Boolean(busy)}
-                        onClick={() => openEdit(item)}
-                        className="rounded-lg border px-3 py-1.5 text-xs font-bold disabled:opacity-50"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        disabled={Boolean(busy)}
-                        onClick={() => void toggleActive(item)}
-                        className="rounded-lg border px-3 py-1.5 text-xs font-bold disabled:opacity-50"
-                      >
-                        {busy === `toggle-${item.id}`
-                          ? "Saving…"
-                          : item.isActive ? "Disable" : "Enable"}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={Boolean(busy)}
-                        onClick={() => void remove(item)}
-                        className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-bold text-red-600 disabled:opacity-50"
-                      >
-                        {busy === `delete-${item.id}` ? "Deleting…" : "Delete"}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan={6} className="p-10 text-center text-slate-500">
-                    No ticker items yet. Add the first item below.
-                  </td>
-                </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
       </section>
 
-      <section className="rounded-2xl border bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-bold">Add New Ticker Item</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Add a market price, announcement, website update, or promotion.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={openAdd}
-            className="h-11 rounded-xl bg-[#0B4F7A] px-5 text-sm font-bold text-white"
-          >
-            Add Ticker Item
-          </button>
-        </div>
-      </section>
+      <section className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/80 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-50 text-[#0B4F7A]"><Clock3 size={19} /></span><p className="text-sm text-slate-500">Last Updated: <span className="font-bold text-slate-800">{lastUpdated ? new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata" }).format(new Date(lastUpdated)) : "Not set"}</span></p></div><button disabled={Boolean(busy)} onClick={() => void updateTimestamp()} className="h-10 rounded-xl border border-slate-200 px-4 text-sm font-bold text-[#0B4F7A] hover:bg-slate-50 disabled:opacity-50">{busy === "timestamp" ? "Updating…" : "Update Timestamp"}</button></section>
 
-      <aside className="rounded-2xl border border-cyan-100 bg-cyan-50/50 p-5">
-        <h2 className="text-lg font-bold">How ticker items appear</h2>
-        <div className="mt-4 grid gap-4 lg:grid-cols-3">
-          <Example
-            title="Market Price"
-            label="Vannamei C30"
-            value="₹445/kg ▲ 2.1%"
-            description="Andhra Pradesh farm-gate average"
-          />
-          <Example
-            title="Announcement"
-            label="Event Update"
-            value="Shrimp Retail 2026 registrations are open"
-            description="29–30 September 2026, Vijayawada"
-          />
-          <Example
-            title="Promotion"
-            label="Telaqua"
-            value="Smart pond water-quality monitoring"
-            description="Monitor pH and other pond conditions using Telaqua devices."
-            link="Learn More"
-          />
-        </div>
-        <p className="mt-3 text-xs text-slate-500">
-          These are examples only and are not saved automatically.
-        </p>
-      </aside>
-
-      <section className="rounded-2xl border bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-bold">Ticker Last Updated</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          This date appears beside the public market ticker to show when the prices
-          or updates were last reviewed.
-        </p>
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
-          <label className="block flex-1 text-sm font-semibold">
-            Date and time
-            <input
-              type="datetime-local"
-              value={lastUpdated}
-              onChange={(event) => setLastUpdated(event.target.value)}
-              className={input}
-            />
-          </label>
-          <button
-            type="button"
-            disabled={Boolean(busy)}
-            onClick={() => setLastUpdated(toLocalInput(new Date().toISOString()))}
-            className="h-11 rounded-xl border border-slate-300 px-4 text-sm font-bold disabled:opacity-50"
-          >
-            Use Current Date &amp; Time
-          </button>
-          <button
-            type="button"
-            disabled={Boolean(busy) || !lastUpdated}
-            onClick={() => void saveLastUpdated()}
-            className="h-11 rounded-xl bg-[#0B4F7A] px-5 text-sm font-bold text-white disabled:opacity-50"
-          >
-            {busy === "meta" ? "Saving…" : "Save Last Updated"}
-          </button>
-        </div>
-        <p className="mt-3 text-sm text-slate-500">
-          Saved value:{" "}
-          <span className="font-semibold text-slate-700">
-            {savedLastUpdated
-              ? new Intl.DateTimeFormat(undefined, {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                }).format(new Date(savedLastUpdated))
-              : "Not set"}
-          </span>
-        </p>
-      </section>
-
-      {formOpen ? (
-        <div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/55 p-4"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.currentTarget === event.target) closeForm();
-          }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="ticker-form-title"
-            className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl"
-          >
-            <form onSubmit={submit} className="space-y-5 p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 id="ticker-form-title" className="text-xl font-bold">
-                    {form.id ? "Edit Ticker Item" : "Add Ticker Item"}
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Enter the wording exactly as it should appear in the ticker.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={closeForm}
-                  className="rounded-lg border px-3 py-1.5 text-sm font-bold"
-                  aria-label="Close ticker item form"
-                >
-                  Close
-                </button>
-              </div>
-
-              <label className="block text-sm font-semibold">
-                Label *
-                <input
-                  required
-                  value={form.label}
-                  onChange={(event) => setField("label", event.target.value)}
-                  className={input}
-                  placeholder="Vannamei C30"
-                />
-                <span className={helper}>The name shown before the ticker value. Example: Vannamei C30</span>
-              </label>
-
-              <label className="block text-sm font-semibold">
-                Value *
-                <input
-                  required
-                  value={form.value}
-                  onChange={(event) => setField("value", event.target.value)}
-                  className={input}
-                  placeholder="₹445/kg ▲ 2.1%"
-                />
-                <span className={helper}>The price, update or promotional message shown in the ticker. Example: ₹445/kg ▲ 2.1%</span>
-              </label>
-
-              <label className="block text-sm font-semibold">
-                Type
-                <select
-                  value={form.type}
-                  onChange={(event) => setField("type", event.target.value as TickerItemType)}
-                  className={input}
-                >
-                  <option value="market">Market Price</option>
-                  <option value="announcement">Announcement</option>
-                  <option value="update">Website Update</option>
-                  <option value="promotion">Promotion</option>
-                </select>
-                <span className={helper}>Choose what kind of information this item contains.</span>
-              </label>
-
-              <label className="block text-sm font-semibold">
-                Description
-                <textarea
-                  value={form.description}
-                  onChange={(event) => setField("description", event.target.value)}
-                  className={`${input} min-h-24 py-3`}
-                />
-                <span className={helper}>Optional extra information shown when the user clicks or hovers over the item.</span>
-              </label>
-
-              <label className="flex items-center gap-3 rounded-xl border bg-slate-50 p-4 text-sm font-semibold">
-                <input
-                  type="checkbox"
-                  checked={form.isActive}
-                  onChange={(event) => setField("isActive", event.target.checked)}
-                  className="h-4 w-4"
-                />
-                Active — show this item publicly when its schedule allows
-              </label>
-
-              <details
-                open={advancedOpen}
-                onToggle={(event) => setAdvancedOpen(event.currentTarget.open)}
-                className="rounded-xl border"
-              >
-                <summary className="cursor-pointer px-4 py-3 text-sm font-bold">
-                  Advanced Options
-                </summary>
-                <div className="grid gap-4 border-t p-4 sm:grid-cols-2">
-                  <label className="text-sm font-semibold">
-                    Link URL
-                    <input
-                      type="url"
-                      value={form.linkUrl}
-                      onChange={(event) => setField("linkUrl", event.target.value)}
-                      className={input}
-                      placeholder="https://…"
-                    />
-                  </label>
-                  <label className="text-sm font-semibold">
-                    Link label
-                    <input
-                      value={form.linkLabel}
-                      onChange={(event) => setField("linkLabel", event.target.value)}
-                      className={input}
-                      placeholder="Learn More"
-                    />
-                  </label>
-                  <label className="text-sm font-semibold">
-                    Start date
-                    <input
-                      type="datetime-local"
-                      value={form.startsAt}
-                      onChange={(event) => setField("startsAt", event.target.value)}
-                      className={input}
-                    />
-                  </label>
-                  <label className="text-sm font-semibold">
-                    End date
-                    <input
-                      type="datetime-local"
-                      min={form.startsAt || undefined}
-                      value={form.endsAt}
-                      onChange={(event) => setField("endsAt", event.target.value)}
-                      className={input}
-                    />
-                  </label>
-                  <label className="text-sm font-semibold">
-                    Display order
-                    <input
-                      type="number"
-                      value={form.displayOrder}
-                      onChange={(event) => setField("displayOrder", event.target.value)}
-                      className={input}
-                    />
-                  </label>
-                  <div className="space-y-3 text-sm font-semibold">
-                    Optional image
-                    {form.imageUrl ? (
-                      <img src={form.imageUrl} alt="" className="mt-2 h-24 w-36 rounded-xl object-cover" />
-                    ) : null}
-                    <div className="flex flex-wrap gap-2">
-                      <label className="inline-flex h-10 cursor-pointer items-center rounded-xl border bg-white px-3 text-xs font-bold">
-                        {busy === "upload" ? "Uploading…" : "Upload image"}
-                        <input
-                          ref={imageInputRef}
-                          disabled={busy === "upload"}
-                          type="file"
-                          accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-                          className="sr-only"
-                          onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            if (file) void uploadImage(file);
-                          }}
-                        />
-                      </label>
-                      {form.imageUrl ? (
-                        <button
-                          type="button"
-                          onClick={() => setField("imageUrl", "")}
-                          className="h-10 rounded-xl border border-red-200 px-3 text-xs font-bold text-red-600"
-                        >
-                          Remove image
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              </details>
-
-              <div className="flex flex-wrap justify-end gap-3 border-t pt-5">
-                <button
-                  type="button"
-                  disabled={Boolean(busy)}
-                  onClick={closeForm}
-                  className="h-11 rounded-xl border px-5 text-sm font-bold disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={Boolean(busy)}
-                  className="h-11 rounded-xl bg-[#0B4F7A] px-5 text-sm font-bold text-white disabled:opacity-50"
-                >
-                  {busy === "form"
-                    ? "Saving…"
-                    : form.id ? "Save Changes" : "Add Ticker Item"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      ) : null}
+      {open ? <TickerForm form={form} preview={preview} busy={busy === "save"} setField={setField} onClose={() => setOpen(false)} onSubmit={save} /> : null}
+      {toast ? <div role="status" className={`fixed bottom-5 right-5 z-[110] flex max-w-sm items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-white shadow-2xl ${toast.error ? "bg-red-600" : "bg-slate-900"}`}>{toast.error ? <X size={17} /> : <Check size={17} />}{toast.text}</div> : null}
     </div>
   );
 }
 
-function Example({
-  title,
-  label,
-  value,
-  description,
-  link,
-}: {
-  title: string;
-  label: string;
-  value: string;
-  description: string;
-  link?: string;
-}) {
-  return (
-    <div className="rounded-xl border bg-white p-4 text-sm shadow-sm">
-      <p className="font-bold text-[#0B4F7A]">{title}</p>
-      <dl className="mt-3 space-y-2 text-slate-600">
-        <div><dt className="font-semibold text-slate-800">Label</dt><dd>{label}</dd></div>
-        <div><dt className="font-semibold text-slate-800">Value</dt><dd>{value}</dd></div>
-        <div><dt className="font-semibold text-slate-800">Description</dt><dd>{description}</dd></div>
-        {link ? <div><dt className="font-semibold text-slate-800">Link</dt><dd>{link}</dd></div> : null}
-      </dl>
+function EmptyRow({ label, muted = false, error = false }: { label: string; muted?: boolean; error?: boolean }) {
+  return <tr><td colSpan={6} className={`px-5 py-16 text-center font-bold ${error ? "text-red-700" : muted ? "text-slate-400" : "text-slate-700"}`}>{label}</td></tr>;
+}
+
+function TickerForm({ form, preview, busy, setField, onClose, onSubmit }: { form: FormState; preview: string; busy: boolean; setField: <K extends keyof FormState>(key: K, value: FormState[K]) => void; onClose: () => void; onSubmit: (event: React.FormEvent) => void }) {
+  const Field = ({ label, name, placeholder, type = "text", required = false, step }: { label: string; name: keyof FormState; placeholder?: string; type?: string; required?: boolean; step?: string }) => <label className="block text-sm font-bold text-slate-700">{label}{required ? " *" : ""}<input type={type} step={step} required={required} value={String(form[name])} onChange={(event) => setField(name, event.target.value as never)} placeholder={placeholder} className={inputClass} /></label>;
+  const promotional = form.type === "product_launch" || form.type === "promotion";
+  return <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/55 p-0 sm:items-center sm:p-5" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><div role="dialog" aria-modal="true" aria-labelledby="ticker-form-title" className="max-h-[96vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl"><form onSubmit={onSubmit}>
+    <div className="sticky top-0 z-10 flex items-start justify-between border-b border-slate-100 bg-white/95 px-5 py-5 backdrop-blur sm:px-7"><div><h2 id="ticker-form-title" className="text-xl font-black text-slate-950">{form.id ? "Edit Ticker Item" : "Add Ticker Item"}</h2><p className="mt-1 text-sm text-slate-500">Only the fields needed for this ticker are shown.</p></div><button type="button" onClick={onClose} aria-label="Close" className="rounded-xl p-2 text-slate-500 hover:bg-slate-100"><X size={20} /></button></div>
+    <div className="space-y-6 px-5 py-6 sm:px-7">
+      <label className="block text-sm font-bold text-slate-700">Ticker Type *<div className="relative"><select value={form.type} onChange={(event) => setField("type", event.target.value as TickerItemType)} className={`${inputClass} appearance-none pr-10`}>{TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}</select><ChevronDown className="pointer-events-none absolute right-3 top-5 text-slate-400" size={17} /></div></label>
+      <div className="grid gap-5 sm:grid-cols-2">
+        {form.type === "market" ? <><Field label="Shrimp Species / Grade" name="species" required placeholder="Vannamei C30" /><Field label="Price" name="price" type="number" step="0.01" required placeholder="445" /><Field label="Unit" name="unit" required placeholder="kg" /><Field label="Price Change %" name="priceChange" type="number" step="0.01" placeholder="2.1" /><Field label="Location" name="location" placeholder="Andhra Pradesh" /></> : null}
+        {form.type === "feed" ? <><Field label="Feed Company" name="company" required placeholder="Feed company" /><Field label="Feed Product" name="product" required placeholder="Grower feed" /><Field label="Bag Size" name="bagSize" placeholder="25kg" /><Field label="Price" name="price" type="number" step="0.01" required placeholder="2125" /><Field label="Unit" name="unit" placeholder="bag" /></> : null}
+        {promotional ? <><Field label="Product / Promotion Title" name="title" required placeholder="New product or promotion" /><Field label="Website URL" name="websiteUrl" type="url" placeholder="https://…" /><Field label="CTA Text" name="ctaText" placeholder="Explore" /><Field label="Optional Coupon Code" name="couponCode" placeholder="SAVE20" /></> : null}
+        {form.type === "coupon" ? <><Field label="Offer Title" name="title" required placeholder="Launch Offer" /><Field label="Coupon Code" name="couponCode" required placeholder="SAVE20" /><Field label="Website URL" name="websiteUrl" type="url" placeholder="https://…" /><Field label="CTA Text" name="ctaText" placeholder="Get Started" /></> : null}
+        {form.type === "announcement" ? <><Field label="Announcement Title" name="title" required placeholder="We are officially launched" /><Field label="Optional Website URL" name="websiteUrl" type="url" placeholder="https://…" /><Field label="Optional CTA Text" name="ctaText" placeholder="Discover More" /></> : null}
+        {form.type === "external_link" ? <><Field label="Link Title" name="title" required placeholder="Visit our website" /><Field label="Website URL" name="websiteUrl" type="url" required placeholder="https://…" /><Field label="CTA Text" name="ctaText" placeholder="Visit Website" /></> : null}
+        {form.type === "custom_message" ? <><Field label="Title / Message" name="title" required placeholder="Important update" /><Field label="Optional URL" name="websiteUrl" type="url" placeholder="https://…" /><Field label="Optional CTA Text" name="ctaText" placeholder="Read More" /></> : null}
+      </div>
+      <label className="block text-sm font-bold text-slate-700">Short Description<textarea value={form.description} onChange={(event) => setField("description", event.target.value)} placeholder="Add a short, human-readable detail (optional)" className={textareaClass} /></label>
+      <div className="grid gap-5 border-t border-slate-100 pt-5 sm:grid-cols-2"><Field label="Display Order" name="displayOrder" type="number" required /><Field label="Start Date / Time" name="startsAt" type="datetime-local" /><Field label="End Date / Time" name="endsAt" type="datetime-local" /><label className="flex h-11 items-center justify-between self-end rounded-xl bg-slate-50 px-4 text-sm font-bold text-slate-700"><span>Active</span><input type="checkbox" checked={form.isActive} onChange={(event) => setField("isActive", event.target.checked)} className="h-4 w-4 accent-emerald-500" /></label></div>
+      <div className="rounded-2xl bg-gradient-to-r from-[#083d60] to-[#087f8c] p-5 text-white"><p className="text-[10px] font-black uppercase tracking-[.2em] text-cyan-200">Live Preview</p><p className="mt-3 text-sm font-bold leading-6">{preview}</p>{form.websiteUrl ? <p className="mt-2 text-[11px] text-cyan-100">This ticker will open its link safely in a new tab.</p> : null}</div>
     </div>
-  );
+    <div className="sticky bottom-0 flex justify-end gap-3 border-t border-slate-100 bg-white/95 px-5 py-4 backdrop-blur sm:px-7"><button type="button" disabled={busy} onClick={onClose} className="h-11 rounded-xl border border-slate-200 px-5 text-sm font-bold text-slate-700">Cancel</button><button type="submit" disabled={busy} className="h-11 rounded-xl bg-[#0B4F7A] px-6 text-sm font-bold text-white disabled:opacity-50">{busy ? "Saving…" : form.id ? "Save Changes" : "Add Ticker Item"}</button></div>
+  </form></div></div>;
 }

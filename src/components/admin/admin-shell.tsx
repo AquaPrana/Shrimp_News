@@ -7,6 +7,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
+  ChartNoAxesCombined,
   CalendarDays,
   ChevronDown,
   Clock3,
@@ -30,6 +31,7 @@ const navigation = [
   { label: "Add Article", href: "/admin/articles/new", icon: FilePlus2 },
   { label: "Events", href: "/admin/events", icon: CalendarDays },
   { label: "Price Ticker", href: "/admin/ticker", icon: TrendingUp },
+  { label: "Analytics", href: "/admin/analytics", icon: ChartNoAxesCombined },
   { label: "Subscribers", href: "/admin/subscribers", icon: Users },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ] as const;
@@ -41,6 +43,7 @@ const pageNames: Record<string, string> = {
   "/admin/events": "Events",
   "/admin/events/new": "Add Event",
   "/admin/ticker": "Price Ticker",
+  "/admin/analytics": "Analytics",
   "/admin/subscribers": "Subscribers",
   "/admin/profile": "My Profile",
   "/admin/settings": "Settings",

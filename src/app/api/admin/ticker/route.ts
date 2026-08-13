@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     ]);
     return NextResponse.json({
       success: true,
-      items,
+      items: items.map((item) => ({ ...item, type: item.type === "update" ? "external_link" : item.type })),
       lastUpdated: meta.lastUpdated.toISOString(),
     });
   } catch (error) {
@@ -67,11 +67,6 @@ export async function POST(request: Request) {
     const item = await prisma.tickerItem.create({
       data: {
         ...validated.value,
-        price: 0,
-        currency: "",
-        unit: "",
-        changePercent: null,
-        direction: "neutral",
         sortOrder: validated.value.displayOrder,
       },
     });

@@ -88,7 +88,7 @@ test("long Word articles paste and save without truncation", () => {
   assert.match(saved.value, /Paragraph 12000:/);
 });
 
-test("the editor leaves paste native and is shared by Add and Edit", () => {
+test("the editor is uncontrolled, sanitizes paste, and is shared by Add and Edit", () => {
   const editor = readFileSync(
     "src/components/admin/article-content-editor.tsx",
     "utf8",
@@ -103,13 +103,45 @@ test("the editor leaves paste native and is shared by Add and Edit", () => {
     "utf8",
   );
 
-  assert.equal((editor.match(/onPaste=/g) || []).length, 0);
+  assert.equal((editor.match(/onPaste=/g) || []).length, 1);
   assert.equal((editor.match(/onInput=/g) || []).length, 1);
-  assert.doesNotMatch(
-    editor,
-    /onBeforeInput=|onKeyDown=|preventDefault\(\)[\s\S]*paste|requestAnimationFrame|setTimeout|pasteClipboardToArticleHtml/,
-  );
+  assert.match(editor, /pasteClipboardToArticleHtml/);
+  assert.match(editor, /insertArticleHtmlAtRange/);
+  assert.match(editor, /onCompositionStart/);
+  assert.match(editor, /onCompositionEnd/);
+  assert.match(editor, /if \(!insertedCaret\) return;\s*event\.preventDefault\(\)/);
+  assert.doesNotMatch(editor, /dangerouslySetInnerHTML/);
+  assert.doesNotMatch(editor, /onInput=\{[^}]*onContentChange/);
   assert.equal((form.match(/<ArticleContentEditor\b/g) || []).length, 1);
+  assert.match(form, /contentEditorRef\.current\?\.getHtml\(\)/);
+  assert.match(form, /onContentChange=\{handleEditorContentChange\}/);
+  assert.doesNotMatch(form, /onChange=\{\(html\) => setField\("content"/);
+  assert.doesNotMatch(form, /<Field label="Complete article content">/);
   assert.match(addPage, /<ArticleForm\s*\/>/);
   assert.match(editPage, /<ArticleForm\b/);
+});
+
+test("unsafe clipboard HTML is removed without destroying useful formatting", () => {
+  const pasted = pasteClipboardToArticleHtml(
+    `<meta charset="utf-8"><style>.hidden{display:none}</style>
+     <h2 id="docs-internal-guid">Safe heading</h2>
+     <p class="MsoNormal" onclick="alert(1)">Text <strong>stays bold</strong>
+       <a href="javascript:alert(1)">unsafe link</a></p>
+     <script>alert(1)</script><iframe src="https://evil.example"></iframe>`,
+    "Safe heading\n\nText stays bold unsafe link",
+  );
+
+  assert.match(pasted, /<h2>Safe heading<\/h2>/);
+  assert.match(pasted, /<strong>stays bold<\/strong>/);
+  assert.match(pasted, /unsafe link/);
+  assert.doesNotMatch(pasted, /script|iframe|onclick|javascript:|docs-internal-guid|<style/i);
+});
+
+test("Unicode plain text paste preserves Telugu and Hindi", () => {
+  const pasted = pasteClipboardToArticleHtml(
+    "",
+    "తెలుగు రొయ్యల పెంపకం సమాచారం.\n\nहिंदी झींगा पालन जानकारी।",
+  );
+  assert.match(pasted, /తెలుగు రొయ్యల పెంపకం సమాచారం/);
+  assert.match(pasted, /हिंदी झींगा पालन जानकारी/);
 });

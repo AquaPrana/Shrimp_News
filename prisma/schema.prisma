@@ -156,6 +156,14 @@ model TickerItem {
   value         String    @default("")
   description   String?   @db.Text
   type          String    @default("market")
+  species       String?
+  location      String?
+  company       String?
+  product       String?
+  bagSize       String?
+  couponCode    String?
+  expiryDate    DateTime?
+  campaignName  String?
   linkUrl       String?
   linkLabel     String?
   imageUrl      String?

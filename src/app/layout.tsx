@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { LanguageProvider } from "@/context/language-context";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -44,6 +45,7 @@ export default async function RootLayout({
         id="top"
         className="flex min-h-full flex-col overflow-x-clip bg-white text-slate-800"
       >
+        <GoogleAnalytics />
         <LanguageProvider initialLanguage="en">
           <SiteHeader />
           <main className="min-w-0 flex-1 overflow-x-clip">{children}</main>
