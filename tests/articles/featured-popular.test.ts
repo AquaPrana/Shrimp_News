@@ -4,6 +4,7 @@ import type { PublicArticle } from "../../src/lib/article-types";
 import {
   selectFeaturedHomepageArticles,
   selectPopularHomepageArticles,
+  selectRecentHomepageArticles,
 } from "../../src/lib/featured-homepage-articles";
 import { validatePrismaArticleInput } from "../../src/lib/validation";
 
@@ -132,5 +133,77 @@ test("public Featured and Popular selectors use only their respective flags", ()
   assert.deepEqual(
     selectPopularHomepageArticles(articles).map(({ id }) => id),
     ["popular", "both"],
+  );
+});
+
+test("Featured falls back to latest published articles when no flags are set", () => {
+  const older = article("older", false, false);
+  older.publishedAt = "2026-01-01T00:00:00.000Z";
+  older.createdAt = "2026-01-01T00:00:00.000Z";
+  const newer = article("newer", false, false);
+  newer.publishedAt = "2026-08-01T00:00:00.000Z";
+  newer.createdAt = "2026-08-01T00:00:00.000Z";
+  const draft = article("draft", false, false, "draft");
+  draft.publishedAt = "2026-09-01T00:00:00.000Z";
+
+  const articles = [older, newer, draft];
+  assert.deepEqual(
+    selectFeaturedHomepageArticles(articles).map(({ id }) => id),
+    ["newer", "older"],
+  );
+  assert.deepEqual(
+    selectPopularHomepageArticles(articles).map(({ id }) => id),
+    [],
+  );
+});
+
+test("Popular does not reuse the Recent list when no articles are marked popular", () => {
+  const recent = selectRecentHomepageArticles([
+    article("a", false, false),
+    article("b", false, false),
+  ]);
+  const popular = selectPopularHomepageArticles([
+    article("a", false, false),
+    article("b", false, false),
+  ]);
+
+  assert.equal(recent.length > 0, true);
+  assert.deepEqual(
+    popular.map(({ id }) => id),
+    [],
+  );
+});
+
+test("Recent uses latest published articles without a recent flag", () => {
+  const older = article("older", false, false);
+  older.publishedAt = "2026-01-01T00:00:00.000Z";
+  const newer = article("newer", false, false);
+  newer.publishedAt = "2026-08-01T00:00:00.000Z";
+  const newest = article("newest", true, true);
+  newest.publishedAt = "2026-08-10T00:00:00.000Z";
+  const draft = article("draft", false, false, "draft");
+  draft.publishedAt = "2026-09-01T00:00:00.000Z";
+
+  assert.deepEqual(
+    selectRecentHomepageArticles([older, draft, newest, newer], 2).map(
+      ({ id }) => id,
+    ),
+    ["newest", "newer"],
+  );
+});
+
+test("boolean-like Featured and Popular values are treated as true", () => {
+  const featured = article("featured-one", false, false);
+  const popular = article("popular-one", false, false);
+  (featured as { isFeatured: unknown }).isFeatured = 1;
+  (popular as { isPopular: unknown }).isPopular = "true";
+
+  assert.deepEqual(
+    selectFeaturedHomepageArticles([featured, popular]).map(({ id }) => id),
+    ["featured-one"],
+  );
+  assert.deepEqual(
+    selectPopularHomepageArticles([featured, popular]).map(({ id }) => id),
+    ["popular-one"],
   );
 });

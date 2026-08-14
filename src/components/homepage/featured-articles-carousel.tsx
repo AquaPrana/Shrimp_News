@@ -177,7 +177,18 @@ export function FeaturedArticlesCarousel({
     return () => window.clearInterval(timer);
   }, [canSlide, paused, locked, goNext]);
 
-  if (count === 0) return null;
+  if (count === 0) {
+    return (
+      <section className="min-w-0 pt-2" aria-label={t("featured")}>
+        <div className="mb-5 flex items-center border-b-2 border-[#0B4F7A]">
+          <h2 className="bg-[#0B4F7A] px-5 py-2.5 text-sm font-black uppercase tracking-[0.12em] text-white sm:text-base">
+            {t("featured")}
+          </h2>
+        </div>
+        <p className="py-6 text-sm text-slate-500">No articles available.</p>
+      </section>
+    );
+  }
 
   const trackItems = canSlide ? [...items, ...items, ...items] : items;
 

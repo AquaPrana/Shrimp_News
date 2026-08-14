@@ -583,8 +583,117 @@ body {
   overflow: visible;
 }
 
+.homepage-news-sidebar-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.homepage-news-sidebar-tab {
+  padding: 20px 10px;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0f172a;
+  border-bottom: 4px solid transparent;
+  margin-bottom: -1px;
+}
+
+.homepage-news-sidebar-tab:hover {
+  background: #f8fafc;
+}
+
+.homepage-news-sidebar-tab.active {
+  background: #f8fafc;
+  color: #0b4f7a;
+  border-bottom-color: #0b4f7a;
+}
+
 .homepage-news-sidebar-list {
+  position: relative;
   overflow: visible;
+  padding: 0 20px 0 36px;
+}
+
+.homepage-news-sidebar-list::before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  top: 20px;
+  bottom: 20px;
+  width: 1px;
+  background: #d9e1e8;
+}
+
+.homepage-news-sidebar-list.is-empty::before {
+  display: none;
+}
+
+.homepage-news-sidebar-item {
+  position: relative;
+  padding: 24px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.homepage-news-sidebar-item:last-child {
+  border-bottom: 0;
+}
+
+.homepage-news-sidebar-dot {
+  position: absolute;
+  left: -24px;
+  top: 38px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #0b4f7a;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #e2e8f0;
+}
+
+.homepage-news-sidebar-link {
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.homepage-news-sidebar-image {
+  position: relative;
+  display: block;
+  width: 116px;
+  height: 78px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.homepage-news-sidebar-content {
+  min-width: 0;
+}
+
+.homepage-news-sidebar-title {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: #0f172a;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.homepage-news-sidebar-item:hover .homepage-news-sidebar-title {
+  color: #0b4f7a;
+}
+
+.homepage-news-sidebar-date {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #94a3b8;
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {

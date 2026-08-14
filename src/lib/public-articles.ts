@@ -86,6 +86,10 @@ function resolvePublicImageUrl(slug: string, imageUrl: string | null) {
   return ARTICLE_IMAGE_OVERRIDES[slug] ?? imageUrl;
 }
 
+function isTrueFlag(value: unknown) {
+  return value === true || value === 1 || value === "1" || value === "true";
+}
+
 export function mapPublicArticle(article: PrismaArticle): PublicArticle {
   const createdAt = article.createdAt.toISOString();
   const featuredImageUrl = resolvePublicImageUrl(article.slug, article.imageUrl);
@@ -109,8 +113,8 @@ export function mapPublicArticle(article: PrismaArticle): PublicArticle {
     category: taxonomy.category,
     author: "Shrimp News Editorial",
     status: "published",
-    isFeatured: article.isFeatured,
-    isPopular: article.isPopular,
+    isFeatured: isTrueFlag(article.isFeatured),
+    isPopular: isTrueFlag(article.isPopular),
     seoTitle: article.title,
     seoDescription: article.excerpt || "",
     sourceUrl: null,
