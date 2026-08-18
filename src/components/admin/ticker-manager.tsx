@@ -2,7 +2,7 @@
 
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Check, ChevronDown, Clock3, Edit3, ExternalLink, Plus, Trash2, X } from "lucide-react";
 import type { TickerItemType } from "@/lib/market-data/client";
 
@@ -123,13 +123,13 @@ function buildTickerParts(form: FormState) {
   if (form.type === "coupon") {
     return {
       label: `🎁 ${form.title}`.trim(),
-      value: [form.couponCode && `Use code ${form.couponCode}`, form.description, cta].filter(Boolean).join(" — "),
+      value: [form.couponCode && `Use code ${form.couponCode}`, form.description, cta].filter(Boolean).join(" • "),
     };
   }
   if (form.type === "announcement") {
-    return { label: `📢 ${form.title}`.trim(), value: [form.description, cta].filter(Boolean).join(" — ") };
+    return { label: `📢 ${form.title}`.trim(), value: [form.description, cta].filter(Boolean).join(" • ") };
   }
-  return { label: form.title, value: [form.description, cta].filter(Boolean).join(" — ") };
+  return { label: form.title, value: [form.description, cta].filter(Boolean).join(" • ") };
 }
 
 function fromRow(row: TickerRow): FormState {
@@ -193,6 +193,7 @@ export function TickerManager() {
   const [busy, setBusy] = useState("");
   const [lastUpdated, setLastUpdated] = useState("");
   const [toast, setToast] = useState<{ text: string; error?: boolean } | null>(null);
+  const savingRef = useRef(false);
   const preview = useMemo(() => {
     const parts = buildTickerParts(form);
     return [parts.label, parts.value].filter(Boolean).join(" — ") || "Your ticker preview will appear here";
@@ -230,6 +231,8 @@ export function TickerManager() {
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
+    if (savingRef.current) return;
+    savingRef.current = true;
     setBusy("save");
     try {
       const response = await fetch(form.id ? `/api/admin/ticker/${form.id}` : "/api/admin/ticker", {
@@ -240,11 +243,13 @@ export function TickerManager() {
       const body = await response.json();
       if (!response.ok || !body.success) throw new Error(body.message || "Unable to save ticker item.");
       setOpen(false);
+      setForm(blankForm());
       notify(form.id ? "Ticker item updated." : "Ticker item added.");
       await load();
     } catch (error) {
       notify(error instanceof Error ? error.message : "Unable to save ticker item.", true);
     } finally {
+      savingRef.current = false;
       setBusy("");
     }
   }
@@ -362,24 +367,38 @@ function EmptyRow({ label, muted = false, error = false }: { label: string; mute
   return <tr><td colSpan={6} className={`px-5 py-16 text-center font-bold ${error ? "text-red-700" : muted ? "text-slate-400" : "text-slate-700"}`}>{label}</td></tr>;
 }
 
+type TickerFieldProps = {
+  form: FormState;
+  label: string;
+  name: keyof FormState;
+  setField: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
+  placeholder?: string;
+  type?: string;
+  required?: boolean;
+  step?: string;
+};
+
+function TickerField({ form, label, name, setField, placeholder, type = "text", required = false, step }: TickerFieldProps) {
+  return <label className="block text-sm font-bold text-slate-700">{label}{required ? " *" : ""}<input type={type} step={step} required={required} value={String(form[name])} onChange={(event) => setField(name, event.target.value as never)} placeholder={placeholder} className={inputClass} /></label>;
+}
+
 function TickerForm({ form, preview, busy, setField, onClose, onSubmit }: { form: FormState; preview: string; busy: boolean; setField: <K extends keyof FormState>(key: K, value: FormState[K]) => void; onClose: () => void; onSubmit: (event: React.FormEvent) => void }) {
-  const Field = ({ label, name, placeholder, type = "text", required = false, step }: { label: string; name: keyof FormState; placeholder?: string; type?: string; required?: boolean; step?: string }) => <label className="block text-sm font-bold text-slate-700">{label}{required ? " *" : ""}<input type={type} step={step} required={required} value={String(form[name])} onChange={(event) => setField(name, event.target.value as never)} placeholder={placeholder} className={inputClass} /></label>;
   const promotional = form.type === "product_launch" || form.type === "promotion";
   return <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/55 p-0 sm:items-center sm:p-5" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><div role="dialog" aria-modal="true" aria-labelledby="ticker-form-title" className="max-h-[96vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl"><form onSubmit={onSubmit}>
     <div className="sticky top-0 z-10 flex items-start justify-between border-b border-slate-100 bg-white/95 px-5 py-5 backdrop-blur sm:px-7"><div><h2 id="ticker-form-title" className="text-xl font-black text-slate-950">{form.id ? "Edit Ticker Item" : "Add Ticker Item"}</h2><p className="mt-1 text-sm text-slate-500">Only the fields needed for this ticker are shown.</p></div><button type="button" onClick={onClose} aria-label="Close" className="rounded-xl p-2 text-slate-500 hover:bg-slate-100"><X size={20} /></button></div>
     <div className="space-y-6 px-5 py-6 sm:px-7">
       <label className="block text-sm font-bold text-slate-700">Ticker Type *<div className="relative"><select value={form.type} onChange={(event) => setField("type", event.target.value as TickerItemType)} className={`${inputClass} appearance-none pr-10`}>{TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}</select><ChevronDown className="pointer-events-none absolute right-3 top-5 text-slate-400" size={17} /></div></label>
       <div className="grid gap-5 sm:grid-cols-2">
-        {form.type === "market" ? <><Field label="Shrimp Species / Grade" name="species" required placeholder="Vannamei C30" /><Field label="Price" name="price" type="number" step="0.01" required placeholder="445" /><Field label="Unit" name="unit" required placeholder="kg" /><Field label="Price Change %" name="priceChange" type="number" step="0.01" placeholder="2.1" /><Field label="Location" name="location" placeholder="Andhra Pradesh" /></> : null}
-        {form.type === "feed" ? <><Field label="Feed Company" name="company" required placeholder="Feed company" /><Field label="Feed Product" name="product" required placeholder="Grower feed" /><Field label="Bag Size" name="bagSize" placeholder="25kg" /><Field label="Price" name="price" type="number" step="0.01" required placeholder="2125" /><Field label="Unit" name="unit" placeholder="bag" /></> : null}
-        {promotional ? <><Field label="Product / Promotion Title" name="title" required placeholder="New product or promotion" /><Field label="Website URL" name="websiteUrl" type="url" placeholder="https://…" /><Field label="CTA Text" name="ctaText" placeholder="Explore" /><Field label="Optional Coupon Code" name="couponCode" placeholder="SAVE20" /></> : null}
-        {form.type === "coupon" ? <><Field label="Offer Title" name="title" required placeholder="Launch Offer" /><Field label="Coupon Code" name="couponCode" required placeholder="SAVE20" /><Field label="Website URL" name="websiteUrl" type="url" placeholder="https://…" /><Field label="CTA Text" name="ctaText" placeholder="Get Started" /></> : null}
-        {form.type === "announcement" ? <><Field label="Announcement Title" name="title" required placeholder="We are officially launched" /><Field label="Optional Website URL" name="websiteUrl" type="url" placeholder="https://…" /><Field label="Optional CTA Text" name="ctaText" placeholder="Discover More" /></> : null}
-        {form.type === "external_link" ? <><Field label="Link Title" name="title" required placeholder="Visit our website" /><Field label="Website URL" name="websiteUrl" type="url" required placeholder="https://…" /><Field label="CTA Text" name="ctaText" placeholder="Visit Website" /></> : null}
-        {form.type === "custom_message" ? <><Field label="Title / Message" name="title" required placeholder="Important update" /><Field label="Optional URL" name="websiteUrl" type="url" placeholder="https://…" /><Field label="Optional CTA Text" name="ctaText" placeholder="Read More" /></> : null}
+        {form.type === "market" ? <><TickerField form={form} setField={setField} label="Shrimp Species / Grade" name="species" required placeholder="Vannamei C30" /><TickerField form={form} setField={setField} label="Price" name="price" type="number" step="0.01" required placeholder="445" /><TickerField form={form} setField={setField} label="Unit" name="unit" required placeholder="kg" /><TickerField form={form} setField={setField} label="Price Change %" name="priceChange" type="number" step="0.01" placeholder="2.1" /><TickerField form={form} setField={setField} label="Location" name="location" placeholder="Andhra Pradesh" /></> : null}
+        {form.type === "feed" ? <><TickerField form={form} setField={setField} label="Feed Company" name="company" required placeholder="Feed company" /><TickerField form={form} setField={setField} label="Feed Product" name="product" required placeholder="Grower feed" /><TickerField form={form} setField={setField} label="Bag Size" name="bagSize" placeholder="25kg" /><TickerField form={form} setField={setField} label="Price" name="price" type="number" step="0.01" required placeholder="2125" /><TickerField form={form} setField={setField} label="Unit" name="unit" placeholder="bag" /></> : null}
+        {promotional ? <><TickerField form={form} setField={setField} label="Product / Promotion Title" name="title" required placeholder="New product or promotion" /><TickerField form={form} setField={setField} label="Website URL" name="websiteUrl" type="url" placeholder="https://…" /><TickerField form={form} setField={setField} label="CTA Text" name="ctaText" placeholder="Explore" /><TickerField form={form} setField={setField} label="Optional Coupon Code" name="couponCode" placeholder="SAVE20" /></> : null}
+        {form.type === "coupon" ? <><TickerField form={form} setField={setField} label="Offer Title" name="title" required placeholder="Launch Offer" /><TickerField form={form} setField={setField} label="Coupon Code" name="couponCode" required placeholder="SAVE20" /><TickerField form={form} setField={setField} label="Website URL" name="websiteUrl" type="url" placeholder="https://…" /><TickerField form={form} setField={setField} label="CTA Text" name="ctaText" placeholder="Get Started" /></> : null}
+        {form.type === "announcement" ? <><TickerField form={form} setField={setField} label="Announcement Title" name="title" required placeholder="We are officially launched" /><TickerField form={form} setField={setField} label="Optional Website URL" name="websiteUrl" type="url" placeholder="https://…" /><TickerField form={form} setField={setField} label="Optional CTA Text" name="ctaText" placeholder="Discover More" /></> : null}
+        {form.type === "external_link" ? <><TickerField form={form} setField={setField} label="Link Title" name="title" required placeholder="Visit our website" /><TickerField form={form} setField={setField} label="Website URL" name="websiteUrl" type="url" required placeholder="https://…" /><TickerField form={form} setField={setField} label="CTA Text" name="ctaText" placeholder="Visit Website" /></> : null}
+        {form.type === "custom_message" ? <><TickerField form={form} setField={setField} label="Title / Message" name="title" required placeholder="Important update" /><TickerField form={form} setField={setField} label="Optional URL" name="websiteUrl" type="url" placeholder="https://…" /><TickerField form={form} setField={setField} label="Optional CTA Text" name="ctaText" placeholder="Read More" /></> : null}
       </div>
       <label className="block text-sm font-bold text-slate-700">Short Description<textarea value={form.description} onChange={(event) => setField("description", event.target.value)} placeholder="Add a short, human-readable detail (optional)" className={textareaClass} /></label>
-      <div className="grid gap-5 border-t border-slate-100 pt-5 sm:grid-cols-2"><Field label="Display Order" name="displayOrder" type="number" required /><Field label="Start Date / Time" name="startsAt" type="datetime-local" /><Field label="End Date / Time" name="endsAt" type="datetime-local" /><label className="flex h-11 items-center justify-between self-end rounded-xl bg-slate-50 px-4 text-sm font-bold text-slate-700"><span>Active</span><input type="checkbox" checked={form.isActive} onChange={(event) => setField("isActive", event.target.checked)} className="h-4 w-4 accent-emerald-500" /></label></div>
+      <div className="grid gap-5 border-t border-slate-100 pt-5 sm:grid-cols-2"><TickerField form={form} setField={setField} label="Display Order" name="displayOrder" type="number" required /><TickerField form={form} setField={setField} label="Start Date / Time" name="startsAt" type="datetime-local" /><TickerField form={form} setField={setField} label="End Date / Time" name="endsAt" type="datetime-local" /><label className="flex h-11 items-center justify-between self-end rounded-xl bg-slate-50 px-4 text-sm font-bold text-slate-700"><span>Active</span><input type="checkbox" checked={form.isActive} onChange={(event) => setField("isActive", event.target.checked)} className="h-4 w-4 accent-emerald-500" /></label></div>
       <div className="rounded-2xl bg-gradient-to-r from-[#083d60] to-[#087f8c] p-5 text-white"><p className="text-[10px] font-black uppercase tracking-[.2em] text-cyan-200">Live Preview</p><p className="mt-3 text-sm font-bold leading-6">{preview}</p>{form.websiteUrl ? <p className="mt-2 text-[11px] text-cyan-100">This ticker will open its link safely in a new tab.</p> : null}</div>
     </div>
     <div className="sticky bottom-0 flex justify-end gap-3 border-t border-slate-100 bg-white/95 px-5 py-4 backdrop-blur sm:px-7"><button type="button" disabled={busy} onClick={onClose} className="h-11 rounded-xl border border-slate-200 px-5 text-sm font-bold text-slate-700">Cancel</button><button type="submit" disabled={busy} className="h-11 rounded-xl bg-[#0B4F7A] px-6 text-sm font-bold text-white disabled:opacity-50">{busy ? "Saving…" : form.id ? "Save Changes" : "Add Ticker Item"}</button></div>

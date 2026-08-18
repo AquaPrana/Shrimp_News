@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { verifyAdminApi } from "@/lib/admin-auth";
 import { logDatabaseError, prisma } from "@/lib/prisma";
 import { ensureTickerMeta, validateTickerItemInput } from "@/lib/ticker";
+import { normalizeTickerItemType } from "@/lib/market-data/client";
+import { normalizeTickerUrl } from "@/lib/ticker-url";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,7 +21,14 @@ export async function GET(request: Request) {
     ]);
     return NextResponse.json({
       success: true,
-      items: items.map((item) => ({ ...item, type: item.type === "update" ? "external_link" : item.type })),
+      items: items.map((item) => {
+        const linkUrl = normalizeTickerUrl(item.linkUrl);
+        return {
+          ...item,
+          type: normalizeTickerItemType(item.type),
+          linkUrl: linkUrl.ok ? linkUrl.value : null,
+        };
+      }),
       lastUpdated: meta.lastUpdated.toISOString(),
     });
   } catch (error) {

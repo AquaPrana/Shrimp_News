@@ -12,6 +12,22 @@ export const TICKER_ITEM_TYPES = [
 ] as const;
 export type TickerItemType = (typeof TICKER_ITEM_TYPES)[number];
 
+const LEGACY_TICKER_TYPE_ALIASES: Record<string, TickerItemType> = {
+  update: "external_link",
+  website_link: "external_link",
+  shrimp_market_price: "market",
+  feed_price: "feed",
+  coupon_code: "coupon",
+};
+
+export function normalizeTickerItemType(value: string): TickerItemType {
+  const normalized = value.trim().toLowerCase();
+  if (TICKER_ITEM_TYPES.includes(normalized as TickerItemType)) {
+    return normalized as TickerItemType;
+  }
+  return LEGACY_TICKER_TYPE_ALIASES[normalized] || "custom_message";
+}
+
 export interface MarketPriceItem {
   id: string;
   label: string;
@@ -32,6 +48,39 @@ export interface MarketPricesApiResponse {
   source: string;
   isFallback: boolean;
   fetchedAt: string;
+}
+
+export function tickerDisplayDetail(item: Pick<MarketPriceItem, "type" | "label" | "value" | "description">) {
+  let detail: string;
+  switch (item.type) {
+    case "market":
+    case "feed":
+      detail = item.value;
+      break;
+    case "product_launch":
+    case "promotion":
+    case "coupon":
+    case "announcement":
+    case "external_link":
+    case "custom_message":
+      detail = item.description?.trim() || item.value;
+      break;
+  }
+  return detail.trim() === item.label.trim() ? "" : detail;
+}
+
+export function tickerDisplayHeading(label: string) {
+  const separated = label.split(/\s*[•|—]\s*/, 2);
+  if (separated.length === 2 && separated[0] && separated[1]) {
+    return { brand: separated[0], tagline: separated[1] };
+  }
+
+  const telAqua = label.match(/^(Tel-Aqua)\s+(.+)$/i);
+  if (telAqua) {
+    return { brand: telAqua[1], tagline: telAqua[2] };
+  }
+
+  return { brand: label, tagline: "" };
 }
 
 const FALLBACK_LAST_UPDATED = "2026-07-15T12:30:00.000Z";

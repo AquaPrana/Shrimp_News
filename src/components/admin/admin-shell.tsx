@@ -16,7 +16,6 @@ import {
   KeyRound,
   LogOut,
   Menu,
-  Search,
   Settings,
   TrendingUp,
   UserCircle,
@@ -24,6 +23,7 @@ import {
   X,
 } from "lucide-react";
 import type { AdminSession } from "@/lib/admin-auth";
+import { AdminSearch } from "@/components/admin/admin-search";
 
 const navigation = [
   { label: "Overview", href: "/admin", icon: BarChart3 },
@@ -185,10 +185,7 @@ export function AdminShell({
             </div>
 
             <div className="hidden max-w-xs flex-1 md:block">
-              <label className="relative block">
-                <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input aria-label="Search admin dashboard" placeholder="Search CMS…" className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-sm outline-none transition focus:border-cyan-400 focus:bg-white focus:ring-2 focus:ring-cyan-100" />
-              </label>
+              <AdminSearch />
             </div>
 
             <div className="hidden items-center gap-2 border-l border-slate-200 pl-4 xl:flex">

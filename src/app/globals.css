@@ -107,7 +107,46 @@ body {
 
 .ticker-track {
   animation: ticker 28s linear infinite;
+  pointer-events: auto;
   will-change: transform;
+}
+
+.ticker-item-link {
+  display: inline-flex;
+  width: max-content;
+  cursor: pointer;
+  pointer-events: auto;
+  text-decoration: none;
+}
+
+.ticker-item-link > * {
+  pointer-events: auto;
+}
+
+.ticker-brand {
+  font-size: 1em;
+  font-weight: 800;
+}
+
+.ticker-tagline {
+  font-size: 1em;
+  font-weight: 700;
+}
+
+.ticker-description {
+  font-size: 1em;
+  font-weight: 500;
+}
+
+.ticker-cta {
+  font-size: 1em;
+  font-weight: 700;
+}
+
+.ticker-item-link:hover .ticker-brand,
+.ticker-item-link:hover .ticker-cta {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .ticker-track:hover {

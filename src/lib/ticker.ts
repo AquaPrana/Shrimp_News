@@ -4,26 +4,25 @@ import type { TickerItem } from "@prisma/client";
 import { normalizeArticleImageUrl, sanitizePlainText } from "@/lib/validation";
 import {
   TICKER_ITEM_TYPES,
+  normalizeTickerItemType,
   type MarketPriceItem,
   type MarketPricesApiResponse,
   type TickerItemType,
 } from "@/lib/market-data/client";
 import { logDatabaseError, prisma } from "@/lib/prisma";
+import { normalizeTickerUrl } from "@/lib/ticker-url";
 
 export const DEFAULT_TICKER_LAST_UPDATED = new Date("2026-07-15T12:30:00.000Z");
 
 export function mapTickerItem(item: TickerItem): MarketPriceItem {
+  const safeLinkUrl = normalizeTickerUrl(item.linkUrl);
   return {
     id: item.id,
     label: item.label,
     value: item.value,
     description: item.description,
-    type: item.type === "update"
-      ? "external_link"
-      : TICKER_ITEM_TYPES.includes(item.type as TickerItemType)
-        ? item.type as TickerItemType
-        : "market",
-    linkUrl: item.linkUrl,
+    type: normalizeTickerItemType(item.type),
+    linkUrl: safeLinkUrl.ok ? safeLinkUrl.value : null,
     linkLabel: item.linkLabel,
     imageUrl: item.imageUrl,
     couponCode: item.couponCode,
@@ -69,19 +68,6 @@ export async function getTickerPayloadFromDatabase(): Promise<MarketPricesApiRes
   }
 }
 
-function optionalHttpUrl(raw: unknown, label: string) {
-  if (typeof raw !== "string" || !raw.trim()) {
-    return { ok: true as const, value: null };
-  }
-  try {
-    const value = new URL(raw.trim());
-    if (!["http:", "https:"].includes(value.protocol)) throw new Error();
-    return { ok: true as const, value: value.toString() };
-  } catch {
-    return { ok: false as const, error: `${label} must be a valid HTTP or HTTPS URL.` };
-  }
-}
-
 function optionalDate(raw: unknown, label: string) {
   if (typeof raw !== "string" || !raw.trim()) {
     return { ok: true as const, value: null };
@@ -97,7 +83,7 @@ export function validateTickerItemInput(raw: Record<string, unknown>) {
   const label = sanitizePlainText(raw.label, 120);
   const value = sanitizePlainText(raw.value, 190);
   const type = sanitizePlainText(raw.type, 30).toLowerCase() as TickerItemType;
-  const linkUrl = optionalHttpUrl(raw.linkUrl, "Link URL");
+  const linkUrl = normalizeTickerUrl(raw.linkUrl);
   const imageUrl = normalizeArticleImageUrl(raw.imageUrl);
   const startsAt = optionalDate(raw.startsAt, "Start date");
   const endsAt = optionalDate(raw.endsAt, "End date");

@@ -1,29 +1,31 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  buildDemoMarketPricesPayload,
-  fetchMarketPrices,
-} from "@/lib/market-data/client";
+import { useEffect, useRef, useState } from "react";
+import { fetchMarketPrices, type MarketPricesApiResponse } from "@/lib/market-data/client";
 
 const REFRESH_MS = 3 * 60 * 1000;
 
 export function useMarketPrices() {
-  const initialPayload = useMemo(() => buildDemoMarketPricesPayload(), []);
-  const [data, setData] = useState(initialPayload);
+  const [data, setData] = useState<MarketPricesApiResponse>({
+    items: [],
+    source: "initial",
+    isFallback: false,
+    fetchedAt: "",
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isFallback, setIsFallback] = useState(initialPayload.isFallback);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(
-    initialPayload.fetchedAt,
-  );
+  const [isFallback, setIsFallback] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const intervalRef = useRef<number | null>(null);
 
   const fetchPrices = async () => {
     try {
       const payload = await fetchMarketPrices();
 
-      setData(payload);
+      setData({
+        ...payload,
+        items: [...payload.items].sort((a, b) => a.displayOrder - b.displayOrder),
+      });
       setIsFallback(Boolean(payload.isFallback));
       setLastUpdated(payload.fetchedAt);
       setError(null);
