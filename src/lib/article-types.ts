@@ -142,6 +142,8 @@ export type AdminArticle = {
   mainCategory: ArticleMainCategory;
   category: ArticleCategory;
   isPublished: boolean;
+  scheduledAt?: string | null;
+  publishedAt?: string | null;
   isFeatured: boolean;
   isPopular: boolean;
   createdAt: string;

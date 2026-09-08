@@ -39,7 +39,7 @@ export function ShrimpFarmingGrid({ articles }: { articles: PublicArticle[] }) {
       <div className="grid min-w-0 gap-6 md:grid-cols-[minmax(0,1.12fr)_minmax(0,1fr)]">
         <article className="group min-w-0">
           <Link href={`/articles/${baseSlug(lead.slug)}`} className="block">
-            <div className="relative aspect-[3/2] overflow-hidden bg-slate-100">
+            <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
               <ArticleCoverImage
                 src={lead.featuredImageUrl}
                 alt={lead.featuredImageAlt || lead.title}
@@ -72,7 +72,7 @@ export function ShrimpFarmingGrid({ articles }: { articles: PublicArticle[] }) {
                 href={`/articles/${baseSlug(article.slug)}`}
                 className="grid grid-cols-[128px_minmax(0,1fr)] gap-4 sm:grid-cols-[150px_minmax(0,1fr)] md:grid-cols-[128px_minmax(0,1fr)] xl:grid-cols-[145px_minmax(0,1fr)]"
               >
-                <div className="relative h-[88px] overflow-hidden bg-slate-100 sm:h-[96px]">
+                <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
                   <ArticleCoverImage
                     src={article.featuredImageUrl}
                     alt={article.featuredImageAlt || article.title}

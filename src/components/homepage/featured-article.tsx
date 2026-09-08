@@ -42,14 +42,13 @@ export function FeaturedArticle({ article }: { article: PublicArticle }) {
           </span>
         </div>
       </div>
-      <div className="relative z-10 overflow-hidden rounded-[28px] border border-white/10 bg-[#03172d]">
+      <div className="relative z-10 aspect-[16/9] self-start overflow-hidden rounded-[28px] border border-white/10 bg-[#03172d]">
         {article.featuredImageUrl ? (
           <ArticleCoverImage
             src={article.featuredImageUrl}
             alt={article.featuredImageAlt}
-            width={900}
-            height={700}
-            className="h-full min-h-[280px] w-full object-cover sm:min-h-[320px]"
+            fill
+            className="object-cover object-center"
             sizes="(max-width: 1024px) 100vw, 40vw"
           />
         ) : null}

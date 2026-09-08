@@ -50,6 +50,55 @@ function rangeAtEditorEnd(editor: HTMLDivElement) {
   return range;
 }
 
+/** Turn browser-created line breaks inside one list item into separate items. */
+function splitSelectedListLines(
+  editor: HTMLDivElement,
+  tagName: "ul" | "ol",
+) {
+  const selection = editor.ownerDocument.getSelection();
+  const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+  if (!selection || !rangeInsideEditor(editor, range)) return;
+
+  let lastItem: HTMLLIElement | null = null;
+  const lists = Array.from(editor.querySelectorAll(tagName)).filter((list) => {
+    try {
+      return range!.intersectsNode(list);
+    } catch {
+      return false;
+    }
+  });
+
+  for (const list of lists) {
+    const items = Array.from(list.children).filter(
+      (child): child is HTMLLIElement => child.tagName === "LI",
+    );
+    for (const item of items) {
+      if (!item.querySelector("br")) continue;
+      const parts = item.innerHTML
+        .split(/<br\s*\/?>/gi)
+        .map((part) => part.trim())
+        .filter(Boolean);
+      if (parts.length < 2) continue;
+
+      const fragment = editor.ownerDocument.createDocumentFragment();
+      for (const part of parts) {
+        const nextItem = editor.ownerDocument.createElement("li");
+        nextItem.innerHTML = part;
+        fragment.append(nextItem);
+        lastItem = nextItem;
+      }
+      item.replaceWith(fragment);
+    }
+  }
+
+  if (!lastItem) return;
+  const caret = editor.ownerDocument.createRange();
+  caret.selectNodeContents(lastItem);
+  caret.collapse(false);
+  selection.removeAllRanges();
+  selection.addRange(caret);
+}
+
 /** Insert an already-sanitized fragment without replacing the editor DOM. */
 export function insertArticleHtmlAtRange(
   editor: HTMLDivElement,
@@ -156,9 +205,48 @@ const ArticleContentEditorImpl = forwardRef<
     restoreSelection(editor);
 
     if (command === "bold") document.execCommand("bold");
-    else if (command === "ul") document.execCommand("insertUnorderedList");
-    else if (command === "ol") document.execCommand("insertOrderedList");
-    else document.execCommand("formatBlock", false, command);
+    else if (command === "ul") {
+      document.execCommand("insertUnorderedList");
+      splitSelectedListLines(editor, "ul");
+    } else if (command === "ol") {
+      document.execCommand("insertOrderedList");
+      splitSelectedListLines(editor, "ol");
+    }
+    else {
+      // Chromium accepts bare tag names while Firefox expects angle brackets.
+      // Trying both keeps the existing native editing behavior (including list,
+      // undo, selection, and caret handling) without rebuilding editor HTML.
+      const formatted = document.execCommand(
+        "formatBlock",
+        false,
+        `<${command}>`,
+      );
+      if (!formatted) document.execCommand("formatBlock", false, command);
+
+      // Preserve an explicit Paragraph choice through the existing paste/save
+      // normalizer, which otherwise promotes title-cased paragraphs to headings.
+      // The temporary attribute is stripped by sanitize-html before storage.
+      if (command === "p") {
+        const activeSelection = window.getSelection();
+        const activeRange = activeSelection?.rangeCount
+          ? activeSelection.getRangeAt(0)
+          : null;
+        if (rangeInsideEditor(editor, activeRange)) {
+          editor.querySelectorAll("p").forEach((paragraph) => {
+            try {
+              if (activeRange!.intersectsNode(paragraph)) {
+                paragraph.setAttribute(
+                  "data-article-explicit-paragraph",
+                  "true",
+                );
+              }
+            } catch {
+              // Detached nodes can disappear while formatBlock is completing.
+            }
+          });
+        }
+      }
+    }
 
     const selection = window.getSelection();
     if (selection?.rangeCount && rangeInsideEditor(editor, selection.getRangeAt(0))) {
@@ -220,19 +308,29 @@ const ArticleContentEditorImpl = forwardRef<
 
   const toolbarButton =
     "rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-cyan-500 hover:text-cyan-700";
-  const preserveEditorFocus = (event: MouseEvent<HTMLButtonElement>) => {
+  const applyToolbarFormat = (
+    event: MouseEvent<HTMLButtonElement>,
+    command: FormatCommand,
+  ) => {
     event.preventDefault();
+    runFormat(command);
+  };
+  const applyKeyboardToolbarFormat = (
+    event: MouseEvent<HTMLButtonElement>,
+    command: FormatCommand,
+  ) => {
+    if (event.detail === 0) runFormat(command);
   };
 
   return (
     <div className={className}>
       <div className="mb-2 flex flex-wrap gap-2">
-        <button type="button" className={toolbarButton} onMouseDown={preserveEditorFocus} onClick={() => runFormat("p")}>Paragraph</button>
-        <button type="button" className={toolbarButton} onMouseDown={preserveEditorFocus} onClick={() => runFormat("h2")}>Heading</button>
-        <button type="button" className={toolbarButton} onMouseDown={preserveEditorFocus} onClick={() => runFormat("h3")}>Subheading</button>
-        <button type="button" className={toolbarButton} onMouseDown={preserveEditorFocus} onClick={() => runFormat("bold")}>Bold</button>
-        <button type="button" className={toolbarButton} onMouseDown={preserveEditorFocus} onClick={() => runFormat("ul")}>Bullet list</button>
-        <button type="button" className={toolbarButton} onMouseDown={preserveEditorFocus} onClick={() => runFormat("ol")}>Numbered list</button>
+        <button type="button" className={toolbarButton} onMouseDown={(event) => applyToolbarFormat(event, "p")} onClick={(event) => applyKeyboardToolbarFormat(event, "p")}>Paragraph</button>
+        <button type="button" className={toolbarButton} onMouseDown={(event) => applyToolbarFormat(event, "h2")} onClick={(event) => applyKeyboardToolbarFormat(event, "h2")}>Heading</button>
+        <button type="button" className={toolbarButton} onMouseDown={(event) => applyToolbarFormat(event, "h3")} onClick={(event) => applyKeyboardToolbarFormat(event, "h3")}>Subheading</button>
+        <button type="button" className={toolbarButton} onMouseDown={(event) => applyToolbarFormat(event, "bold")} onClick={(event) => applyKeyboardToolbarFormat(event, "bold")}>Bold</button>
+        <button type="button" className={toolbarButton} onMouseDown={(event) => applyToolbarFormat(event, "ul")} onClick={(event) => applyKeyboardToolbarFormat(event, "ul")}>Bullet list</button>
+        <button type="button" className={toolbarButton} onMouseDown={(event) => applyToolbarFormat(event, "ol")} onClick={(event) => applyKeyboardToolbarFormat(event, "ol")}>Numbered list</button>
       </div>
 
       <div

@@ -1,6 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
+import { articleStatus, ARTICLE_TIMEZONE_LABEL, scheduleFields, scheduleFromFields } from "@/lib/article-publication";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -91,6 +92,8 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
     () => Boolean(article && article.slug !== slugify(article.title)),
   );
   const [sourceArticleId, setSourceArticleId] = useState(article?.id || "");
+  const [publishOption, setPublishOption] = useState<"draft" | "now" | "schedule">(() => article ? ({ draft: "draft", published: "now", scheduled: "schedule" } as const)[articleStatus(article)] : "draft");
+  const [schedule, setSchedule] = useState(() => scheduleFields(article?.scheduledAt));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
@@ -309,9 +312,20 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
       return;
     }
 
+    const scheduledAt = publishOption === "schedule" ? scheduleFromFields(schedule.date, schedule.time) : null;
+    if (publishOption === "schedule" && (!scheduledAt || new Date(scheduledAt) <= new Date())) {
+      setIsError(true);
+      setMessage("Choose a valid date and time in the future (IST).");
+      setBusy(false);
+      return;
+    }
+
     try {
       const payload = {
         ...form,
+        publishOption,
+        scheduledAt,
+        isPublished: publishOption === "now",
         content: contentForSave,
         excerpt: excerptForSave,
         imageUrl: image.value || "",
@@ -602,18 +616,27 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                 ))}
               </select>
             </Field>
-            <Field label="Status">
+            <Field label="Publish options">
               <select
-                value={form.isPublished ? "published" : "draft"}
-                onChange={(event) =>
-                  setField("isPublished", event.target.value === "published")
-                }
+                value={publishOption}
+                onChange={(event) => {
+                  setPublishOption(event.target.value as "draft" | "now" | "schedule");
+                  setField("isPublished", event.target.value === "now");
+                }}
                 className={input}
               >
                 <option value="draft">Draft</option>
-                <option value="published">Published</option>
+                <option value="now">Publish Now</option>
+                <option value="schedule">Schedule for Later</option>
               </select>
             </Field>
+            {publishOption === "schedule" ? (
+              <div className="space-y-3">
+                <Field label="Date"><input type="date" required value={schedule.date} onChange={(event) => setSchedule((current) => ({ ...current, date: event.target.value }))} className={input} /></Field>
+                <Field label="Time"><input type="time" required value={schedule.time} onChange={(event) => setSchedule((current) => ({ ...current, time: event.target.value }))} className={input} /></Field>
+                <Hint>{ARTICLE_TIMEZONE_LABEL}. The article stays private until this time. Choose Draft and save to cancel scheduling, or Publish Now to publish immediately.</Hint>
+              </div>
+            ) : null}
             <fieldset className="space-y-3 border-t border-slate-100 pt-4">
               <legend className="text-sm font-semibold">Homepage placement</legend>
               <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3">
@@ -664,7 +687,9 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                     ? form.isPublished
                       ? "Publishing…"
                       : "Saving…"
-                    : form.isPublished
+                    : publishOption === "schedule"
+                      ? "Schedule Article"
+                      : publishOption === "now"
                       ? "Publish"
                       : "Save draft"}
               </button>

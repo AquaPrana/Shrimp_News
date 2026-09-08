@@ -1,3 +1,4 @@
+import { publicArticleWhere } from "@/lib/article-publication";
 import "server-only";
 
 import type { NewsletterDelivery, Subscriber } from "@prisma/client";
@@ -144,7 +145,7 @@ export async function runWeeklyNewsletter(now = new Date()) {
   const window = previousSevenDays(now);
   const rows = await prisma.article.findMany({
     where: {
-      isPublished: true,
+      AND: [publicArticleWhere(now)],
       createdAt: {
         gte: window.from,
         lt: window.to,

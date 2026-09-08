@@ -1,4 +1,5 @@
 import "server-only";
+import { articleStatus, publicArticleWhere } from "@/lib/article-publication";
 
 import type { Article as PrismaArticle, Prisma } from "@prisma/client";
 import type {
@@ -121,7 +122,7 @@ export function mapPublicArticle(article: PrismaArticle): PublicArticle {
     topics: [regionTopic, ...topicTopics],
     createdAt,
     updatedAt: article.updatedAt.toISOString(),
-    publishedAt: createdAt,
+    publishedAt: article.publishedAt?.toISOString() || article.scheduledAt?.toISOString() || createdAt,
   };
 }
 
@@ -211,9 +212,10 @@ function mergeFixedFeatureArticles(
   articles: PublicArticle[],
   options: ListOptions,
   rawQuery: string,
+  hiddenFixedSlugs: Set<string>,
 ) {
   const fixed = FIXED_FEATURE_ARTICLES.filter((article) =>
-    fixedArticleMatchesOptions(article, options, rawQuery),
+    !hiddenFixedSlugs.has(article.slug) && fixedArticleMatchesOptions(article, options, rawQuery),
   );
 
   return [...articles.filter((article) => !FIXED_FEATURE_ARTICLE_SLUGS.has(baseSlug(article.slug))), ...fixed].sort(
@@ -227,7 +229,7 @@ function buildBasePublishedWhere(
   const topicRegion = normalizeRegion(options.topic);
   const requestedRegion = normalizeRegion(options.mainCategory);
   const where: Prisma.ArticleWhereInput = {
-    isPublished: true,
+    AND: [publicArticleWhere()],
   };
 
   if (typeof options.isFeatured === "boolean") {
@@ -309,18 +311,33 @@ export async function queryPublishedArticles(
   const { limit, skip } = normalizeArticlePagination(options);
   const where = buildBasePublishedWhere(options);
   const rawQuery = options.q?.trim() ?? "";
+  // A database draft/schedule must also hide a matching built-in feature.
+  const fixedRows = await prisma.article.findMany({
+    where: { slug: { in: [...FIXED_FEATURE_ARTICLE_SLUGS] } },
+    select: { slug: true, isPublished: true, scheduledAt: true },
+  });
+  const hiddenFixedSlugs = new Set(fixedRows.filter((row) => articleStatus(row) !== "published").map((row) => row.slug));
 
-  // No search: fetch enough rows for the requested window, then merge one fixed entry.
+  // Fetch bounded windows for immediate and scheduled publications independently.
   if (!rawQuery) {
-    const rows = await prisma.article.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      take: skip + limit,
-    });
+    const groups = await Promise.all([
+      prisma.article.findMany({
+        where: { AND: [where, { scheduledAt: null }] },
+        orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+        take: skip + limit,
+      }),
+      prisma.article.findMany({
+        where: { AND: [where, { scheduledAt: { not: null } }] },
+        orderBy: { scheduledAt: "desc" },
+        take: skip + limit,
+      }),
+    ]);
+    const rows = groups.flat();
     return mergeFixedFeatureArticles(
       rows.map(mapPublicArticle),
       options,
       rawQuery,
+      hiddenFixedSlugs,
     ).slice(skip, skip + limit);
   }
 
@@ -350,6 +367,7 @@ export async function queryPublishedArticles(
     matched,
     options,
     rawQuery,
+    hiddenFixedSlugs,
   ).slice(skip, skip + limit);
 }
 
@@ -375,11 +393,16 @@ export async function getPublishedArticleBySlug(
   slug: string,
 ): Promise<PublicArticle | null> {
   const fixed = fixedFeatureArticleBySlug(slug);
-  if (fixed) return fixed;
-
   try {
+    if (fixed) {
+      const stored = await prisma.article.findUnique({
+        where: { slug: fixed.slug },
+        select: { isPublished: true, scheduledAt: true },
+      });
+      return stored && articleStatus(stored) !== "published" ? null : fixed;
+    }
     const source = await prisma.article.findFirst({
-      where: { isPublished: true, slug },
+      where: { AND: [publicArticleWhere()], slug },
     });
     if (!source) return null;
     return mapPublicArticle(source);

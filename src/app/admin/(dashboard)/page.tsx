@@ -1,3 +1,4 @@
+import { articleStatus, publicArticleWhere } from "@/lib/article-publication";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -23,13 +24,14 @@ export default async function Overview() {
     title: string;
     category: string;
     isPublished: boolean;
+    scheduledAt: Date | null;
     updatedAt: Date;
   }> = [];
 
   const results = await Promise.allSettled([
     prisma.article.count(),
-    prisma.article.count({ where: { isPublished: true } }),
-    prisma.article.count({ where: { isPublished: false } }),
+    prisma.article.count({ where: publicArticleWhere() }),
+    prisma.article.count({ where: { isPublished: false, scheduledAt: null } }),
     prisma.event.count(),
     prisma.subscriber.count(),
     prisma.article.findMany({
@@ -40,6 +42,7 @@ export default async function Overview() {
         title: true,
         category: true,
         isPublished: true,
+        scheduledAt: true,
         updatedAt: true,
       },
     }),
@@ -186,7 +189,7 @@ export default async function Overview() {
                             : "bg-amber-50 text-amber-700"
                         }`}
                       >
-                        {article.isPublished ? "Published" : "Draft"}
+                        {articleStatus(article) === "scheduled" ? "Scheduled" : articleStatus(article) === "published" ? "Published" : "Draft"}
                       </span>
                     </td>
                     <td className="px-5 py-4 text-right sm:px-6">

@@ -233,7 +233,14 @@ export function cleanWordHtml(html: string) {
       return content ? `<li>${content}</li>` : "";
     })
     .replace(/<(ul|ol)\b[^>]*>/gi, "<$1>")
-    .replace(/<(p|h[1-6]|blockquote|li)\b[^>]*>/gi, "<$1>")
+    .replace(
+      /<(p|h[1-6]|blockquote|li)\b([^>]*)>/gi,
+      (_match, tag: string, attributes: string) =>
+        tag.toLowerCase() === "p" &&
+        /\bdata-article-explicit-paragraph\b/i.test(attributes)
+          ? '<p data-article-explicit-paragraph="true">'
+          : `<${tag}>`,
+    )
     .replace(/<h1\b([^>]*)>/gi, "<h2$1>")
     .replace(/<\/h1>/gi, "</h2>")
     .replace(/<h[4-6]\b([^>]*)>/gi, "<h3$1>")
@@ -248,19 +255,24 @@ function convertDivsToParagraphs(html: string) {
 }
 
 function splitParagraphsOnBreaks(html: string) {
-  return html.replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, (_match, inner: string) => {
-    const segments = inner
-      .split(/<br\s*\/?>/gi)
-      .map((segment: string) => segment.trim())
-      .filter((segment: string) => stripHtmlTags(segment).length > 0);
+  return html.replace(
+    /<p\b([^>]*)>([\s\S]*?)<\/p>/gi,
+    (_match, attributes: string, inner: string) => {
+      const segments = inner
+        .split(/<br\s*\/?>/gi)
+        .map((segment: string) => segment.trim())
+        .filter((segment: string) => stripHtmlTags(segment).length > 0);
 
-    if (segments.length === 0) return "";
-    if (segments.length === 1 && !/<br\s*\/?>/i.test(inner)) {
-      return `<p>${inner.trim()}</p>`;
-    }
+      if (segments.length === 0) return "";
+      if (segments.length === 1 && !/<br\s*\/?>/i.test(inner)) {
+        return `<p${attributes}>${inner.trim()}</p>`;
+      }
 
-    return segments.map((segment: string) => `<p>${segment}</p>`).join("");
-  });
+      return segments
+        .map((segment: string) => `<p${attributes}>${segment}</p>`)
+        .join("");
+    },
+  );
 }
 
 function promoteBoldParagraphsToHeadings(html: string) {
@@ -274,11 +286,15 @@ function promoteBoldParagraphsToHeadings(html: string) {
 }
 
 function promoteStandaloneParagraphHeadings(html: string) {
-  return html.replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, (match, inner: string) => {
-    const plain = stripHtmlTags(inner);
-    if (!plain || inner.trim() !== plain) return match;
-    return looksLikeHeading(plain) ? wrapHeading(plain) : match;
-  });
+  return html.replace(
+    /<p\b([^>]*)>([\s\S]*?)<\/p>/gi,
+    (match, attributes: string, inner: string) => {
+      if (/\bdata-article-explicit-paragraph\b/i.test(attributes)) return match;
+      const plain = stripHtmlTags(inner);
+      if (!plain || inner.trim() !== plain) return match;
+      return looksLikeHeading(plain) ? wrapHeading(plain) : match;
+    },
+  );
 }
 
 function extractHtmlBlocks(html: string) {
@@ -442,6 +458,7 @@ export function sanitizeArticleHtml(html: string) {
       p: "p",
       h2: "h2",
       h3: "h3",
+      b: "strong",
       ul: "ul",
       ol: "ol",
       li: "li",

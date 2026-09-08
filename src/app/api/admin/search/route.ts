@@ -1,3 +1,4 @@
+import { articleStatus } from "@/lib/article-publication";
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { verifyAdminApi } from "@/lib/admin-auth";
@@ -56,7 +57,7 @@ export async function GET(request: Request) {
         where: articleWhere,
         orderBy: { updatedAt: "desc" },
         take: RESULT_LIMIT,
-        select: { id: true, title: true, category: true, isPublished: true },
+        select: { id: true, title: true, category: true, isPublished: true, scheduledAt: true },
       }),
       prisma.event.findMany({
         where: eventWhere,
@@ -83,7 +84,7 @@ export async function GET(request: Request) {
         id: article.id,
         type: "article" as const,
         title: article.title,
-        subtitle: `Article • ${article.category} • ${article.isPublished ? "Published" : "Draft"}`,
+        subtitle: `Article • ${article.category} • ${articleStatus(article) === "scheduled" ? "Scheduled" : articleStatus(article) === "published" ? "Published" : "Draft"}`,
         href: `/admin/articles/${article.id}/edit`,
       })),
       ...events.map((event) => ({

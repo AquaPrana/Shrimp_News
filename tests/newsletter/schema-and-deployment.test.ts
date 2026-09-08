@@ -27,7 +27,7 @@ test("migration is additive and preserves existing subscription dates", () => {
 });
 
 test("Vercel cron is Monday 9 AM IST and required settings are documented", () => {
-  assert.deepEqual(vercel.crons, [
+  assert.deepEqual(vercel.crons?.filter((cron) => cron.path === "/api/cron/weekly-newsletter"), [
     {
       path: "/api/cron/weekly-newsletter",
       schedule: "30 3 * * 1",

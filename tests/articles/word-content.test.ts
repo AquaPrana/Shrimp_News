@@ -109,6 +109,12 @@ test("the editor is uncontrolled, sanitizes paste, and is shared by Add and Edit
   assert.match(editor, /insertArticleHtmlAtRange/);
   assert.match(editor, /onCompositionStart/);
   assert.match(editor, /onCompositionEnd/);
+  assert.match(editor, /onMouseDown=.*applyToolbarFormat/);
+  assert.match(editor, /document\.execCommand\("bold"\)/);
+  assert.match(editor, /document\.execCommand\("insertUnorderedList"\)/);
+  assert.match(editor, /document\.execCommand\("insertOrderedList"\)/);
+  assert.match(editor, /splitSelectedListLines/);
+  assert.match(editor, /"formatBlock"/);
   assert.match(editor, /if \(!insertedCaret\) return;\s*event\.preventDefault\(\)/);
   assert.doesNotMatch(editor, /dangerouslySetInnerHTML/);
   assert.doesNotMatch(editor, /onInput=\{[^}]*onContentChange/);
@@ -119,6 +125,41 @@ test("the editor is uncontrolled, sanitizes paste, and is shared by Add and Edit
   assert.doesNotMatch(form, /<Field label="Complete article content">/);
   assert.match(addPage, /<ArticleForm\s*\/>/);
   assert.match(editPage, /<ArticleForm\b/);
+});
+
+test("an explicit Paragraph toolbar choice remains a paragraph after save", () => {
+  const saved = prepareArticleContentForSave(
+    '<p data-article-explicit-paragraph="true">Water Quality is Important</p><p>This supporting sentence makes the article content long enough to save safely.</p>',
+  );
+
+  assert.equal(saved.ok, true);
+  if (!saved.ok) return;
+  assert.match(saved.value, /^<p>Water Quality is Important<\/p>/);
+  assert.doesNotMatch(saved.value, /data-article-explicit-paragraph/);
+});
+
+test("toolbar semantic HTML survives save and public display", () => {
+  const html =
+    "<h2>Heading text</h2><h3>Subheading text</h3><p>Paragraph with <strong>selected bold words</strong> and enough content to validate.</p><ul><li>One</li><li>Two</li><li>Three</li></ul><ol><li>First</li><li>Second</li><li>Third</li></ol>";
+  const saved = prepareArticleContentForSave(html);
+
+  assert.equal(saved.ok, true);
+  if (!saved.ok) return;
+  assert.equal(prepareArticleContentForDisplay(saved.value), saved.value);
+  for (const tag of ["h2", "h3", "p", "strong", "ul", "ol", "li"]) {
+    assert.match(saved.value, new RegExp(`<${tag}(?:>|\\s)`));
+  }
+});
+
+test("browser bold markup is stored as semantic strong markup", () => {
+  const saved = prepareArticleContentForSave(
+    "<p>This paragraph includes <b>selected bold words</b> and enough supporting content to pass article validation.</p>",
+  );
+
+  assert.equal(saved.ok, true);
+  if (!saved.ok) return;
+  assert.match(saved.value, /<strong>selected bold words<\/strong>/);
+  assert.doesNotMatch(saved.value, /<b>/);
 });
 
 test("unsafe clipboard HTML is removed without destroying useful formatting", () => {

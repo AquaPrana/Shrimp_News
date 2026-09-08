@@ -37,7 +37,7 @@ export function LatestArticlesGrid({
           return (
             <article
               key={`latest-grid-${article.slug}`}
-              className="home-reveal group relative aspect-[3/2] min-w-0 overflow-hidden bg-slate-900"
+              className="home-reveal group relative aspect-[16/9] min-w-0 overflow-hidden bg-slate-900"
               style={{ animationDelay: `${0.1 + index * 0.05}s` }}
             >
               <Link
@@ -45,13 +45,15 @@ export function LatestArticlesGrid({
                 className="absolute inset-0 block"
                 aria-label={`${t("readArticle")} ${article.title}`}
               >
-                <ArticleCoverImage
-                  src={article.featuredImageUrl}
-                  alt={article.featuredImageAlt || article.title}
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 32vw"
-                />
+                <span className="absolute inset-0">
+                  <ArticleCoverImage
+                    src={article.featuredImageUrl}
+                    alt={article.featuredImageAlt || article.title}
+                    fill
+                    className="object-cover object-center transition-transform duration-700 group-hover:scale-[1.04]"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 32vw"
+                  />
+                </span>
                 <span className="absolute inset-0 bg-black/30 transition-colors group-hover:bg-black/40" />
                 <span className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/15" />
 

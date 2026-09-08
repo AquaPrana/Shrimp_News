@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArticleCoverImage } from "@/components/articles/article-cover-image";
 import { useLanguage } from "@/context/language-context";
 import type { PublicArticle } from "@/lib/article-types";
 import { formatArticleDate } from "@/lib/format-date";
@@ -16,6 +15,7 @@ const FALLBACK = "/images/articles/ArticleImage.jpeg";
 
 function SidebarArticleCard({ article }: { article: PublicArticle }) {
   const { language } = useLanguage();
+  const thumbSrc = article.featuredImageUrl?.trim() || FALLBACK;
 
   return (
     <article className="homepage-news-sidebar-item group">
@@ -24,13 +24,18 @@ function SidebarArticleCard({ article }: { article: PublicArticle }) {
         href={`/articles/${baseSlug(article.slug)}`}
         className="homepage-news-sidebar-link"
       >
+        {/*
+          Plain <img> (not next/image fill): remote Hostinger covers were still
+          cropped by absolute fill wrappers. Contain + fixed box shows the full cover.
+        */}
         <span className="homepage-news-sidebar-image">
-          <ArticleCoverImage
-            src={article.featuredImageUrl || FALLBACK}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={thumbSrc}
             alt=""
-            fill
-            className="object-cover transition duration-500 group-hover:scale-105"
-            sizes="116px"
+            className="homepage-news-sidebar-thumb"
+            loading="lazy"
+            decoding="async"
           />
         </span>
         <span className="homepage-news-sidebar-content">

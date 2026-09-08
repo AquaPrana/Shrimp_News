@@ -18,7 +18,8 @@
     "db:import-events": "tsx --env-file=.env.local scripts/import-events.ts",
     "db:migrate-flexible-ticker": "tsx --env-file=.env.local scripts/migrate-flexible-ticker.ts",
     "db:migrate-categories": "tsx --env-file=.env.local scripts/migrate-article-categories.ts",
-    "db:migrate-article-collation": "tsx --env-file=.env.local scripts/migrate-article-collation.ts"
+    "db:migrate-article-collation": "tsx --env-file=.env.local scripts/migrate-article-collation.ts",
+    "db:migrate-article-scheduling": "tsx --env-file=.env.local scripts/migrate-article-scheduling.ts"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.8.0",

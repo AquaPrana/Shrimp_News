@@ -1,3 +1,4 @@
+import { validateArticlePublication } from "@/lib/article-publication";
 import { NextResponse } from "next/server";
 import { verifyAdminApi } from "@/lib/admin-auth";
 import { logDatabaseError, prisma, prismaErrorCode } from "@/lib/prisma";
@@ -61,12 +62,17 @@ export async function PUT(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: "Another article already uses this slug." }, { status: 409 });
     }
 
+    const publication = validateArticlePublication(body, existing);
+    if (!publication.ok) return NextResponse.json({ error: publication.error }, { status: 400 });
+
     const article = await prisma.article.update({
       where: { id },
-      data: validated.value,
+      data: { ...validated.value, ...publication.value },
     });
     return NextResponse.json({
-      message: validated.value.isPublished
+      message: publication.value.scheduledAt && !publication.value.isPublished
+          ? "Article scheduled successfully."
+          : publication.value.isPublished
           ? "Article published successfully."
           : "Draft saved successfully.",
       article,

@@ -37,7 +37,7 @@ function FeaturedCard({
           alt={article.featuredImageAlt || article.title}
           fill
           priority={priority}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 55vw, 40vw"
         />
         <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />

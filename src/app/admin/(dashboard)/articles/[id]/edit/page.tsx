@@ -59,6 +59,8 @@ function mapArticleResponse(value: unknown): AdminArticle | null {
       typeof record.isPublished === "boolean"
         ? record.isPublished
         : record.status === "published",
+    scheduledAt: stringField(record, ["scheduledAt"]) ?? null,
+    publishedAt: stringField(record, ["publishedAt"]) ?? null,
     isFeatured: record.isFeatured === true,
     isPopular: record.isPopular === true,
     createdAt: stringField(record, ["createdAt"]) ?? "",

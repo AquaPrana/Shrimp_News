@@ -1,3 +1,5 @@
+import { publicArticleWhere } from "@/lib/article-publication";
+import { validateArticlePublication } from "@/lib/article-publication";
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { verifyAdminApi } from "@/lib/admin-auth";
@@ -21,8 +23,9 @@ export async function GET(request: Request) {
     const where: Prisma.ArticleWhereInput = {};
 
     if (category) where.category = category;
-    if (status === "published") where.isPublished = true;
-    if (status === "draft") where.isPublished = false;
+    if (status === "published") where.AND = [publicArticleWhere()];
+    if (status === "draft") { where.isPublished = false; where.scheduledAt = null; }
+    if (status === "scheduled") where.scheduledAt = { gt: new Date() };
     if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
       const start = new Date(`${date}T00:00:00.000Z`);
       const end = new Date(start);
@@ -64,13 +67,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "An article with this slug already exists." }, { status: 409 });
     }
 
+    const publication = validateArticlePublication(body);
+    if (!publication.ok) return NextResponse.json({ error: publication.error }, { status: 400 });
+
     const article = await prisma.article.create({
-      data: validated.value,
+      data: { ...validated.value, ...publication.value },
     });
 
     return NextResponse.json(
       {
-        message: validated.value.isPublished
+        message: publication.value.scheduledAt && !publication.value.isPublished
+          ? "Article scheduled successfully."
+          : publication.value.isPublished
           ? "Article published successfully."
           : "Draft saved successfully.",
         article,

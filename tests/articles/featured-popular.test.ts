@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import type { PublicArticle } from "../../src/lib/article-types";
 import {
@@ -206,4 +207,21 @@ test("boolean-like Featured and Popular values are treated as true", () => {
     selectPopularHomepageArticles([featured, popular]).map(({ id }) => id),
     ["popular-one"],
   );
+});
+
+test("article thumbnails fill their wider containers without inset bars", () => {
+  const cardFiles = [
+    "src/components/homepage/article-card.tsx",
+    "src/components/homepage/editorial-hero.tsx",
+    "src/components/homepage/featured-articles-carousel.tsx",
+    "src/components/homepage/latest-articles-grid.tsx",
+    "src/components/homepage/news-sidebar.tsx",
+  ];
+
+  for (const file of cardFiles) {
+    const source = readFileSync(file, "utf8");
+    assert.match(source, /object-cover/);
+    assert.doesNotMatch(source, /object-contain|inset-\[[0-9.]+%\]/);
+    if (!file.includes("news-sidebar")) assert.match(source, /aspect-\[16\/9\]/);
+  }
 });

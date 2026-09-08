@@ -50,14 +50,16 @@ function FeaturedCarouselCard({ article }: { article: PublicArticle }) {
         className="block"
         aria-label={`${t("readArticle")} ${article.title}`}
       >
-        <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
-          <ArticleCoverImage
-            src={article.featuredImageUrl || FALLBACK}
-            alt={article.featuredImageAlt || article.title}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          />
+        <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
+          <span className="absolute inset-0">
+            <ArticleCoverImage
+              src={article.featuredImageUrl || FALLBACK}
+              alt={article.featuredImageAlt || article.title}
+              fill
+              className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            />
+          </span>
         </div>
         <h3 className="article-title mt-3 line-clamp-3 min-h-[3.9em] text-[14px] font-extrabold leading-snug text-slate-900 transition-colors group-hover:text-[#0B4F7A] sm:text-[15px]">
           {article.title}
