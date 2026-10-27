@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { articleStatus, ARTICLE_TIMEZONE_LABEL, scheduleFields, scheduleFromFields } from "@/lib/article-publication";
+import { articleStatus, ARTICLE_TIMEZONE_LABEL, formatArticleSchedule, scheduleFields, scheduleFromFields } from "@/lib/article-publication";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -48,6 +48,21 @@ const empty: FormState = {
 };
 
 type UploadStatus = "idle" | "uploading" | "success" | "error";
+
+/** IST wall-clock time `days` from today at `hour`:00. */
+function istDayAt(days: number, hour: number) {
+  const today = scheduleFields(new Date()).date;
+  const base = new Date(`${today}T00:00:00+05:30`);
+  base.setUTCDate(base.getUTCDate() + days);
+  return new Date(base.getTime() + hour * 60 * 60 * 1000);
+}
+
+const SCHEDULE_PRESETS = [
+  { label: "In 1 hour", at: () => new Date(Math.ceil((Date.now() + 60 * 60 * 1000) / 300_000) * 300_000) },
+  { label: "Tomorrow 9 AM", at: () => istDayAt(1, 9) },
+  { label: "Tomorrow 6 PM", at: () => istDayAt(1, 18) },
+  { label: "Next week 9 AM", at: () => istDayAt(7, 9) },
+];
 
 const ALLOWED_UPLOAD_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const ALLOWED_UPLOAD_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
@@ -383,6 +398,10 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
   const hasPreview = Boolean(previewSrc);
   const isUploading = uploadStatus === "uploading";
   const publishDisabled = busy || isUploading;
+  const scheduledIso = publishOption === "schedule" ? scheduleFromFields(schedule.date, schedule.time) : null;
+  const scheduledPreview = scheduledIso
+    ? { iso: scheduledIso, future: new Date(scheduledIso) > new Date() }
+    : null;
   return (
     <div className="space-y-6">
       <header>
@@ -622,6 +641,9 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
                 onChange={(event) => {
                   setPublishOption(event.target.value as "draft" | "now" | "schedule");
                   setField("isPublished", event.target.value === "now");
+                  if (event.target.value === "schedule" && !schedule.date) {
+                    setSchedule(scheduleFields(SCHEDULE_PRESETS[1].at()));
+                  }
                 }}
                 className={input}
               >
@@ -631,10 +653,29 @@ export function ArticleForm({ article }: { article?: AdminArticle }) {
               </select>
             </Field>
             {publishOption === "schedule" ? (
-              <div className="space-y-3">
-                <Field label="Date"><input type="date" required value={schedule.date} onChange={(event) => setSchedule((current) => ({ ...current, date: event.target.value }))} className={input} /></Field>
+              <div className="space-y-3 rounded-xl border border-cyan-100 bg-cyan-50/60 p-3">
+                <div className="flex flex-wrap gap-2">
+                  {SCHEDULE_PRESETS.map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => setSchedule(scheduleFields(preset.at()))}
+                      className="rounded-full border border-cyan-200 bg-white px-3 py-1 text-xs font-semibold text-cyan-800 hover:border-cyan-500"
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+                <Field label="Date"><input type="date" required min={scheduleFields(new Date()).date} value={schedule.date} onChange={(event) => setSchedule((current) => ({ ...current, date: event.target.value }))} className={input} /></Field>
                 <Field label="Time"><input type="time" required value={schedule.time} onChange={(event) => setSchedule((current) => ({ ...current, time: event.target.value }))} className={input} /></Field>
-                <Hint>{ARTICLE_TIMEZONE_LABEL}. The article stays private until this time. Choose Draft and save to cancel scheduling, or Publish Now to publish immediately.</Hint>
+                {scheduledPreview ? (
+                  <p className={`text-xs font-semibold ${scheduledPreview.future ? "text-cyan-800" : "text-red-600"}`}>
+                    {scheduledPreview.future
+                      ? `Will go live on ${formatArticleSchedule(scheduledPreview.iso)}.`
+                      : "This time has already passed. Choose a future time."}
+                  </p>
+                ) : null}
+                <Hint>{ARTICLE_TIMEZONE_LABEL}. The article stays private until this time, then appears on the website automatically. Choose Draft and save to cancel scheduling, or Publish Now to publish immediately.</Hint>
               </div>
             ) : null}
             <fieldset className="space-y-3 border-t border-slate-100 pt-4">

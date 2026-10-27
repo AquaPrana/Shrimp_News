@@ -15,6 +15,10 @@ const ALLOWED_TAGS = [
   "b",
   "em",
   "i",
+  "u",
+  "s",
+  "span",
+  "hr",
   "blockquote",
   "img",
   "table",
@@ -26,11 +30,22 @@ const ALLOWED_TAGS = [
 ];
 
 const HEADING_MAX_LENGTH = 120;
+const SAFE_COLOR =
+  /^(?:#[0-9a-f]{3,8}|rgba?\(\s*[\d.]+%?\s*,\s*[\d.]+%?\s*,\s*[\d.]+%?\s*(?:,\s*[\d.]+%?\s*)?\))$/i;
+const SAFE_TEXT_ALIGN = /^(?:left|right|center|justify)$/i;
+const SAFE_FONT_SIZE =
+  /^(?:x-small|small|medium|large|x-large|xx-large|xxx-large|\d{1,2}(?:\.\d+)?(?:px|em|rem))$/i;
+const BLOCK_STYLES = { "text-align": [SAFE_TEXT_ALIGN] };
+const INLINE_STYLES = {
+  color: [SAFE_COLOR],
+  "background-color": [SAFE_COLOR],
+  "font-size": [SAFE_FONT_SIZE],
+};
 export const MAX_ARTICLE_HTML_LENGTH = 5_000_000;
 const BULLET_PATTERN = /^[\s]*(?:[•\-\*·▪◦‣–—]|\d+[.)])\s+(.+)$/;
 const HTML_TAG_PATTERN = /<\/?[a-z][\s\S]*?>/i;
 const BLOCK_TAG_PATTERN =
-  /<(p|h2|h3|ul|ol|blockquote|table)\b[^>]*>[\s\S]*?<\/\1>/gi;
+  /<(p|h2|h3|h4|ul|ol|blockquote|table)\b[^>]*>[\s\S]*?<\/\1>|<hr\b[^>]*>/gi;
 
 export function stripHtmlTags(value: string) {
   return value
@@ -192,8 +207,35 @@ export function plainTextToArticleHtml(value: string): string {
   return sanitizeArticleHtml(blocks.join(""));
 }
 
-/** Remove Word / Docs / office-specific markup before sanitizing pasted HTML. */
-export function cleanWordHtml(html: string) {
+function styleAttribute(attributes: string) {
+  const match = /\sstyle=(?:"([^"]*)"|'([^']*)')/i.exec(attributes);
+  const value = match?.[1] ?? match?.[2];
+  return value ? ` style="${value.replace(/"/g, "&quot;")}"` : "";
+}
+
+/**
+ * Unwrap spans, keeping (with keepStyles) only styled editor spans. A stack
+ * pairs each closing tag with its opener so nested spans stay balanced.
+ */
+function spanTagReplacer(keepStyles: boolean) {
+  const kept: boolean[] = [];
+  return (tag: string) => {
+    if (tag.startsWith("</")) return kept.pop() ? "</span>" : "";
+    const style = keepStyles ? styleAttribute(tag) : "";
+    kept.push(Boolean(style));
+    return style ? `<span${style}>` : "";
+  };
+}
+
+/**
+ * Remove Word / Docs / office-specific markup before sanitizing pasted HTML.
+ * With keepStyles, inline style attributes written by the editor toolbar are
+ * kept for the sanitizer to filter; every other cleanup step is unchanged.
+ */
+export function cleanWordHtml(html: string, { keepStyles = false } = {}) {
+  const presentationAttributes = keepStyles
+    ? "class|dir|lang|id|align|width|height|face|size|color|bgcolor|border|cellpadding|cellspacing"
+    : "class|style|dir|lang|id|align|width|height|face|size|color|bgcolor|border|cellpadding|cellspacing";
   return html
     // Word may copy a complete document. Keep only the clipboard fragment when present.
     .replace(
@@ -216,21 +258,22 @@ export function cleanWordHtml(html: string) {
     .replace(/<(\/?)(?:o|w|v|m):[^>]*>/gi, "")
     .replace(/<\/?o:p[^>]*>/gi, "")
     // Strip presentation attributes that fight site typography.
-    .replace(/\s(?:class|style|dir|lang|id|align|width|height|face|size|color|bgcolor|border|cellpadding|cellspacing)="[^"]*"/gi, "")
-    .replace(/\s(?:class|style|dir|lang|id|align|width|height|face|size|color|bgcolor|border|cellpadding|cellspacing)='[^']*'/gi, "")
+    .replace(new RegExp(`\\s(?:${presentationAttributes})="[^"]*"`, "gi"), "")
+    .replace(new RegExp(`\\s(?:${presentationAttributes})='[^']*'`, "gi"), "")
     .replace(/<\/?font\b[^>]*>/gi, "")
-    .replace(/<span\b[^>]*>/gi, "")
-    .replace(/<\/span>/gi, "")
+    .replace(/<\/?span\b[^>]*>/gi, spanTagReplacer(keepStyles))
     .replace(/&nbsp;/gi, " ")
     .replace(/\u00a0/g, " ")
     // Flatten Word list paragraphs into compact list items.
-    .replace(/<li\b[^>]*>([\s\S]*?)<\/li>/gi, (_match, inner: string) => {
+    .replace(/<li\b([^>]*)>([\s\S]*?)<\/li>/gi, (_match, attributes: string, inner: string) => {
       const content = inner
         .replace(/<\/?(?:p|div)\b[^>]*>/gi, " ")
         .replace(/<br\s*\/?>/gi, " ")
         .replace(/\s+/g, " ")
         .trim();
-      return content ? `<li>${content}</li>` : "";
+      return content
+        ? `<li${keepStyles ? styleAttribute(attributes) : ""}>${content}</li>`
+        : "";
     })
     .replace(/<(ul|ol)\b[^>]*>/gi, "<$1>")
     .replace(
@@ -239,12 +282,13 @@ export function cleanWordHtml(html: string) {
         tag.toLowerCase() === "p" &&
         /\bdata-article-explicit-paragraph\b/i.test(attributes)
           ? '<p data-article-explicit-paragraph="true">'
-          : `<${tag}>`,
+          : `<${tag}${keepStyles ? styleAttribute(attributes) : ""}>`,
     )
     .replace(/<h1\b([^>]*)>/gi, "<h2$1>")
     .replace(/<\/h1>/gi, "</h2>")
-    .replace(/<h[4-6]\b([^>]*)>/gi, "<h3$1>")
-    .replace(/<\/h[4-6]>/gi, "</h3>");
+    // The editor offers h4 ("Small heading"); pasted h4-h6 still become h3.
+    .replace(keepStyles ? /<h[5-6]\b([^>]*)>/gi : /<h[4-6]\b([^>]*)>/gi, "<h3$1>")
+    .replace(keepStyles ? /<\/h[5-6]>/gi : /<\/h[4-6]>/gi, "</h3>");
 }
 
 function convertDivsToParagraphs(html: string) {
@@ -393,15 +437,29 @@ export function collapseEmptyAndSpacerBlocks(html: string) {
   return result;
 }
 
+type NormalizeOptions = {
+  /**
+   * Clipboard HTML from Word/Docs gets office cleanup plus heading and list
+   * inference. Editor HTML was structured by the admin with the toolbar, so it
+   * is kept as authored: no headings are guessed and safe styling survives.
+   */
+  fromClipboard?: boolean;
+};
+
 /** Normalize pasted or edited HTML into semantic article blocks. */
-export function normalizeBlockHtml(html: string) {
+export function normalizeBlockHtml(
+  html: string,
+  { fromClipboard = false }: NormalizeOptions = {},
+) {
   if (!html.trim()) return "";
 
-  let result = cleanWordHtml(html);
+  let result = cleanWordHtml(html, { keepStyles: !fromClipboard });
   result = convertDivsToParagraphs(result);
   result = splitParagraphsOnBreaks(result);
-  result = promoteBoldParagraphsToHeadings(result);
-  result = promoteStandaloneParagraphHeadings(result);
+  if (fromClipboard) {
+    result = promoteBoldParagraphsToHeadings(result);
+    result = promoteStandaloneParagraphHeadings(result);
+  }
   result = mergeBulletParagraphsIntoLists(result);
   result = collapseEmptyAndSpacerBlocks(result);
 
@@ -412,7 +470,18 @@ export function sanitizeArticleHtml(html: string) {
   const cleaned = sanitizeHtml(html, {
     allowedTags: ALLOWED_TAGS,
     allowedAttributes: {
-      a: ["href", "target", "rel", "title"],
+      a: ["href", "target", "rel", "title", "style"],
+      p: ["style"],
+      h2: ["style"],
+      h3: ["style"],
+      h4: ["style"],
+      li: ["style"],
+      blockquote: ["style"],
+      span: ["style"],
+      strong: ["style"],
+      em: ["style"],
+      u: ["style"],
+      s: ["style"],
       img: ["src", "alt", "title", "width", "height"],
       table: [],
       thead: [],
@@ -426,8 +495,21 @@ export function sanitizeArticleHtml(html: string) {
       img: ["http", "https"],
     },
     allowProtocolRelative: true,
-    // Never preserve Word/Docs presentation attributes.
-    allowedStyles: {},
+    // Only the editor's own safe styles survive; Word/Docs styles are dropped.
+    allowedStyles: {
+      p: BLOCK_STYLES,
+      h2: BLOCK_STYLES,
+      h3: BLOCK_STYLES,
+      h4: BLOCK_STYLES,
+      li: BLOCK_STYLES,
+      blockquote: BLOCK_STYLES,
+      span: INLINE_STYLES,
+      a: INLINE_STYLES,
+      strong: INLINE_STYLES,
+      em: INLINE_STYLES,
+      u: INLINE_STYLES,
+      s: INLINE_STYLES,
+    },
     allowedClasses: {},
     nonTextTags: [
       "style",
@@ -459,6 +541,9 @@ export function sanitizeArticleHtml(html: string) {
       h2: "h2",
       h3: "h3",
       b: "strong",
+      i: "em",
+      strike: "s",
+      del: "s",
       ul: "ul",
       ol: "ol",
       li: "li",
@@ -466,14 +551,23 @@ export function sanitizeArticleHtml(html: string) {
     },
   });
 
-  return collapseEmptyAndSpacerBlocks(cleaned).trim();
+  // Spans whose only styles were unsafe are left bare; unwrap them so saving
+  // and redisplaying produce identical HTML.
+  const withoutBareSpans = cleaned.replace(
+    /<\/?span\b[^>]*>/gi,
+    spanTagReplacer(true),
+  );
+  return collapseEmptyAndSpacerBlocks(withoutBareSpans).trim();
 }
 
 /**
  * Primary sanitizer used before save and on display.
  * Cleans Word/Docs paste artifacts while preserving structure.
  */
-export function sanitizeArticleContent(content: string): string {
+export function sanitizeArticleContent(
+  content: string,
+  options: NormalizeOptions = {},
+): string {
   const trimmed = content.trim();
   if (!trimmed) return "";
 
@@ -481,12 +575,12 @@ export function sanitizeArticleContent(content: string): string {
     return plainTextToArticleHtml(trimmed);
   }
 
-  const structured = normalizeBlockHtml(trimmed);
+  const structured = normalizeBlockHtml(trimmed, options);
   return sanitizeArticleHtml(structured);
 }
 
 function formatArticleHtml(rawHtml: string) {
-  return sanitizeArticleContent(rawHtml);
+  return sanitizeArticleContent(rawHtml, { fromClipboard: true });
 }
 
 function countHtmlBlocks(html: string) {

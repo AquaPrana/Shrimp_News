@@ -186,3 +186,48 @@ test("Unicode plain text paste preserves Telugu and Hindi", () => {
   assert.match(pasted, /తెలుగు రొయ్యల పెంపకం సమాచారం/);
   assert.match(pasted, /हिंदी झींगा पालन जानकारी/);
 });
+
+test("editor paragraphs are never auto-promoted to headings on save or display", () => {
+  const html =
+    "<p>Water Quality Management Tips</p><p><strong>Important Pond Care Steps</strong></p><p>This supporting sentence makes the article content long enough to save safely.</p>";
+  const saved = prepareArticleContentForSave(html);
+
+  assert.equal(saved.ok, true);
+  if (!saved.ok) return;
+  assert.doesNotMatch(saved.value, /<h[2-4]>/);
+  assert.equal(prepareArticleContentForDisplay(saved.value), saved.value);
+});
+
+test("toolbar styling survives save and display while unsafe styles are removed", () => {
+  const html =
+    '<h4 style="text-align: center;">Small heading</h4>' +
+    '<p style="text-align: center; position: fixed;"><b style="font-size: x-large; color: rgb(185, 28, 28);">Shrimp</b> ' +
+    '<i>italic</i> <u>underlined</u> <strike>old</strike> ' +
+    '<span style="background-color: #fef08a; background-image: url(https://evil.example/x.png);">highlighted</span> ' +
+    '<span style="color: expression(alert(1));">text</span> with enough content to validate the article body.</p>' +
+    '<blockquote>Quoted text</blockquote><hr><p><a href="https://example.com" style="color: #0b4f7a;">link</a></p>';
+  const saved = prepareArticleContentForSave(html);
+
+  assert.equal(saved.ok, true);
+  if (!saved.ok) return;
+  assert.match(saved.value, /<h4 style="text-align:center">Small heading<\/h4>/);
+  assert.match(saved.value, /<p style="text-align:center">/);
+  assert.match(saved.value, /<strong style="font-size:x-large;color:rgb\(185, 28, 28\)">Shrimp<\/strong>/);
+  assert.match(saved.value, /<em>italic<\/em>/);
+  assert.match(saved.value, /<u>underlined<\/u>/);
+  assert.match(saved.value, /<s>old<\/s>/);
+  assert.match(saved.value, /<span style="background-color:#fef08a">highlighted<\/span>/);
+  assert.match(saved.value, /<blockquote>Quoted text<\/blockquote><hr \/>/);
+  assert.match(saved.value, /<a href="https:\/\/example\.com" style="color:#0b4f7a">link<\/a>/);
+  assert.doesNotMatch(saved.value, /position|background-image|expression|evil\.example/);
+  assert.match(saved.value, /<\/span> text with enough/);
+  assert.equal(prepareArticleContentForDisplay(saved.value), saved.value);
+});
+
+test("Word paste still drops Word colours and sizes", () => {
+  const pasted = pasteClipboardToArticleHtml(
+    '<p class="MsoNormal" style="font-size:14pt;color:#ff0000;text-align:center">Plain Word paragraph text that is long enough.</p>',
+    "",
+  );
+  assert.equal(pasted, "<p>Plain Word paragraph text that is long enough.</p>");
+});

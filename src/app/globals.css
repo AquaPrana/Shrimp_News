@@ -457,11 +457,37 @@ body {
 /* Do not reserve tall empty space for spacer paragraphs (cleaned on save/display). */
 .article-prose p:empty,
 .article-content p:empty,
-.article-editor p:empty,
 .article-prose p:has(br:only-child),
-.article-content p:has(br:only-child),
-.article-editor p:has(br:only-child) {
+.article-content p:has(br:only-child) {
   display: none;
+}
+
+/* The editor must keep a freshly created empty line visible so the caret
+   stays where the admin is typing after pressing Enter. */
+.article-editor:empty::before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.article-prose u,
+.article-content u,
+.article-editor u {
+  text-decoration: underline;
+}
+
+.article-prose s,
+.article-content s,
+.article-editor s {
+  text-decoration: line-through;
+}
+
+.article-prose hr,
+.article-content hr,
+.article-editor hr {
+  margin: 1.5rem 0;
+  border: 0;
+  border-top: 1px solid #cbd5e1;
 }
 
 .article-prose ul,
@@ -475,6 +501,18 @@ body {
   margin: 0 0 0.75rem;
   padding-left: 1.25rem;
   list-style-position: outside;
+}
+
+.article-prose ul,
+.article-content ul,
+.article-editor ul {
+  list-style: disc outside;
+}
+
+.article-prose ol,
+.article-content ol,
+.article-editor ol {
+  list-style: decimal outside;
 }
 
 .article-prose ul:last-child,
